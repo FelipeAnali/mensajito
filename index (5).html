@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Un pequeño recordatorio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#262320;
+    --page:#efeae2;
+    --paper-1:#e6ddf3;
+    --paper-2:#e0e4f4;
+    --paper-3:#dff0e6;
+    --paper-4:#f3e6df;
+    --body:#55504b;
+    --env:#f6f3fb;
+    --env-shade:#e7e0f4;
+    --seal:#e4907c;
+    --seal-deep:#cf7663;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background-color:var(--page);
+    background-image:radial-gradient(rgba(38,35,32,.14) 1.1px, transparent 1.2px);
+    background-size:22px 22px;
+    color:var(--ink);
+    font-family:"Space Mono",ui-monospace,monospace;
+    min-height:100dvh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .frame{
+    width:min(94vw,460px);
+    background:var(--ink);
+    border-radius:30px;
+    padding:12px;
+    box-shadow:0 30px 60px -25px rgba(38,35,32,.55);
+  }
+
+  .topbar{
+    height:46px;
+    display:flex;
+    align-items:center;
+    padding:0 14px;
+  }
+  .sender{
+    color:#f4f1ec;
+    font-size:15px;
+    letter-spacing:.5px;
+  }
+
+  .canvas{
+    position:relative;
+    border-radius:20px;
+    overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 12% 8%, var(--paper-1) 0%, transparent 55%),
+      radial-gradient(120% 90% at 92% 20%, var(--paper-2) 0%, transparent 60%),
+      radial-gradient(130% 110% at 88% 100%, var(--paper-3) 0%, transparent 62%),
+      radial-gradient(120% 110% at 8% 100%, var(--paper-4) 0%, transparent 58%),
+      var(--paper-2);
+  }
+
+  .stage{
+    min-height:520px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:44px 30px;
+    text-align:center;
+  }
+
+  /* ---------- SOBRE ---------- */
+  .envelope-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:26px;
+  }
+  .envelope{
+    position:relative;
+    width:270px;
+    height:180px;
+    border:0;
+    background:transparent;
+    padding:0;
+    cursor:pointer;
+    perspective:900px;
+    filter:drop-shadow(0 16px 22px rgba(38,35,32,.18));
+    transition:transform .5s ease, opacity .5s ease;
+  }
+  .envelope:focus-visible{outline:3px solid var(--ink);outline-offset:10px;border-radius:8px}
+
+  .env-body{
+    position:absolute;inset:0;
+    background:var(--env);
+    border-radius:10px;
+    z-index:1;
+  }
+  .env-letter{
+    position:absolute;
+    left:12px;right:12px;
+    top:16px;
+    height:150px;
+    background:#fffdfa;
+    border-radius:7px 7px 3px 3px;
+    box-shadow:0 6px 14px rgba(38,35,32,.12);
+    z-index:2;
+    transform:translateY(24px);
+    transition:transform .7s cubic-bezier(.2,.9,.25,1) .3s, z-index 0s .35s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .env-letter span{font-size:34px;opacity:.85}
+  .env-pocket{
+    position:absolute;inset:0;
+    z-index:3;
+    background:var(--env-shade);
+    border-radius:10px;
+    clip-path:polygon(0 42%, 50% 100%, 100% 42%, 100% 100%, 0 100%);
+  }
+  .env-flap{
+    position:absolute;
+    top:0;left:0;right:0;
+    height:96px;
+    background:var(--env-shade);
+    clip-path:polygon(0 0, 100% 0, 50% 100%);
+    transform-origin:top center;
+    transform:rotateX(0deg);
+    z-index:5;
+    transition:transform .7s cubic-bezier(.6,.05,.3,1), z-index 0s .35s;
+    backface-visibility:hidden;
+  }
+  .env-seal{
+    position:absolute;
+    top:66px;left:50%;
+    width:44px;height:44px;
+    margin-left:-22px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--seal), var(--seal-deep));
+    box-shadow:0 4px 10px rgba(207,118,99,.45);
+    z-index:6;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:20px;
+    transition:opacity .3s ease, transform .3s ease;
+  }
+
+  .envelope.open .env-flap{transform:rotateX(178deg);z-index:0}
+  .envelope.open .env-letter{transform:translateY(-40px);z-index:6}
+  .envelope.open .env-seal{opacity:0;transform:scale(.4)}
+
+  .tap{
+    color:var(--body);
+    font-size:13px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    opacity:.75;
+    animation:breathe 2.4s ease-in-out infinite;
+  }
+  @keyframes breathe{0%,100%{opacity:.4}50%{opacity:.9}}
+
+  /* ---------- MENSAJE ---------- */
+  .note{
+    opacity:0;
+    transform:scale(.94);
+    transition:opacity .7s ease, transform .7s cubic-bezier(.2,.9,.25,1);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .note.show{opacity:1;transform:scale(1)}
+
+  .note-emoji{
+    width:96px;height:96px;
+    border-radius:50%;
+    background:rgba(255,255,255,.55);
+    border:1.5px solid rgba(38,35,32,.35);
+    display:flex;align-items:center;justify-content:center;
+    font-size:46px;
+    margin-bottom:26px;
+    box-shadow:0 8px 20px rgba(38,35,32,.10);
+  }
+  .note h1{
+    font-family:"Fraunces",Georgia,serif;
+    font-weight:600;
+    font-size:clamp(30px,7.5vw,42px);
+    line-height:1.08;
+    margin:0 0 22px;
+    color:var(--ink);
+  }
+  .note p{
+    font-size:15px;
+    line-height:1.85;
+    color:var(--body);
+    max-width:32ch;
+    margin:0 auto;
+  }
+  .wave{margin-top:30px;color:var(--ink);opacity:.85}
+
+  /* ---------- YA VISTO ---------- */
+  .spent{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+    opacity:0;
+    animation:fadeIn .8s ease forwards;
+  }
+  @keyframes fadeIn{to{opacity:1}}
+  .spent .mark{
+    font-size:40px;
+    opacity:.5;
+  }
+  .spent h2{
+    font-family:"Fraunces",Georgia,serif;
+    font-weight:500;
+    font-size:24px;
+    margin:0;
+    color:var(--ink);
+  }
+  .spent p{
+    font-size:13px;
+    line-height:1.8;
+    color:var(--body);
+    max-width:30ch;
+    margin:0;
+    opacity:.8;
+  }
+
+  [hidden]{display:none !important}
+
+  @media (prefers-reduced-motion: reduce){
+    .env-flap,.env-letter,.note,.envelope,.env-seal{transition:opacity .3s ease !important}
+    .tap{animation:none}
+  }
+
+  @media (max-width:420px){
+    .stage{min-height:470px;padding:38px 22px}
+    .envelope{width:230px;height:158px}
+    .env-letter{height:132px}
+    .env-flap{height:84px}
+  }
+</style>
+</head>
+<body>
+  <main class="frame">
+    <div class="topbar">
+      <span class="sender" id="sender"></span>
+    </div>
+    <div class="canvas">
+      <div class="stage">
+
+        <!-- Estado 1: sobre cerrado -->
+        <div class="envelope-wrap" id="wrap">
+          <button class="envelope" id="envelope" aria-label="Abrir el mensaje">
+            <div class="env-body"></div>
+            <div class="env-letter"><span id="letterEmoji"></span></div>
+            <div class="env-pocket"></div>
+            <div class="env-flap"></div>
+            <div class="env-seal">♥</div>
+          </button>
+          <div class="tap">toca para abrir</div>
+        </div>
+
+        <!-- Estado 2: mensaje revelado -->
+        <article class="note" id="note" hidden>
+          <div class="note-emoji" id="noteEmoji"></div>
+          <h1 id="noteTitle"></h1>
+          <p id="noteBody"></p>
+          <svg class="wave" width="190" height="16" viewBox="0 0 190 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 9 C 14 -2, 26 18, 38 9 S 62 -2, 74 9 S 98 18, 110 9 S 134 -2, 146 9 S 170 18, 188 9"
+                  stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+          </svg>
+        </article>
+
+        <!-- Estado 3: ya fue visto -->
+        <div class="spent" id="spent" hidden>
+          <div class="mark">✧</div>
+          <h2>Ya lo abriste</h2>
+          <p>Este mensaje era para verse una sola vez. Cumplió su momento y se quedó guardado en tu memoria.</p>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+<script>
+  // ===================================================================
+  //  EDITA AQUÍ  →  todo lo personalizable está en este bloque
+  // ===================================================================
+  const CONFIG = {
+    remitente: "Anonimo",
+    emoji: "🤗",
+    titulo: "Un pequeño recordatorio:",
+    mensaje: "La gente habla demasiado y no dice nada. Tú en cambio sonríes y me desarmas por completo. Me encanta tu mirada y me gusta la forma en que existes, sin pedirle perdón a nadie.",
+
+    // Cambia el número del final (v1 → v2 → v3...) cuando quieras
+    // "reiniciarlo" y poder verlo de nuevo mientras pruebas.
+    clave: "recordatorio_visto_v1"
+  };
+  // ===================================================================
+
+  const $ = (id) => document.getElementById(id);
+
+  // Pintar contenido
+  $("sender").textContent = CONFIG.remitente;
+  $("letterEmoji").textContent = CONFIG.emoji;
+  $("noteEmoji").textContent = CONFIG.emoji;
+  $("noteTitle").textContent = CONFIG.titulo;
+  $("noteBody").textContent = CONFIG.mensaje;
+
+  // Lectura segura de localStorage (algunos entornos lo bloquean)
+  function yaVisto(){
+    try { return localStorage.getItem(CONFIG.clave) === "1"; }
+    catch(e){ return false; }
+  }
+  function marcarVisto(){
+    try { localStorage.setItem(CONFIG.clave, "1"); }
+    catch(e){ /* si no hay storage, no se puede "gastar"; se muestra igual */ }
+  }
+
+  const wrap = $("wrap");
+  const envelope = $("envelope");
+  const note = $("note");
+  const spent = $("spent");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function mostrarMensaje(){
+    wrap.hidden = true;
+    note.hidden = false;
+    requestAnimationFrame(() => note.classList.add("show"));
+  }
+
+  function abrir(){
+    if (envelope.classList.contains("open")) return;
+    marcarVisto();                 // se consume en el momento de abrir
+    envelope.classList.add("open");
+    const espera = reduce ? 150 : 1150;
+    setTimeout(mostrarMensaje, espera);
+  }
+
+  // Arranque
+  if (yaVisto()){
+    wrap.hidden = true;
+    spent.hidden = false;
+  } else {
+    envelope.addEventListener("click", abrir);
+    envelope.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " "){ e.preventDefault(); abrir(); }
+    });
+  }
+</script>
+</body>
+</html>
