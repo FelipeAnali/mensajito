@@ -71,6 +71,8 @@
   }
 
   .stage{
+    position:relative;
+    z-index:1;
     min-height:520px;
     display:flex;
     flex-direction:column;
@@ -238,11 +240,98 @@
     opacity:.8;
   }
 
+  /* ---------- GALAXIA ---------- */
+  .galaxy{
+    position:absolute;inset:0;
+    z-index:0;
+    pointer-events:none;
+    opacity:0;
+    background:
+      radial-gradient(90% 60% at 20% 15%, rgba(126,87,194,.55) 0%, transparent 60%),
+      radial-gradient(80% 60% at 85% 85%, rgba(56,110,170,.45) 0%, transparent 60%),
+      radial-gradient(60% 40% at 70% 30%, rgba(228,144,124,.25) 0%, transparent 70%),
+      #120f24;
+    transition:opacity 1.4s ease;
+  }
+  .canvas.night .galaxy{opacity:1}
+
+  .star{
+    position:absolute;
+    border-radius:50%;
+    background:#fff;
+    box-shadow:0 0 6px 1px rgba(255,255,255,.7);
+    opacity:.2;
+    animation:twinkle var(--dur,3s) ease-in-out var(--delay,0s) infinite;
+  }
+  @keyframes twinkle{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
+
+  .shooting{
+    position:absolute;
+    width:110px;height:2px;
+    border-radius:2px;
+    background:linear-gradient(90deg, rgba(255,255,255,.95), transparent);
+    transform:rotate(-28deg);
+    opacity:0;
+    animation:shoot 7s ease-in var(--delay,2s) infinite;
+  }
+  @keyframes shoot{
+    0%{opacity:0;transform:rotate(-28deg) translateX(0)}
+    3%{opacity:1}
+    12%{opacity:0;transform:rotate(-28deg) translateX(-340px)}
+    100%{opacity:0;transform:rotate(-28deg) translateX(-340px)}
+  }
+
+  .spark{
+    position:absolute;
+    width:6px;height:6px;
+    margin:-3px 0 0 -3px;
+    border-radius:50%;
+    background:#fff6e8;
+    box-shadow:0 0 10px 2px rgba(255,214,190,.9);
+    z-index:2;
+    pointer-events:none;
+    animation:burst 1.3s cubic-bezier(.15,.8,.3,1) forwards;
+  }
+  @keyframes burst{
+    0%{opacity:1;transform:translate(0,0) scale(1)}
+    100%{opacity:0;transform:translate(var(--x),var(--y)) scale(.2)}
+  }
+
+  /* Colores del mensaje sobre la galaxia */
+  .canvas.night .note h1{color:#f4f1ec}
+  .canvas.night .note p{color:rgba(244,241,236,.86)}
+  .canvas.night .wave{color:#f4f1ec}
+  .canvas.night .note-emoji{
+    background:rgba(255,255,255,.08);
+    border-color:rgba(255,255,255,.35);
+    box-shadow:0 0 30px rgba(170,140,230,.45);
+    animation:glow 3.2s ease-in-out infinite;
+  }
+  @keyframes glow{
+    0%,100%{box-shadow:0 0 22px rgba(170,140,230,.35)}
+    50%{box-shadow:0 0 42px rgba(228,144,124,.55)}
+  }
+
+  /* Palabras que aparecen una a una */
+  .w{
+    display:inline-block;
+    opacity:0;
+    animation:wordIn .7s ease forwards;
+    animation-delay:calc(var(--i) * 60ms + .6s);
+  }
+  @keyframes wordIn{
+    from{opacity:0;filter:blur(6px);transform:translateY(8px)}
+    to{opacity:1;filter:blur(0);transform:none}
+  }
+  .wave{opacity:0;animation:fadeIn 1s ease forwards;animation-delay:var(--wave-delay,1s)}
+
   [hidden]{display:none !important}
 
   @media (prefers-reduced-motion: reduce){
     .env-flap,.env-letter,.note,.envelope,.env-seal{transition:opacity .3s ease !important}
-    .tap{animation:none}
+    .tap,.star,.shooting,.canvas.night .note-emoji{animation:none}
+    .star{opacity:.7}
+    .w,.wave{animation:none;opacity:1}
   }
 
   @media (max-width:420px){
@@ -258,7 +347,8 @@
     <div class="topbar">
       <span class="sender" id="sender"></span>
     </div>
-    <div class="canvas">
+    <div class="canvas" id="canvas">
+      <div class="galaxy" id="galaxy" aria-hidden="true"></div>
       <div class="stage">
 
         <!-- Estado 1: sobre cerrado -->
@@ -303,11 +393,11 @@
     remitente: "Anonimo",
     emoji: "🤗",
     titulo: "Un pequeño recordatorio:",
-    mensaje: "Esa sonrisa tuya es un peligro y tus ojos una trampa. Que cualquiera le joden la cabeza, y los fascinaria.",
+    mensaje: "Quiero perderme en tu cuerpo sin pedir permiso ni llevar un mapa, recorrer con las manos cada rincón de tu piel hasta hacerte viajar a otras galaxias, donde el aire falte y la razón termine de estorbar. Pero cuando el ruido se apague y la tormenta baje, quiero que quede la verdad: un amor limpio, directo y sin rodeos baratos. Darte un beso largo en la frente, despacio y en silencio, solo para recordarte que, en medio de todo este maldito caos, tú eres de las pocas cosas sagradas y preciadas que me quedan.",
 
     // Cambia el número del final (v1 → v2 → v3...) cuando quieras
     // "reiniciarlo" y poder verlo de nuevo mientras pruebas.
-    clave: "recordatorio_visto_v1"
+    clave: "recordatorio_visto_v2"
   };
   // ===================================================================
 
@@ -318,7 +408,21 @@
   $("letterEmoji").textContent = CONFIG.emoji;
   $("noteEmoji").textContent = CONFIG.emoji;
   $("noteTitle").textContent = CONFIG.titulo;
-  $("noteBody").textContent = CONFIG.mensaje;
+  // El mensaje se arma palabra por palabra para animarlo
+  const body = $("noteBody");
+  body.setAttribute("aria-label", CONFIG.mensaje);
+  const palabras = CONFIG.mensaje.split(/\s+/).filter(Boolean);
+  palabras.forEach((palabra, i) => {
+    const span = document.createElement("span");
+    span.className = "w";
+    span.style.setProperty("--i", i);
+    span.setAttribute("aria-hidden", "true");
+    span.textContent = palabra;
+    body.appendChild(span);
+    if (i < palabras.length - 1) body.appendChild(document.createTextNode(" "));
+  });
+  document.querySelector(".wave")
+    .style.setProperty("--wave-delay", (palabras.length * 60 + 900) + "ms");
 
   // Lectura segura de localStorage (algunos entornos lo bloquean)
   function yaVisto(){
@@ -342,12 +446,66 @@
     requestAnimationFrame(() => note.classList.add("show"));
   }
 
+  const canvas = $("canvas");
+  const galaxy = $("galaxy");
+  const azar = (min, max) => min + Math.random() * (max - min);
+
+  // Cielo de estrellas que titilan + un par de estrellas fugaces
+  function crearGalaxia(){
+    for (let i = 0; i < 60; i++){
+      const s = document.createElement("span");
+      s.className = "star";
+      const size = azar(1, 3).toFixed(1) + "px";
+      s.style.width = s.style.height = size;
+      s.style.left = azar(0, 100) + "%";
+      s.style.top = azar(0, 100) + "%";
+      s.style.setProperty("--dur", azar(2, 5).toFixed(2) + "s");
+      s.style.setProperty("--delay", azar(0, 4).toFixed(2) + "s");
+      galaxy.appendChild(s);
+    }
+    [["85%", "12%", "2s"], ["95%", "45%", "5.5s"]].forEach(([left, top, delay]) => {
+      const f = document.createElement("span");
+      f.className = "shooting";
+      f.style.left = left;
+      f.style.top = top;
+      f.style.setProperty("--delay", delay);
+      galaxy.appendChild(f);
+    });
+  }
+
+  // Explosión de chispas desde el centro del sobre
+  function explosion(){
+    const c = canvas.getBoundingClientRect();
+    const e = envelope.getBoundingClientRect();
+    const cx = e.left + e.width / 2 - c.left;
+    const cy = e.top + e.height / 2 - c.top;
+    for (let i = 0; i < 28; i++){
+      const p = document.createElement("span");
+      p.className = "spark";
+      const ang = azar(0, Math.PI * 2);
+      const dist = azar(90, 230);
+      p.style.left = cx + "px";
+      p.style.top = cy + "px";
+      p.style.setProperty("--x", Math.cos(ang) * dist + "px");
+      p.style.setProperty("--y", Math.sin(ang) * dist + "px");
+      p.style.animationDelay = azar(0, .15).toFixed(2) + "s";
+      canvas.appendChild(p);
+      p.addEventListener("animationend", () => p.remove());
+    }
+  }
+
   function abrir(){
     if (envelope.classList.contains("open")) return;
     marcarVisto();                 // se consume en el momento de abrir
     envelope.classList.add("open");
-    const espera = reduce ? 150 : 1150;
-    setTimeout(mostrarMensaje, espera);
+    crearGalaxia();
+    if (reduce){
+      canvas.classList.add("night");
+      setTimeout(mostrarMensaje, 150);
+      return;
+    }
+    setTimeout(() => { explosion(); canvas.classList.add("night"); }, 650);
+    setTimeout(mostrarMensaje, 1250);
   }
 
   // Arranque
