@@ -24,7 +24,6 @@
   }
 
   *{box-sizing:border-box}
-  html,body{height:100%}
   body{
     margin:0;
     background-color:var(--night);
@@ -34,12 +33,12 @@
     font-family:"Space Mono",ui-monospace,monospace;
     min-height:100dvh;
     display:flex;
-    align-items:center;
     justify-content:center;
     padding:24px;
   }
 
   .frame{
+    margin:auto 0;
     width:min(94vw,460px);
     background:var(--frame);
     border:1px solid rgba(30,215,96,.22);
@@ -494,7 +493,7 @@
   // ===================================================================
   const CONFIG = {
     remitente: "Anonimo",
-    emoji: "🤗",
+    emoji: "☕",
     titulo: "Románticos lunes",
     mensaje: "Los lunes suelen ser un perro rabioso mordiéndote los talones. El mundo pesa y la rutina pesa. Pero hable y, de repente, apareció ese desayuno. Hay gente que destruye el día y hay gente como ella, capaz de volver un maldito lunes el momento más hermoso de la semana. Me encantas. Hoy el día me suena distinto por ti",
 
