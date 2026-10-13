@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flores para ti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#050405;
+    --frame:#0d0b0d;
+    --canvas:#0a080a;
+    --green:#2fbf71;
+    --green-soft:#7dffa8;
+    --pink:#ff7eb6;
+    --rose:#ff4d6d;
+    --text:#fbf3f6;
+    --muted:rgba(251,243,246,.74);
+    --env:#1a1418;
+    --env-shade:#241a20;
+    --paper:#fff5f8;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background-color:var(--night);
+    background-image:radial-gradient(rgba(255,126,182,.12) 1.1px, transparent 1.2px);
+    background-size:22px 22px;
+    color:var(--text);
+    font-family:"Space Mono",ui-monospace,monospace;
+    min-height:100dvh;
+    display:flex;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .frame{
+    margin:auto 0;
+    width:min(94vw,460px);
+    background:var(--frame);
+    border:1px solid rgba(255,126,182,.22);
+    border-radius:30px;
+    padding:12px;
+    box-shadow:0 0 60px -10px rgba(255,126,182,.22), 0 30px 60px -25px #000;
+  }
+
+  .topbar{
+    height:46px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 14px;
+  }
+  .topbar::before{
+    content:"";
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--pink);
+    box-shadow:0 0 10px var(--pink);
+  }
+  .sender{font-size:15px;letter-spacing:.5px}
+  .count{
+    margin-left:auto;
+    font-size:12px;
+    color:var(--muted);
+    opacity:0;
+    transition:opacity .6s ease;
+  }
+  .count.show{opacity:1}
+
+  .canvas{
+    position:relative;
+    border-radius:20px;
+    overflow:hidden;
+    min-height:600px;
+    background:
+      radial-gradient(70% 45% at 50% 40%, rgba(255,126,182,.12) 0%, transparent 70%),
+      radial-gradient(80% 60% at 100% 100%, rgba(120,60,140,.45) 0%, transparent 65%),
+      radial-gradient(60% 50% at 0% 0%, rgba(47,191,113,.12) 0%, transparent 70%),
+      var(--canvas);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .canvas.garden{cursor:pointer}
+
+  .stage{
+    position:relative;
+    z-index:2;
+    min-height:600px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:36px 24px;
+    text-align:center;
+  }
+
+  /* ---------- PÉTALOS QUE CAEN ---------- */
+  .falling{
+    position:absolute;inset:0;
+    pointer-events:none;
+    z-index:1;
+  }
+  .falling i{
+    position:absolute;
+    top:-20px;
+    width:10px;height:14px;
+    border-radius:80% 0 80% 0;
+    opacity:.75;
+    animation:fall var(--dur,9s) linear var(--delay,0s) infinite;
+  }
+  @keyframes fall{
+    0%{transform:translate(0,0) rotate(0)}
+    50%{transform:translate(var(--drift,30px),330px) rotate(200deg)}
+    100%{transform:translate(0,680px) rotate(420deg)}
+  }
+
+  /* ---------- SOBRE ---------- */
+  .envelope-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:26px;
+  }
+  .envelope{
+    position:relative;
+    width:270px;height:180px;
+    border:0;background:transparent;padding:0;
+    cursor:pointer;
+    perspective:900px;
+    filter:drop-shadow(0 0 22px rgba(255,126,182,.28));
+    animation:hover 3.2s ease-in-out infinite;
+  }
+  @keyframes hover{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .envelope:focus-visible{outline:3px solid var(--pink);outline-offset:10px;border-radius:8px}
+  .env-body{
+    position:absolute;inset:0;
+    background:var(--env);
+    border:1px solid rgba(255,126,182,.35);
+    border-radius:10px;
+    z-index:1;
+  }
+  .env-letter{
+    position:absolute;
+    left:12px;right:12px;top:16px;
+    height:140px;
+    background:var(--paper);
+    border-radius:7px 7px 3px 3px;
+    box-shadow:0 0 18px rgba(255,126,182,.35);
+    z-index:2;
+    transform:translateY(20px);
+    transition:transform .7s cubic-bezier(.2,.9,.25,1) .3s, z-index 0s .35s;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .env-letter span{font-size:34px;opacity:0;transition:opacity .4s ease .4s}
+  .env-pocket{
+    position:absolute;inset:0;
+    z-index:3;
+    background:linear-gradient(180deg, #21181d, var(--env-shade));
+    border-radius:10px;
+    clip-path:polygon(0 42%, 50% 100%, 100% 42%, 100% 100%, 0 100%);
+  }
+  .env-flap{
+    position:absolute;
+    top:0;left:0;right:0;
+    height:96px;
+    background:linear-gradient(180deg, #34232c, #22181e);
+    clip-path:polygon(0 0, 100% 0, 50% 100%);
+    transform-origin:top center;
+    z-index:5;
+    transition:transform .7s cubic-bezier(.6,.05,.3,1), z-index 0s .35s;
+    backface-visibility:hidden;
+  }
+  .env-seal{
+    position:absolute;
+    top:66px;left:50%;
+    width:44px;height:44px;
+    margin-left:-22px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #ffc2dc, var(--pink) 45%, #d94f8c);
+    box-shadow:0 0 16px rgba(255,126,182,.7);
+    z-index:6;
+    display:flex;align-items:center;justify-content:center;
+    color:#3a0d22;font-size:22px;
+    transition:opacity .3s ease, transform .3s ease;
+  }
+  .envelope.open{animation:none}
+  .envelope.open .env-flap{transform:rotateX(178deg);z-index:0}
+  .envelope.open .env-letter{transform:translateY(-40px);z-index:6}
+  .envelope.open .env-letter span{opacity:1}
+  .envelope.open .env-seal{opacity:0;transform:scale(.4)}
+
+  .tap{
+    color:var(--pink);
+    font-size:13px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    animation:breathe 2.4s ease-in-out infinite;
+  }
+  @keyframes breathe{0%,100%{opacity:.35}50%{opacity:.95}}
+
+  /* ---------- RAMO ---------- */
+  .bouquet-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    opacity:0;
+    transition:opacity .8s ease;
+  }
+  .bouquet-wrap.show{opacity:1}
+  .bouquet-wrap h1{
+    font-family:"Fraunces",Georgia,serif;
+    font-weight:600;
+    font-size:clamp(28px,7vw,38px);
+    line-height:1.1;
+    margin:0 0 14px;
+    text-shadow:0 0 24px rgba(255,126,182,.4);
+  }
+  .bouquet-wrap p{
+    font-size:14.5px;
+    line-height:1.8;
+    color:var(--muted);
+    max-width:30ch;
+    margin:0 auto 6px;
+  }
+  .bouquet{
+    width:min(100%,320px);
+    height:auto;
+    overflow:visible;
+    margin-top:4px;
+  }
+  .hint{
+    margin-top:6px;
+    font-size:12px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--pink);
+    opacity:0;
+    animation:fadeIn 1s ease 3.6s forwards, breathe 2.4s ease-in-out 4.6s infinite;
+  }
+  @keyframes fadeIn{to{opacity:1}}
+
+  /* Palabras que aparecen una a una */
+  .w{
+    display:inline-block;
+    opacity:0;
+    animation:wordIn .7s ease forwards;
+    animation-delay:calc(var(--i) * 90ms + .3s);
+  }
+  @keyframes wordIn{
+    from{opacity:0;filter:blur(6px);transform:translateY(6px)}
+    to{opacity:1;filter:blur(0);transform:none}
+  }
+
+  /* ---------- FLORES (SVG) ---------- */
+  .stem{
+    fill:none;
+    stroke:var(--green);
+    stroke-width:3;
+    stroke-linecap:round;
+    stroke-dasharray:1;
+    stroke-dashoffset:1;
+    animation:grow .9s ease-out forwards;
+    animation-delay:var(--d,0s);
+  }
+  @keyframes grow{to{stroke-dashoffset:0}}
+  .leaf{
+    fill:#1f8f52;
+    transform-box:fill-box;
+    transform-origin:0% 50%;
+    transform:scale(0);
+    animation:pop .5s ease-out forwards;
+    animation-delay:calc(var(--d,0s) + .45s);
+  }
+  .head{
+    transform-box:fill-box;
+    transform-origin:center;
+    transform:scale(0) rotate(-120deg);
+    animation:bloom .9s cubic-bezier(.3,1.5,.5,1) forwards;
+    animation-delay:calc(var(--d,0s) + .6s);
+  }
+  @keyframes bloom{to{transform:scale(1) rotate(0)}}
+  @keyframes pop{to{transform:scale(1)}}
+  .head.tappable{cursor:pointer}
+  .head.wiggle{transform:none;animation:wiggle .6s ease}
+  @keyframes wiggle{
+    0%{transform:scale(1) rotate(0)}
+    30%{transform:scale(1.18) rotate(-12deg)}
+    60%{transform:scale(.95) rotate(8deg)}
+    100%{transform:scale(1) rotate(0)}
+  }
+
+  .wrap-paper{
+    opacity:0;
+    animation:fadeIn .8s ease .2s forwards;
+  }
+
+  /* Flores que nacen donde ella toca */
+  .sprout{
+    position:absolute;
+    pointer-events:none;
+    z-index:1;
+    overflow:visible;
+    filter:drop-shadow(0 0 8px rgba(255,126,182,.25));
+  }
+  .sprout .stem{animation-duration:.5s}
+  .sprout .head{animation-delay:calc(var(--d,0s) + .25s)}
+  .sprout .leaf{animation-delay:calc(var(--d,0s) + .2s)}
+
+  .petal-burst{
+    position:absolute;
+    width:9px;height:12px;
+    border-radius:80% 0 80% 0;
+    pointer-events:none;
+    z-index:3;
+    animation:burst 1.1s ease-out forwards;
+  }
+  @keyframes burst{
+    0%{opacity:1;transform:translate(0,0) rotate(0)}
+    100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(260deg)}
+  }
+
+  [hidden]{display:none !important}
+
+  @media (prefers-reduced-motion: reduce){
+    .envelope,.tap,.hint,.falling i{animation:none}
+    .hint{opacity:1}
+    .w{animation:none;opacity:1}
+    .stem{animation:none;stroke-dashoffset:0}
+    .leaf,.head{animation:none;transform:none}
+    .wrap-paper{animation:none;opacity:1}
+  }
+
+  @media (max-width:420px){
+    .canvas,.stage{min-height:560px}
+    .stage{padding:30px 18px}
+    .envelope{width:230px;height:158px}
+    .env-letter{height:118px}
+    .env-flap{height:84px}
+  }
+</style>
+</head>
+<body>
+  <main class="frame">
+    <div class="topbar">
+      <span class="sender" id="sender"></span>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="canvas" id="canvas">
+      <div class="falling" id="falling" aria-hidden="true"></div>
+      <div class="stage">
+
+        <!-- Estado 1: carta cerrada -->
+        <div class="envelope-wrap" id="wrap">
+          <button class="envelope" id="envelope" aria-label="Abrir la carta">
+            <div class="env-body"></div>
+            <div class="env-letter"><span>🌷</span></div>
+            <div class="env-pocket"></div>
+            <div class="env-flap"></div>
+            <div class="env-seal">✿</div>
+          </button>
+          <div class="tap">toca para abrir</div>
+        </div>
+
+        <!-- Estado 2: el ramo -->
+        <section class="bouquet-wrap" id="bouquetWrap" hidden>
+          <h1 id="titulo"></h1>
+          <p id="mensaje"></p>
+          <svg class="bouquet" id="bouquet" viewBox="0 0 320 330" aria-label="Un ramo de flores"></svg>
+          <div class="hint" id="hint"></div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+<script>
+  // ===================================================================
+  //  EDITA AQUÍ  →  todo lo personalizable está en este bloque
+  // ===================================================================
+  const CONFIG = {
+    remitente: "Anonimo",
+    titulo: "Flores para ti",
+    mensaje: "Como ya no te puedo volver a ver, te llenaré de muchas flores digitales.",
+    pista: "toca la pantalla y haz que florezca",
+    // Colores de las flores
+    colores: ["#ff7eb6", "#ff4d6d", "#c77dff", "#ffd166", "#ffb4a2", "#fff3f8", "#ff9e6d"]
+  };
+  // ===================================================================
+
+  const $ = (id) => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const azar = (min, max) => min + Math.random() * (max - min);
+  const elegir = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  $("sender").textContent = CONFIG.remitente;
+  $("titulo").textContent = CONFIG.titulo;
+  $("hint").textContent = CONFIG.pista;
+
+  // Mensaje palabra por palabra
+  const msg = $("mensaje");
+  msg.setAttribute("aria-label", CONFIG.mensaje);
+  CONFIG.mensaje.split(/\s+/).filter(Boolean).forEach((p, i, arr) => {
+    const s = document.createElement("span");
+    s.className = "w";
+    s.style.setProperty("--i", i);
+    s.setAttribute("aria-hidden", "true");
+    s.textContent = p;
+    msg.appendChild(s);
+    if (i < arr.length - 1) msg.appendChild(document.createTextNode(" "));
+  });
+
+  // ---------- Dibujo de flores ----------
+  function el(tag, attrs = {}){
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+
+  // Oscurece/aclara un color hex
+  function tono(hex, f){
+    const n = parseInt(hex.slice(1), 16);
+    const c = [n >> 16, (n >> 8) & 255, n & 255].map(v =>
+      Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f));
+    return "#" + c.map(v => v.toString(16).padStart(2, "0")).join("");
+  }
+
+  // Cabeza de flor centrada en (0,0) con radio r
+  function cabeza(tipo, color, r){
+    const g = el("g");
+    const borde = tono(color, -.25);
+    if (tipo === "margarita"){
+      for (let i = 0; i < 14; i++){
+        g.appendChild(el("ellipse", {cx:0, cy:-r*.55, rx:r*.16, ry:r*.5, fill:color, stroke:borde, "stroke-width":.6, transform:`rotate(${i*360/14})`}));
+      }
+      g.appendChild(el("circle", {r:r*.28, fill:"#ffd166"}));
+      g.appendChild(el("circle", {r:r*.16, fill:"#f4a259"}));
+    } else if (tipo === "tulipan"){
+      g.appendChild(el("ellipse", {cx:-r*.32, cy:0, rx:r*.38, ry:r*.72, fill:borde, transform:"rotate(-16)"}));
+      g.appendChild(el("ellipse", {cx: r*.32, cy:0, rx:r*.38, ry:r*.72, fill:borde, transform:"rotate(16)"}));
+      g.appendChild(el("ellipse", {cx:0, cy:r*.05, rx:r*.42, ry:r*.75, fill:color}));
+      g.appendChild(el("ellipse", {cx:-r*.12, cy:-r*.2, rx:r*.1, ry:r*.32, fill:tono(color, .35), opacity:.7}));
+    } else if (tipo === "rosa"){
+      g.appendChild(el("circle", {r:r, fill:borde}));
+      g.appendChild(el("circle", {r:r*.82, fill:color}));
+      g.appendChild(el("path", {d:`M0 0 m${-r*.15} 0 a${r*.15} ${r*.15} 0 1 1 ${r*.3} 0 a${r*.32} ${r*.32} 0 1 1 ${-r*.62} ${r*.05} a${r*.5} ${r*.5} 0 1 1 ${r*.95} ${-r*.1} a${r*.68} ${r*.68} 0 1 1 ${-r*1.3} ${r*.2}`, fill:"none", stroke:tono(color, -.35), "stroke-width":r*.08, "stroke-linecap":"round"}));
+    } else {
+      const n = 6;
+      for (let i = 0; i < n; i++){
+        g.appendChild(el("ellipse", {cx:0, cy:-r*.52, rx:r*.38, ry:r*.55, fill:color, stroke:borde, "stroke-width":.8, transform:`rotate(${i*360/n})`}));
+      }
+      g.appendChild(el("circle", {r:r*.3, fill:"#ffd166"}));
+      for (let i = 0; i < 6; i++){
+        const a = i * Math.PI / 3;
+        g.appendChild(el("circle", {cx:Math.cos(a)*r*.14, cy:Math.sin(a)*r*.14, r:r*.04, fill:"#c9772f"}));
+      }
+    }
+    return g;
+  }
+
+  const TIPOS = ["margarita", "tulipan", "rosa", "flor"];
+
+  // Flor completa: tallo desde (x0,y0) hasta la cabeza en (x,y)
+  function flor(svg, {x0, y0, x, y, tipo, color, r, delay = 0, tocable = false}){
+    const d = `${delay}s`;
+    const cx = (x0 + x) / 2 + azar(-18, 18);
+    const tallo = el("path", {class:"stem", d:`M${x0} ${y0} Q${cx} ${(y0 + y) / 2} ${x} ${y + r * .4}`, pathLength:1});
+    tallo.style.setProperty("--d", d);
+    svg.appendChild(tallo);
+
+    const ly = y0 - (y0 - y) * azar(.35, .55);
+    const lx = x0 + (x - x0) * ((y0 - ly) / (y0 - y));
+    const lado = Math.random() < .5 ? 1 : -1;
+    const hoja = el("ellipse", {class:"leaf", cx:lx + lado * r * .45, cy:ly, rx:r * .5, ry:r * .18, transform:`rotate(${lado * -30} ${lx} ${ly})`});
+    hoja.style.setProperty("--d", d);
+    svg.appendChild(hoja);
+
+    const pos = el("g", {transform:`translate(${x} ${y})`});
+    const h = cabeza(tipo, color, r);
+    h.classList.add("head");
+    h.style.setProperty("--d", d);
+    pos.appendChild(h);
+    svg.appendChild(pos);
+
+    if (tocable){
+      h.classList.add("tappable");
+      h.addEventListener("click", (e) => {
+        e.stopPropagation();
+        h.classList.remove("wiggle");
+        void h.getBBox();
+        h.classList.add("wiggle");
+        const b = h.getBoundingClientRect();
+        petalos(b.left + b.width / 2, b.top + b.height / 2, color);
+        contar();
+      });
+    }
+  }
+
+  // ---------- Ramo ----------
+  function armarRamo(){
+    const svg = $("bouquet");
+    const base = {x:160, y:300};
+    const posiciones = [
+      [160, 70, 30], [104, 96, 26], [216, 96, 26], [62, 140, 22], [258, 140, 22],
+      [130, 128, 24], [192, 130, 24], [160, 168, 22], [92, 176, 18], [228, 176, 18]
+    ];
+    posiciones.forEach(([x, y, r], i) => {
+      flor(svg, {x0:base.x + azar(-6, 6), y0:base.y, x, y, r,
+        tipo: TIPOS[i % TIPOS.length],
+        color: CONFIG.colores[i % CONFIG.colores.length],
+        delay: .1 + i * .18,
+        tocable: true});
+    });
+
+    // Papel del ramo y moño (por delante de los tallos)
+    const papel = el("g", {class:"wrap-paper"});
+    const defs = el("defs");
+    const grad = el("linearGradient", {id:"papel", x1:0, y1:0, x2:0, y2:1});
+    grad.appendChild(el("stop", {offset:"0", "stop-color":"#3a2632"}));
+    grad.appendChild(el("stop", {offset:"1", "stop-color":"#1c1418"}));
+    defs.appendChild(grad);
+    svg.prepend(defs);
+    papel.appendChild(el("path", {d:"M88 222 L232 222 L182 326 L138 326 Z", fill:"url(#papel)", stroke:"rgba(255,126,182,.45)", "stroke-width":1.2}));
+    papel.appendChild(el("path", {d:"M88 222 L160 250 L232 222", fill:"none", stroke:"rgba(255,126,182,.35)", "stroke-width":1}));
+    papel.appendChild(el("ellipse", {cx:146, cy:276, rx:14, ry:8, fill:"#ff4d6d", transform:"rotate(-25 146 276)"}));
+    papel.appendChild(el("ellipse", {cx:174, cy:276, rx:14, ry:8, fill:"#ff4d6d", transform:"rotate(25 174 276)"}));
+    papel.appendChild(el("path", {d:"M156 280 L146 304 M164 280 L176 302", stroke:"#ff4d6d", "stroke-width":4, "stroke-linecap":"round"}));
+    papel.appendChild(el("circle", {cx:160, cy:278, r:5, fill:"#d63a5a"}));
+    // El papel va antes de las cabezas para que las flores queden encima
+    const primeraCabeza = svg.querySelector("g[transform]");
+    svg.insertBefore(papel, primeraCabeza);
+  }
+
+  // ---------- Interacción: tocar y que florezca ----------
+  const canvas = $("canvas");
+  let total = 0;
+  const vivas = [];
+
+  function contar(){
+    total++;
+    const c = $("count");
+    c.textContent = "🌸 " + total;
+    c.classList.add("show");
+  }
+
+  function petalos(px, py, color){
+    const c = canvas.getBoundingClientRect();
+    for (let i = 0; i < 10; i++){
+      const p = document.createElement("span");
+      p.className = "petal-burst";
+      p.style.background = i % 2 ? color : tono(color, .3);
+      p.style.left = (px - c.left) + "px";
+      p.style.top = (py - c.top) + "px";
+      const a = azar(0, Math.PI * 2), dist = azar(30, 80);
+      p.style.setProperty("--x", Math.cos(a) * dist + "px");
+      p.style.setProperty("--y", Math.sin(a) * dist + 30 + "px");
+      canvas.appendChild(p);
+      p.addEventListener("animationend", () => p.remove());
+    }
+  }
+
+  function brotar(px, py){
+    const c = canvas.getBoundingClientRect();
+    const x = px - c.left, y = py - c.top;
+    const r = azar(14, 22);
+    const w = r * 4, h = r * 6;
+    const svg = el("svg", {class:"sprout", width:w, height:h, viewBox:`${-w/2} ${-r*2} ${w} ${h}`});
+    svg.style.left = (x - w / 2) + "px";
+    svg.style.top = (y - r * 2) + "px";
+    const color = elegir(CONFIG.colores);
+    flor(svg, {x0:azar(-6, 6), y0:h - r * 2.2, x:0, y:0, r, tipo:elegir(TIPOS), color});
+    canvas.appendChild(svg);
+    petalos(px, py, color);
+    vivas.push(svg);
+    if (vivas.length > 120) vivas.shift().remove();
+    contar();
+  }
+
+  // ---------- Pétalos que caen de fondo ----------
+  function lluvia(){
+    const f = $("falling");
+    for (let i = 0; i < 16; i++){
+      const p = document.createElement("i");
+      p.style.left = azar(0, 100) + "%";
+      p.style.background = elegir(CONFIG.colores);
+      p.style.setProperty("--dur", azar(7, 13).toFixed(1) + "s");
+      p.style.setProperty("--delay", azar(-12, 0).toFixed(1) + "s");
+      p.style.setProperty("--drift", azar(-60, 60).toFixed(0) + "px");
+      f.appendChild(p);
+    }
+  }
+
+  // ---------- Abrir la carta ----------
+  const envelope = $("envelope");
+  function abrir(){
+    if (envelope.classList.contains("open")) return;
+    envelope.classList.add("open");
+    setTimeout(() => {
+      $("wrap").hidden = true;
+      const bw = $("bouquetWrap");
+      bw.hidden = false;
+      armarRamo();
+      requestAnimationFrame(() => bw.classList.add("show"));
+      canvas.classList.add("garden");
+      canvas.addEventListener("click", (e) => brotar(e.clientX, e.clientY));
+    }, reduce ? 150 : 1150);
+  }
+  envelope.addEventListener("click", abrir);
+  lluvia();
+</script>
+</body>
+</html>
