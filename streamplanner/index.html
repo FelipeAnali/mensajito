@@ -1872,12 +1872,27 @@ $('tab-inicio').addEventListener('click', e => {
 // La portada se actualiza sola (cuenta regresiva y estado del turno)
 setInterval(() => { if (!$('tab-inicio').hidden) renderInicio(); }, 30000);
 
-const quedoPendiente = hayPendiente() || ghMigrado;
+/**
+ * Enlace de configuración: …/streamplanner/#token=github_pat_…&vence=AAAA-MM-DD
+ * Guarda el token en este celular y lo borra de la barra de direcciones.
+ * Va después del "#", así que nunca llega a GitHub Pages ni queda en el repo.
+ */
+let tokenDeEnlace = false;
+(function leerEnlaceConfig() {
+  const q = new URLSearchParams(location.hash.slice(1)), t = (q.get('token') || '').trim(), v = q.get('vence') || '';
+  if (!t) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  if (!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(t)) { toast('El enlace no trae un token válido'); return; }
+  guardarToken(t); tokenDeEnlace = true;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) guardarVence(v);
+})();
+const quedoPendiente = hayPendiente() || ghMigrado || tokenDeEnlace;
 guardarStore(); // deja guardada la migración, si la hubo
 if (!quedoPendiente) marcarPendiente(false); // abrir la app no cuenta como cambio
 render();
 // Si quedó algo sin subir (la app se cerró de golpe, no había internet o el calendario cambió de repo), se sube ahora
-if (quedoPendiente) subirPendiente();
+if (tokenDeEnlace) { marcarPendiente(true); subirCalendario(true); }
+else if (quedoPendiente) subirPendiente();
 </script>
 
 </body>
