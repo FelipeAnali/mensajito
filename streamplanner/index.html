@@ -1,0 +1,1704 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="StreamPlanner">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<!-- Base equivalente a la del visor de Claude: márgenes del notch y sin margen del navegador -->
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>StreamPlanner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F2F2F7">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
+<meta name="color-scheme" content="light dark">
+<style>
+/* =====================================================================
+   StreamPlanner v2 — planificador + registro real + estadísticas
+   Layout: una columna tipo app de iPhone (máx. 560px). Título grande,
+   listas agrupadas "inset", hojas inferiores para editar y barra de
+   pestañas fija abajo. Todo el color sale de los tokens de :root.
+   ===================================================================== */
+:root{
+  /* Colores del sistema iOS — modo claro */
+  --bg:#F2F2F7;              /* fondo agrupado */
+  --card:#FFFFFF;            /* celdas y tarjetas */
+  --fill:#E9E9EF;            /* fondo de controles */
+  --fill2:#DCDCE3;           /* control presionado */
+  --label:#000000;           /* texto principal */
+  --label2:rgba(60,60,67,.64);  /* texto secundario */
+  --label3:rgba(60,60,67,.34);  /* texto terciario */
+  --sep:rgba(60,60,67,.18);  /* separadores */
+  --tint:#5856D6;            /* acento (índigo iOS) */
+  --tint-soft:rgba(88,86,214,.12);
+  --on-tint:#FFFFFF;
+  --red:#FF3B30;   --red-soft:rgba(255,59,48,.12);
+  --green:#248A3D; --green-soft:rgba(52,199,89,.16); --green-mark:#34C759;
+  --orange:#C93400;--orange-soft:rgba(255,149,0,.16);
+  --bar:rgba(249,249,251,.86);  /* barras translúcidas */
+  --scrim:rgba(0,0,0,.32);
+  --hero:#121218;            /* tarjeta "Hoy" de la portada (oscura en ambos temas) */
+  --hero-line:rgba(255,255,255,.08);
+  --hero-ink:#FFFFFF; --hero-ink2:rgba(255,255,255,.66);
+  --live:#FF3B30;
+  --shadow:0 -6px 30px rgba(0,0,0,.12);
+  /* Tipografía del sistema (SF Pro en iPhone/Mac) */
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  /* Curvas de movimiento */
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-drawer:cubic-bezier(.32,.72,0,1);
+  --gutter:max(16px,env(safe-area-inset-left,0px));
+  --gutter-r:max(16px,env(safe-area-inset-right,0px));
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#000000; --card:#1C1C1E; --fill:#2C2C2E; --fill2:#3A3A3C;
+    --label:#FFFFFF; --label2:rgba(235,235,245,.64); --label3:rgba(235,235,245,.32);
+    --sep:rgba(84,84,88,.6); --tint:#7D7AFF; --tint-soft:rgba(125,122,255,.2); --on-tint:#FFFFFF;
+    --red:#FF6961; --red-soft:rgba(255,69,58,.2); --green:#30D158; --green-soft:rgba(48,209,88,.2); --green-mark:#30D158;
+    --orange:#FFB340; --orange-soft:rgba(255,159,10,.2); --bar:rgba(22,22,24,.86);
+    --scrim:rgba(0,0,0,.55); --shadow:0 -6px 30px rgba(0,0,0,.6); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#000000; --card:#1C1C1E; --fill:#2C2C2E; --fill2:#3A3A3C;
+  --label:#FFFFFF; --label2:rgba(235,235,245,.64); --label3:rgba(235,235,245,.32);
+  --sep:rgba(84,84,88,.6); --tint:#7D7AFF; --tint-soft:rgba(125,122,255,.2); --on-tint:#FFFFFF;
+  --red:#FF6961; --red-soft:rgba(255,69,58,.2); --green:#30D158; --green-soft:rgba(48,209,88,.2); --green-mark:#30D158;
+  --orange:#FFB340; --orange-soft:rgba(255,159,10,.2); --bar:rgba(22,22,24,.86);
+  --scrim:rgba(0,0,0,.55); --shadow:0 -6px 30px rgba(0,0,0,.6); color-scheme:dark;
+}
+
+/* ---------- Base (el box-sizing evita que los controles se salgan) ---------- */
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+body{background:var(--bg);color:var(--label);font-family:var(--font);font-size:17px;line-height:1.3;
+  padding-left:var(--gutter);padding-right:var(--gutter-r);
+  padding-block:0 calc(100px + env(safe-area-inset-bottom,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bar)}
+button,[role="button"]{font:inherit;color:inherit;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+input,textarea,select{font-family:var(--font);font-size:17px;color:var(--label)}
+.num{font-variant-numeric:tabular-nums}
+.app{max-width:560px;margin:0 auto}
+:focus-visible{outline:2px solid var(--tint);outline-offset:2px;border-radius:8px}
+b{font-weight:600}
+
+/* ---------- Barra superior (navegación de semanas) ---------- */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;
+  margin-left:calc(-1 * var(--gutter));margin-right:calc(-1 * var(--gutter-r));padding:8px var(--gutter-r) 8px var(--gutter);
+  background:var(--bar);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--sep)}
+.nav .week{font-size:15px;font-weight:600;text-align:center;line-height:1.2}
+.nav .week small{display:block;font-size:12px;font-weight:400;color:var(--label2)}
+.nav .week button{border:0;background:none;padding:2px 8px;border-radius:8px;cursor:pointer}
+.iconbtn{background:none;border:0;color:var(--tint);font-size:17px;min-height:36px;padding:6px 4px;display:inline-flex;align-items:center;justify-content:center;gap:2px;cursor:pointer;border-radius:8px;transition:opacity 120ms}
+.iconbtn:active{opacity:.4}
+.iconbtn svg{width:22px;height:22px}
+.iconbtn:disabled{opacity:.3}
+
+/* ---------- Título grande ---------- */
+.large{padding-top:14px}
+.large h1{font-size:34px;font-weight:700;letter-spacing:.3px;margin:0;line-height:1.15;text-wrap:balance}
+.large p{margin:4px 0 0;color:var(--label2);font-size:15px}
+
+/* ---------- Secciones y celdas agrupadas ---------- */
+.section{margin-top:24px}
+.section-h{font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--label2);padding:0 16px 7px}
+.section-f{font-size:13px;color:var(--label2);padding:7px 16px 0;line-height:1.45}
+.group{background:var(--card);border-radius:12px;overflow:hidden}
+.cell{display:flex;align-items:center;gap:12px;padding:11px 16px;min-height:48px;position:relative;width:100%;background:none;border:0;text-align:left}
+.cell + .cell::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--sep)}
+.cell.tap{cursor:pointer;transition:background 120ms}
+.cell.tap:active{background:var(--fill)}
+.grow{flex:1;min-width:0}
+.t{font-size:17px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.s{font-size:13px;color:var(--label2);margin-top:3px;line-height:1.35}
+.chev{color:var(--label3);width:8px;height:14px;flex:none}
+.val{flex:none;font-size:17px;color:var(--label2);text-align:right}
+
+/* ---------- Resumen con anillo ---------- */
+.summary{display:grid;grid-template-columns:104px minmax(0,1fr);gap:16px;align-items:center;padding:16px}
+.ring{width:104px;height:104px;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:10;stroke-linecap:round}
+.ring .track{stroke:var(--fill)}
+.ring .prog{stroke:var(--tint);transition:stroke-dashoffset 600ms var(--ease-out)}
+.ring .real{stroke:var(--green-mark);transition:stroke-dashoffset 600ms var(--ease-out)}
+.ring .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .center b{font-size:24px;font-weight:700;letter-spacing:-.4px}
+.ring .center span{font-size:12px;color:var(--label2)}
+.kpis{display:flex;flex-direction:column;gap:12px;min-width:0}
+.kpi .k{font-size:12px;color:var(--label2);text-transform:uppercase;letter-spacing:.4px}
+.kpi .v{font-size:19px;font-weight:600;margin-top:1px}
+.meter{height:6px;border-radius:3px;background:var(--fill);overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;background:var(--green-mark);border-radius:3px;transition:width 600ms var(--ease-out)}
+.meter.tint i{background:var(--tint)}
+.pills{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 16px}
+.pill{font-size:13px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--tint-soft);color:var(--tint);white-space:nowrap}
+.pill.red{background:var(--red-soft);color:var(--red)}
+.pill.green{background:var(--green-soft);color:var(--green)}
+.pill.orange{background:var(--orange-soft);color:var(--orange)}
+.pill.gray{background:var(--fill);color:var(--label2)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--label2);padding:0 16px 14px}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
+
+/* ---------- Filas de día ---------- */
+.date{width:40px;flex:none;text-align:center}
+.date span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--label2);font-weight:600}
+.date b{display:block;font-size:22px;font-weight:600;line-height:1.1}
+.isred .date span,.isred .date b{color:var(--red)}
+.istoday .date b{color:var(--tint)}
+.hrs{text-align:right;flex:none;min-width:52px}
+.hrs b{font-size:17px;display:block}
+.hrs span{font-size:12px;color:var(--label2)}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 6px;border-radius:5px;line-height:1.3;white-space:nowrap}
+.tag.red{background:var(--red-soft);color:var(--red)}
+.tag.tint{background:var(--tint-soft);color:var(--tint)}
+.tag.orange{background:var(--orange-soft);color:var(--orange)}
+.tag.green{background:var(--green-soft);color:var(--green)}
+.tag.gray{background:var(--fill);color:var(--label2)}
+.rest .t{color:var(--label2)}
+
+/* ---------- Control segmentado ---------- */
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--fill);border-radius:9px;padding:2px;gap:2px}
+.seg button{border:0;background:none;padding:6px 8px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;line-height:1.25;transition:background 160ms var(--ease-out)}
+.seg button small{display:block;font-size:11px;color:var(--label2);font-weight:400}
+.seg button[aria-pressed="true"]{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.14);font-weight:600}
+.seg button:disabled{opacity:.35;cursor:not-allowed}
+.seg.pad{margin:4px 16px 14px}
+.seg.mini{flex:none;width:124px}
+.decision{padding:14px 16px 10px}
+.decision h3{margin:0 0 4px;font-size:17px}
+.decision p{margin:0;font-size:15px;color:var(--label2);line-height:1.45}
+
+/* ---------- Avisos ---------- */
+.alerts{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.alerts:empty{display:none}
+.alert{padding:11px 14px;border-radius:12px;background:var(--orange-soft);font-size:14px;line-height:1.45}
+.alert.red{background:var(--red-soft)}
+.alert.green{background:var(--green-soft)}
+
+/* ---------- Campos ---------- */
+.field{display:flex;align-items:center;gap:4px;background:var(--fill);border-radius:9px;padding:0 10px;flex:none;width:120px;min-height:36px}
+.field span{color:var(--label2);font-size:15px}
+.field input{border:0;background:none;width:100%;min-width:0;padding:7px 0;text-align:right;font-variant-numeric:tabular-nums;outline:none}
+.field:focus-within{box-shadow:0 0 0 2px var(--tint)}
+.field.time{width:132px;padding:0 6px}
+.field.time input{text-align:center}
+.field.wide{width:100%}
+.field.wide input{text-align:left}
+textarea.code{width:100%;min-height:110px;border:0;border-radius:12px;background:var(--card);padding:12px 14px;font:13px/1.45 var(--mono);resize:vertical;outline:none}
+textarea.code:focus{box-shadow:0 0 0 2px var(--tint)}
+
+/* ---------- Botones ---------- */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:12px;padding:14px;font-size:17px;font-weight:600;cursor:pointer;background:var(--tint);color:var(--on-tint);transition:transform 140ms var(--ease-out),opacity 140ms}
+.btn:active{transform:scale(.97)}
+.btn.plain{background:var(--tint-soft);color:var(--tint)}
+.btn.danger{background:var(--red-soft);color:var(--red)}
+.btn svg{width:20px;height:20px;flex:none}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stack{display:flex;flex-direction:column;gap:10px}
+.linkbtn{border:0;background:none;color:var(--tint);font-size:15px;padding:8px 0;cursor:pointer}
+pre.code{margin:0;padding:14px 16px;font:12px/1.5 var(--mono);color:var(--label2);max-height:240px;overflow:auto;white-space:pre}
+
+/* ---------- Estadísticas ---------- */
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{background:var(--card);border-radius:12px;padding:14px 16px}
+.tile .k{font-size:13px;color:var(--label2)}
+.tile .v{font-size:26px;font-weight:700;letter-spacing:-.4px;margin-top:4px}
+.tile .d{font-size:12px;color:var(--label2);margin-top:2px}
+.bars{padding:6px 16px 14px;display:flex;flex-direction:column;gap:12px}
+.barrow .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:15px}
+.barrow .top span:last-child{font-weight:600}
+.barrow .sub{font-size:12px;color:var(--label2);margin-top:2px}
+.barrow .track{height:10px;border-radius:5px;background:var(--fill);margin-top:6px;overflow:hidden}
+.barrow .track i{display:block;height:100%;border-radius:4px;background:var(--tint);transition:width 500ms var(--ease-out)}
+.cols{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-items:end;height:150px;padding:12px 16px 0}
+.col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.col i{display:block;width:100%;max-width:30px;border-radius:4px 4px 2px 2px;background:var(--tint);min-height:2px;transition:height 500ms var(--ease-out)}
+.col small{font-size:11px;color:var(--label2);white-space:nowrap}
+.col.best i{background:var(--green-mark)}
+.colnames{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:6px 16px 14px;font-size:12px;color:var(--label2);text-align:center}
+.empty{text-align:center;padding:36px 20px}
+.empty svg{width:44px;height:44px;color:var(--label3)}
+.empty h3{margin:10px 0 4px;font-size:19px}
+.empty p{margin:0 auto 16px;color:var(--label2);font-size:15px;max-width:30ch;line-height:1.45}
+.banner{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:12px;background:var(--orange-soft);font-size:14px;margin-top:12px}
+
+/* ---------- Hojas inferiores ---------- */
+.backdrop{position:fixed;inset:0;background:var(--scrim);opacity:0;visibility:hidden;transition:opacity 300ms var(--ease-out),visibility 0s 300ms;z-index:20}
+.backdrop.open{opacity:1;visibility:visible;transition:opacity 300ms var(--ease-out)}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-width:560px;margin:0 auto;background:var(--bg);border-radius:14px 14px 0 0;box-shadow:var(--shadow);
+  transform:translateY(100%);visibility:hidden;transition:transform 420ms var(--ease-drawer),visibility 0s 420ms;
+  padding:8px var(--gutter-r) calc(24px + env(safe-area-inset-bottom,0px)) var(--gutter);max-height:90dvh;overflow-y:auto;overscroll-behavior:contain}
+.sheet.open{transform:translateY(0);visibility:visible;transition:transform 420ms var(--ease-drawer)}
+.grabber{width:36px;height:5px;border-radius:3px;background:var(--label3);margin:0 auto 4px}
+.sheet-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:2px 0 4px}
+.sheet-head h2{font-size:17px;font-weight:600;margin:0;text-align:center}
+.sheet-head .iconbtn:last-child{justify-self:end;font-weight:600}
+.sheet-head .iconbtn:first-child{justify-self:start}
+.sheet .section{margin-top:16px}
+.stepper{display:flex;align-items:center;background:var(--fill);border-radius:9px;overflow:hidden;flex:none}
+.stepper button{border:0;background:none;width:40px;height:36px;font-size:22px;line-height:1;cursor:pointer}
+.stepper button:active{background:var(--fill2)}
+.stepper button:disabled,.field input:disabled{opacity:.35;cursor:not-allowed}
+.stepper output{min-width:58px;text-align:center;font-weight:600;font-size:16px;font-variant-numeric:tabular-nums}
+.timeline{padding:4px 16px}
+.tl{display:grid;grid-template-columns:78px minmax(0,1fr);gap:10px;padding:9px 0;font-size:15px;border-bottom:.5px solid var(--sep)}
+.tl:last-child{border-bottom:0}
+.tl time{color:var(--label2);font-variant-numeric:tabular-nums}
+.calc{display:flex;justify-content:space-between;align-items:baseline;padding:14px 16px}
+.calc b{font-size:22px}
+
+/* ---------- Alerta de confirmación (estilo iOS) ---------- */
+.dialog{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:24px;background:var(--scrim);opacity:0;visibility:hidden;transition:opacity 200ms var(--ease-out),visibility 0s 200ms}
+.dialog.open{opacity:1;visibility:visible;transition:opacity 200ms var(--ease-out)}
+.dialog .box{width:min(290px,100%);background:var(--card);border-radius:14px;overflow:hidden;text-align:center;transform:scale(.96);transition:transform 200ms var(--ease-out)}
+.dialog.open .box{transform:scale(1)}
+.dialog h3{margin:18px 16px 4px;font-size:17px}
+.dialog p{margin:0 16px 16px;font-size:13px;color:var(--label2);line-height:1.4}
+.dialog .acts{display:grid;grid-template-columns:1fr 1fr;border-top:.5px solid var(--sep)}
+.dialog .acts button{border:0;background:none;padding:12px;font-size:17px;color:var(--tint);cursor:pointer}
+.dialog .acts button+button{border-left:.5px solid var(--sep);color:var(--red);font-weight:600}
+.dialog .acts button:active{background:var(--fill)}
+
+/* ---------- Barra de pestañas ---------- */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--bar);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-top:.5px solid var(--sep);padding:6px var(--gutter-r) calc(6px + env(safe-area-inset-bottom,0px)) var(--gutter)}
+.tabbar .in{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));max-width:560px;margin:0 auto}
+.tab{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:500;color:var(--label3);padding:3px 0;cursor:pointer}
+.tab svg{width:26px;height:26px}
+.tab[aria-selected="true"]{color:var(--tint)}
+
+/* ---------- Toast ---------- */
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);opacity:0;z-index:45;
+  background:var(--label);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;transition:opacity 220ms var(--ease-out),transform 220ms var(--ease-out);pointer-events:none;width:max-content;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- Portada de inicio ---------- */
+.home{display:flex;flex-direction:column;gap:14px}
+.home .large{padding-top:18px}
+.date-l{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--label2)}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand .logo{width:40px;height:40px;border-radius:11px;background:var(--hero);display:grid;place-items:center;flex:none;border:.5px solid var(--sep)}
+.brand .logo svg{width:22px;height:22px}
+.hero{position:relative;overflow:hidden;background:var(--hero);color:var(--hero-ink);border-radius:22px;padding:20px;border:.5px solid var(--hero-line)}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(110% 70% at 100% 0%,rgba(255,59,48,.28),transparent 62%);pointer-events:none}
+.hero > *{position:relative}
+.chip{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:5px 10px 5px 8px;border-radius:999px;background:rgba(255,255,255,.1)}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--hero-ink2)}
+.chip.live i{background:var(--live);animation:pulse 1.5s ease-out infinite}
+.chip.on i{background:var(--live)}
+.chip.ok i{background:#30D158}
+.hero .range{font-size:32px;font-weight:700;letter-spacing:-.5px;margin-top:14px;line-height:1.1;font-variant-numeric:tabular-nums;text-wrap:balance}
+.hero .meta{font-size:15px;color:var(--hero-ink2);margin-top:6px;line-height:1.4}
+.hero .foot{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:18px;flex-wrap:wrap}
+.hero .foot .k{font-size:12px;color:var(--hero-ink2);text-transform:uppercase;letter-spacing:.5px}
+.hero .foot b{display:block;font-size:22px;font-variant-numeric:tabular-nums;margin-top:2px}
+.hero .prog{height:4px;border-radius:2px;background:rgba(255,255,255,.14);margin-top:16px;overflow:hidden}
+.hero .prog i{display:block;height:100%;background:var(--live);border-radius:2px}
+.btn.light{width:auto;background:var(--hero-ink);color:#000;padding:11px 18px;font-size:15px;border-radius:999px}
+.strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;padding:12px 10px}
+.sd{display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:none;padding:4px 0;border-radius:10px;cursor:pointer;min-width:0}
+.sd span{font-size:11px;font-weight:600;color:var(--label2)}
+.sd b{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:600;background:var(--fill);font-variant-numeric:tabular-nums}
+.sd small{font-size:11px;color:var(--label2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sd.done b{background:var(--green-mark);color:#fff}
+.sd.miss b{background:var(--red);color:#fff}
+.sd.rest b{background:none;color:var(--label3);box-shadow:inset 0 0 0 1.5px var(--sep)}
+.sd.today b{outline:2px solid var(--tint);outline-offset:2px}
+.sd.red span{color:var(--red)}
+.mini2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.qicon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff;flex:none}
+.qicon svg{width:18px;height:18px}
+.urlbox{font:12px/1.45 var(--mono);word-break:break-all;color:var(--label2);padding:12px 16px;user-select:all;-webkit-user-select:all}
+a.btn{text-decoration:none}
+details.manual{margin-top:14px}
+details.manual summary{cursor:pointer;color:var(--tint);font-size:15px;padding:6px 16px;list-style:none}
+details.manual summary::-webkit-details-marker{display:none}
+details.manual summary::before{content:"›";display:inline-block;margin-right:8px;transition:transform 160ms var(--ease-out)}
+details.manual[open] summary::before{transform:rotate(90deg)}
+.btn:disabled{opacity:.5;cursor:default}
+#calSec,#subSec{scroll-margin-top:calc(70px + env(safe-area-inset-top,0px))}
+ol.steps{margin:0;padding:12px 16px 14px 34px;font-size:15px;line-height:1.5}
+ol.steps li+li{margin-top:6px}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,59,48,.7)}100%{box-shadow:0 0 0 9px rgba(255,59,48,0)}}
+@keyframes rise{from{transform:translateY(10px)}to{transform:none}}
+.home > *{animation:rise 460ms var(--ease-out) both}
+.home > *:nth-child(2){animation-delay:40ms}.home > *:nth-child(3){animation-delay:80ms}
+.home > *:nth-child(4){animation-delay:120ms}.home > *:nth-child(5){animation-delay:160ms}.home > *:nth-child(6){animation-delay:200ms}
+
+@media (hover:hover) and (pointer:fine){
+  .cell.tap:hover{background:var(--fill)}
+  .iconbtn:hover{opacity:.7}
+}
+@media (max-width:370px){ .seg.mini{width:108px} .field{width:104px} .field.time{width:118px} }
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:0ms!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Barra superior: cambia la semana que se ve en todas las pestañas -->
+  <nav class="nav" id="weekNav" aria-label="Semana" hidden>
+    <button class="iconbtn" id="prevWeek" aria-label="Semana anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="week"><button id="weekLabel" aria-label="Ir a la semana actual">—</button></div>
+    <button class="iconbtn" id="nextWeek" aria-label="Semana siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+  </nav>
+
+  <!-- ===================== PESTAÑA: SEMANA (plan) ===================== -->
+  <!-- ===================== PESTAÑA: INICIO (portada) ===================== -->
+  <main id="tab-inicio" class="home">
+    <header class="large brand">
+      <div><div class="date-l" id="homeDate">—</div><h1 id="homeHello">Hola</h1></div>
+      <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.5" fill="#FF3B30" stroke="none"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4"/><path d="M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14" stroke-opacity=".55"/></svg></div>
+    </header>
+    <section class="hero" id="homeHero" aria-live="polite"></section>
+    <section class="group"><div class="strip" id="homeStrip"></div></section>
+    <div class="mini2" id="homeTiles"></div>
+    <div class="alerts" id="homeAlerts" style="margin-top:0"></div>
+    <section class="group" id="homeLinks">
+      <button class="cell tap" data-go="hoy"><span class="qicon" style="background:#34C759"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><div class="grow"><div class="t">Registrar el día de hoy</div></div><svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l6 6-6 6"/></svg></button>
+      <button class="cell tap" data-go="semana"><span class="qicon" style="background:#5856D6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18"/></svg></span><div class="grow"><div class="t">Plan de la semana</div></div><svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l6 6-6 6"/></svg></button>
+      <button class="cell tap" data-go="stats"><span class="qicon" style="background:#FF9500"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7"/></svg></span><div class="grow"><div class="t">Estadísticas</div></div><svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l6 6-6 6"/></svg></button>
+      <button class="cell tap" data-go="calendario"><span class="qicon" style="background:#FF3B30"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><div class="grow"><div class="t">Calendario y alarmas del iPhone</div></div><svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l6 6-6 6"/></svg></button>
+    </section>
+  </main>
+
+  <main id="tab-semana" hidden>
+    <header class="large"><h1>Mi semana</h1><p id="subtitle">—</p></header>
+
+    <section class="section">
+      <div class="group">
+        <div class="summary">
+          <div class="ring" aria-hidden="true">
+            <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52"/><circle class="prog" id="ringPlan" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"/></svg>
+            <div class="center"><b class="num" id="ringHours">0</b><span id="ringTarget">de 42 h</span></div>
+          </div>
+          <div class="kpis">
+            <div class="kpi"><div class="k">Caja de la semana</div><div class="v num" id="kpiCash">$0</div><div class="meter"><i id="cashBar" style="width:0%"></i></div></div>
+            <div class="kpi"><div class="k">Horas reales</div><div class="v num" id="kpiReal">0 h</div><div class="meter tint"><i id="realBar" style="width:0%"></i></div></div>
+          </div>
+        </div>
+        <div class="pills" id="pills"></div>
+      </div>
+      <div class="alerts" id="alerts"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-h">Plan día por día</div>
+      <div class="group" id="dayList"></div>
+      <div class="section-f">Toca un día para cambiar sus horas o su hora de inicio. Lo que falte se pasa a viernes, sábado y domingo sin pasar del recomendado; si no alcanza, se usan jornadas largas hasta el máximo permitido, con alerta.</div>
+    </section>
+
+    <section class="section">
+      <div class="section-h">Punto de decisión del viernes</div>
+      <div class="group">
+        <div class="decision"><h3 id="decTitle">—</h3><p id="decText">—</p></div>
+        <div class="seg pad" role="group" aria-label="Fin de semana en Modo Libertad">
+          <button id="opt1" aria-pressed="true">Opción 1<small id="opt1s">Sáb 7 h · Dom libre</small></button>
+          <button id="opt2" aria-pressed="false">Opción 2<small id="opt2s">Sáb y Dom 3,5 h</small></button>
+        </div>
+      </div>
+      <div class="section-f">Las opciones aplican cuando la caja llega a la meta. Si el domingo es día rojo, la Opción 1 se bloquea.</div>
+    </section>
+
+    <section class="section" id="calSec">
+      <div class="section-h">Calendario del iPhone</div>
+      <div class="group">
+        <div class="cell"><span class="qicon" id="syncIcon" style="background:var(--label3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg></span>
+          <div class="grow"><div class="t">GitHub</div><div class="s" id="syncTxt">Sin conectar</div></div></div>
+        <div class="cell"><div class="grow"><div class="t">Eventos</div><div class="s" id="icsInfo">—</div></div><b class="num" id="icsCount">0</b></div>
+        <div class="cell"><div class="grow"><div class="t">Incluir</div></div>
+          <div class="seg mini" role="group" aria-label="Semanas a incluir"><button data-icsw="1" aria-pressed="true">Esta</button><button data-icsw="2" aria-pressed="false">+ Próxima</button></div></div>
+      </div>
+      <div class="stack" style="margin-top:10px">
+        <button class="btn" id="btnSyncNow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>Subir a GitHub ahora</button>
+      </div>
+      <div class="section-f" id="syncHelp">Con la conexión activa, cada cambio que hagas sube solo el calendario a GitHub y tu iPhone lo actualiza. Se conecta en Ajustes → Conexión con GitHub.</div>
+      <details class="manual">
+        <summary>Hacerlo a mano (sin conexión)</summary>
+        <div class="stack" style="margin-top:10px">
+          <button class="btn plain" id="btnCopy">1 · Copiar calendario</button>
+          <a class="btn plain" id="lnkEdit" href="#" target="_blank" rel="noopener">2 · Pegarlo en GitHub</a>
+        </div>
+        <div class="section-f">En GitHub borra todo el texto del archivo, pega y toca <b>Commit changes</b>.</div>
+      </details>
+    </section>
+
+    <section class="section">
+      <div class="section-h">Alarmas para la app Reloj</div>
+      <div class="group" id="clockList"></div>
+      <div class="section-f">Las alertas del Calendario no suenan con el iPhone en silencio o en Concentración. Crea estas alarmas en Reloj para despertarte seguro.</div>
+    </section>
+  </main>
+
+  <!-- ===================== PESTAÑA: REGISTRO (real) ===================== -->
+  <main id="tab-registro" hidden>
+    <header class="large"><h1>Registro</h1><p>Anota lo que hiciste al terminar cada turno</p></header>
+    <section class="section">
+      <div class="group">
+        <div class="cell"><div class="grow"><div class="t">Horas reales</div><div class="meter tint"><i id="regHoursBar" style="width:0%"></i></div></div><b class="num" id="regHours">0 / 42 h</b></div>
+        <div class="cell"><div class="grow"><div class="t">Caja</div><div class="meter"><i id="regCashBar" style="width:0%"></i></div></div><b class="num" id="regCash">$0 / $600</b></div>
+        <div class="cell"><div class="grow"><div class="t">Te falta</div></div><span class="val num" id="regMissing">—</span></div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="section-h">Días de la semana</div>
+      <div class="group" id="regList"></div>
+      <div class="section-f">Las horas reales se cuentan desde que inicias hasta que terminas, menos la pausa. Si un día te quedó corto, el plan de los días siguientes se ajusta solo.</div>
+    </section>
+  </main>
+
+  <!-- ===================== PESTAÑA: ESTADÍSTICAS ===================== -->
+  <main id="tab-stats" hidden>
+    <header class="large"><h1>Estadísticas</h1><p id="statsSub">Según tus registros reales</p></header>
+    <div class="seg" role="group" aria-label="Periodo" style="margin-top:14px">
+      <button data-rango="sem" aria-pressed="false">Esta semana</button>
+      <button data-rango="4s" aria-pressed="true">4 semanas</button>
+      <button data-rango="todo" aria-pressed="false">Todo</button>
+    </div>
+    <div id="statsBody"></div>
+  </main>
+
+  <!-- ===================== PESTAÑA: AJUSTES ===================== -->
+  <main id="tab-ajustes" hidden>
+    <header class="large"><h1>Ajustes</h1><p>Metas, horarios y reglas a tu medida</p></header>
+
+    <section class="section">
+      <div class="section-h">Metas</div>
+      <div class="group">
+        <div class="cell"><div class="grow"><div class="t">Meta semanal</div><div class="s">Dinero para el Modo Libertad</div></div><label class="field"><span>$</span><input id="cfg-metaUSD" data-cfg="metaUSD" inputmode="decimal" autocomplete="off"></label></div>
+        <div class="cell"><div class="grow"><div class="t">Horas si cumples la meta</div><div class="s">Ruta A</div></div><label class="field"><input id="cfg-horasCumple" data-cfg="horasCumple" inputmode="decimal" autocomplete="off"><span>h</span></label></div>
+        <div class="cell"><div class="grow"><div class="t">Horas si no la cumples</div><div class="s">Ruta B · evita el descuento</div></div><label class="field"><input id="cfg-horasNoCumple" data-cfg="horasNoCumple" inputmode="decimal" autocomplete="off"><span>h</span></label></div>
+        <div class="cell"><div class="grow"><div class="t">Recomendado por día</div><div class="s">Si un día se pasa, sale alerta</div></div><label class="field"><input id="cfg-maxDia" data-cfg="maxDia" inputmode="decimal" autocomplete="off"><span>h</span></label></div>
+        <div class="cell"><div class="grow"><div class="t">Máximo permitido por día</div><div class="s">Tope de una jornada larga</div></div><label class="field"><input id="cfg-maxPermitido" data-cfg="maxPermitido" inputmode="decimal" autocomplete="off"><span>h</span></label></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-h">Plan base de lunes a viernes</div>
+      <div class="group" id="cfgDays"></div>
+      <div class="section-f">Pon 0 h en el día que quieras descansar. Mañana y Tarde usan los horarios de la sección Franjas.</div>
+    </section>
+
+    <section class="section">
+      <div class="section-h">Fin de semana</div>
+      <div class="group" id="cfgWeekend"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-h">Franjas y logística</div>
+      <div class="group" id="cfgTurnos"></div>
+      <div class="section-f">El despertador, el Didi y la llegada se mueven junto con la hora de inicio cuando cambias el inicio de un día.</div>
+    </section>
+
+    <section class="section">
+      <div class="section-h">Pausa activa</div>
+      <div class="group">
+        <div class="cell"><div class="grow"><div class="t">Duración</div></div><label class="field"><input id="cfg-pausaMin" data-cfg="pausaMin" inputmode="numeric" autocomplete="off"><span>min</span></label></div>
+        <div class="cell"><div class="grow"><div class="t">Solo en turnos desde</div><div class="s">Los turnos cortos van sin pausa</div></div><label class="field"><input id="cfg-pausaDesde" data-cfg="pausaDesde" inputmode="decimal" autocomplete="off"><span>h</span></label></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-h">Días rojos (quincena)</div>
+      <div class="group">
+        <div class="cell"><label class="field wide"><input id="cfg-diasRojos" data-cfg="diasRojos" inputmode="numeric" autocomplete="off" placeholder="1, 2, 14, 15, 16, 30, 31" aria-label="Días rojos del mes"></label></div>
+      </div>
+      <div class="section-f">Días del mes separados por coma. En estos días no se descansa; si cae lunes, el descanso pasa al miércoles o al jueves.</div>
+    </section>
+
+    <section class="section" id="subSec">
+      <div class="section-h">Conexión con GitHub</div>
+      <div class="group">
+        <div class="cell"><div class="grow"><div class="t">Usuario</div></div><label class="field" style="width:190px"><input id="gh-owner" data-path="gh.owner" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" style="text-align:right"></label></div>
+        <div class="cell"><div class="grow"><div class="t">Repositorio</div></div><label class="field" style="width:190px"><input id="gh-repo" data-path="gh.repo" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" style="text-align:right"></label></div>
+        <div class="cell"><div class="grow"><div class="t">Rama</div></div><label class="field" style="width:190px"><input id="gh-branch" data-path="gh.branch" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" style="text-align:right"></label></div>
+        <div class="cell"><div class="grow"><div class="t">Archivo</div></div><label class="field" style="width:190px"><input id="gh-ruta" data-path="gh.ruta" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" style="text-align:right"></label></div>
+        <div class="cell"><div class="grow"><div class="t">Nombre del calendario</div></div><label class="field" style="width:190px"><input id="cfg-icsNombre" data-cfg="icsNombre" autocomplete="off" style="text-align:right"></label></div>
+        <div class="cell"><div class="grow"><div class="t">Token</div><div class="s" id="tokenEstado">Sin token</div></div><label class="field" style="width:190px"><input id="ghToken" type="password" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="github_pat_…" aria-label="Token de GitHub"></label></div>
+        <div class="cell"><div class="grow"><div class="t">Subir cambios solo</div><div class="s">Unos segundos después de cada cambio</div></div>
+          <div class="seg mini" role="group" aria-label="Subida automática"><button data-ghauto="1" aria-pressed="true">Sí</button><button data-ghauto="0" aria-pressed="false">No</button></div></div>
+      </div>
+      <div class="stack" style="margin-top:10px">
+        <button class="btn" id="btnSyncTest">Probar conexión y subir</button>
+        <button class="btn danger" id="btnTokenDel">Quitar token de este celular</button>
+      </div>
+      <div class="section-f" id="syncTxt2">—</div>
+
+      <div class="section-h" style="margin-top:22px">Tu enlace de suscripción (se arma solo)</div>
+      <div class="group"><div class="urlbox" id="webcalTxt">—</div></div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn plain" id="btnCopyUrl">Copiar enlace</button>
+        <a class="btn plain" id="lnkWebcal" href="#">Suscribirme</a>
+      </div>
+
+      <div class="section-h" style="margin-top:22px">Crear el token (una sola vez)</div>
+      <div class="group">
+        <ol class="steps">
+          <li>En github.com: tu foto → <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</b>.</li>
+          <li>Nombre: StreamPlanner. Vencimiento: el que prefieras (por ejemplo 1 año).</li>
+          <li><b>Repository access → Only select repositories</b> → elige solo <b id="tokRepo">mensajito</b>.</li>
+          <li><b>Permissions → Repository permissions → Contents → Read and write</b>. Nada más.</li>
+          <li>Toca <b>Generate token</b>, cópialo y pégalo arriba en Token.</li>
+        </ol>
+      </div>
+      <div class="section-h" style="margin-top:22px">Suscribirse en el iPhone (una sola vez)</div>
+      <div class="group">
+        <ol class="steps">
+          <li><b>Ajustes → Calendario → Cuentas → Añadir cuenta → Otra → Añadir calendario suscrito</b>.</li>
+          <li>Pega tu enlace de suscripción y toca <b>Siguiente → Guardar</b>.</li>
+          <li><b>Importante:</b> en Calendarios suscritos → tu calendario, desactiva <b>Eliminar alertas</b>.</li>
+        </ol>
+      </div>
+      <div class="section-f">El token se guarda solo en el navegador de este celular: no va en los respaldos ni en el calendario. Solo puede editar ese repositorio. Si pierdes el celular, bórralo en GitHub. El repositorio es público: el calendario lleva solo horarios, nunca direcciones.</div>
+    </section>
+
+    <section class="section">
+      <div class="section-h">Respaldo</div>
+      <div class="stack">
+        <div class="btn-row"><button class="btn plain" id="btnBackup">Copiar respaldo</button><button class="btn plain" id="btnRestore">Restaurar</button></div>
+        <textarea class="code" id="restoreText" placeholder="Pega aquí un respaldo y toca Restaurar" aria-label="Texto de respaldo"></textarea>
+        <div class="btn-row"><button class="btn plain" id="btnResetCfg">Ajustes de fábrica</button><button class="btn danger" id="btnWipe">Borrar todo</button></div>
+      </div>
+      <div class="section-f">Los datos viven en este navegador. Copia el respaldo para pasarlos a otro dispositivo.</div>
+    </section>
+  </main>
+</div>
+
+<!-- Hoja: editar el plan de un día -->
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheetPlan" role="dialog" aria-modal="true" aria-labelledby="planTitle">
+  <div class="grabber"></div>
+  <div class="sheet-head"><button class="iconbtn" id="planReset">Restablecer</button><h2 id="planTitle">Día</h2><button class="iconbtn" data-close>Listo</button></div>
+  <div class="section"><div class="group">
+    <div class="cell"><div class="grow"><div class="t">Horas</div><div class="s" id="planHint">—</div></div>
+      <div class="stepper"><button id="planMinus" aria-label="Menos media hora">−</button><output id="planHrs">0 h</output><button id="planPlus" aria-label="Más media hora">+</button></div></div>
+    <div class="cell"><div class="grow"><div class="t">Hora de inicio</div><div class="s" id="planFranja">—</div></div><label class="field time"><input id="planStart" type="time" step="300" aria-label="Hora de inicio"></label></div>
+  </div></div>
+  <div class="section"><button class="btn plain" id="planRest">Descansar este día</button></div>
+  <div class="section"><div class="section-h">Logística</div><div class="group"><div class="timeline" id="planTimeline"></div></div></div>
+</div>
+
+<!-- Hoja: registrar lo que se hizo de verdad -->
+<div class="sheet" id="sheetReal" role="dialog" aria-modal="true" aria-labelledby="realTitle">
+  <div class="grabber"></div>
+  <div class="sheet-head"><button class="iconbtn" data-close>Cancelar</button><h2 id="realTitle">Registrar</h2><button class="iconbtn" id="realSave">Guardar</button></div>
+  <!-- Qué pasó ese día: cambia qué campos se muestran -->
+  <div class="seg" id="realEstado" role="group" aria-label="Qué pasó ese día" style="margin-top:12px">
+    <button data-estado="trabajo" aria-pressed="true">Trabajé</button>
+    <button data-estado="falta" aria-pressed="false">Falté</button>
+    <button data-estado="descanso" aria-pressed="false">Descansé</button>
+  </div>
+  <div class="section" id="realNotaSec" hidden><div class="group">
+    <div class="cell"><label class="field wide"><input id="realNota" maxlength="80" autocomplete="off" placeholder="Motivo (opcional): cita médica, enfermedad…" aria-label="Motivo"></label></div>
+  </div></div>
+  <div class="section" id="realWork"><div class="group">
+    <div class="cell"><div class="grow"><div class="t">Inicio</div></div><label class="field time"><input id="realStart" type="time" step="300" aria-label="Hora real de inicio"></label></div>
+    <div class="cell"><div class="grow"><div class="t">Fin</div></div><label class="field time"><input id="realEnd" type="time" step="300" aria-label="Hora real de fin"></label></div>
+    <div class="cell"><div class="grow"><div class="t">Pausa</div></div><label class="field"><input id="realPause" inputmode="numeric" autocomplete="off" aria-label="Minutos de pausa"><span>min</span></label></div>
+    <div class="cell"><div class="grow"><div class="t">Facturado</div><div class="s">USD del día</div></div><label class="field"><span>$</span><input id="realUSD" inputmode="decimal" enterkeyhint="done" placeholder="0" autocomplete="off" aria-label="Dólares facturados"></label></div>
+  </div></div>
+  <div class="section"><div class="group"><div class="calc"><span id="realPlanTxt" class="s" style="margin:0">—</span><b class="num" id="realHrs">0 h</b></div></div></div>
+  <div class="section stack">
+    <button class="btn plain" id="realFill">Usar el horario del plan</button>
+    <button class="btn danger" id="realDelete">Borrar registro</button>
+  </div>
+</div>
+
+<!-- Confirmación -->
+<div class="dialog" id="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dlgTitle">
+  <div class="box"><h3 id="dlgTitle">¿Seguro?</h3><p id="dlgText">—</p>
+    <div class="acts"><button id="dlgNo">Cancelar</button><button id="dlgYes">Borrar</button></div></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Barra de pestañas -->
+<nav class="tabbar" aria-label="Secciones"><div class="in" role="tablist">
+  <button class="tab" role="tab" data-tab="inicio" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
+  <button class="tab" role="tab" data-tab="semana" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Semana</button>
+  <button class="tab" role="tab" data-tab="registro" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Registro</button>
+  <button class="tab" role="tab" data-tab="stats" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Estadísticas</button>
+  <button class="tab" role="tab" data-tab="ajustes" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Ajustes</button>
+</div></nav>
+
+<script>
+"use strict";
+/* =====================================================================
+   1. AJUSTES POR DEFECTO (las reglas del documento original).
+      Todo se puede cambiar desde la pestaña Ajustes.
+   ===================================================================== */
+const CONFIG_BASE = {
+  metaUSD: 600,          // meta semanal en dólares
+  horasCumple: 35,       // horas de la semana si se cumple la meta (Ruta A)
+  horasNoCumple: 42,     // horas si no se cumple (Ruta B, evita el descuento)
+  maxDia: 9,             // límite RECOMENDADO por día: si se pasa, la app avisa
+  maxPermitido: 12,      // límite PERMITIDO por día: nunca se planea más que esto
+  base: [0, 6, 7, 6, 9], // horas base lunes→viernes (0 = descanso)
+  franjaDia: ['am', 'am', 'am', 'am', 'am', 'pm', 'pm'], // franja de cada día lun→dom
+  finde: { g42: [7, 7], opt1: [7, 0], opt2: [3.5, 3.5] }, // [sábado, domingo] según el caso
+  turnos: {
+    am: { nombre: 'Mañana', inicio: '07:00', despertador: '04:20', didi: '05:55', llegada: '06:30' },
+    pm: { nombre: 'Tarde',  inicio: '14:00', despertador: '11:30', didi: '12:55', llegada: '13:30' }
+  },
+  pausaMin: 15,          // minutos de pausa activa
+  pausaDesde: 4,         // la pausa solo aplica a turnos de 4 h o más
+  diasRojos: [1, 2, 14, 15, 16, 30, 31],
+  // Calendario suscrito en GitHub (lo que funciona en iPhone sin pasar por Mi Fitness)
+  // Dónde vive el calendario en GitHub. Con esto se arman solos los enlaces.
+  gh: { owner: 'FelipeAnali', repo: 'mensajito', branch: 'claude/bold-fermat-ta8hnh', ruta: 'calendario/turnos.ics', auto: true },
+  icsNombre: 'Turnos StreamPlanner',
+  icsSemanas: 1         // semanas que se incluyen al copiar el calendario
+};
+const CFG_TEXTO = ['icsNombre']; // ajustes que son texto, no número
+const NOMBRES_DIA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+const CORTO_DIA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+/* Categorías de franja para las estadísticas, según la hora real de inicio */
+const CATEGORIAS = [
+  { id: 'manana', nombre: 'Mañana', desc: 'Inicio antes de 12:00 PM · tráfico Europa', desde: 0, hasta: 720 },
+  { id: 'tarde',  nombre: 'Tarde',  desc: 'Inicio 12:00 PM – 5:59 PM · Prime Time EE. UU.', desde: 720, hasta: 1080 },
+  { id: 'noche',  nombre: 'Noche',  desc: 'Inicio desde las 6:00 PM', desde: 1080, hasta: 1440 }
+];
+
+/* =====================================================================
+   2. UTILIDADES
+   ===================================================================== */
+const copia = (o) => JSON.parse(JSON.stringify(o));
+/** Lunes de la semana de una fecha (sin hora). */
+function lunesDe(f) { const d = new Date(f.getFullYear(), f.getMonth(), f.getDate()); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d; }
+function sumarDias(f, n) { const d = new Date(f); d.setDate(d.getDate() + n); return d; }
+/** Fecha → "AAAA-MM-DD" (clave de guardado). */
+function clave(f) { return f.getFullYear() + '-' + String(f.getMonth() + 1).padStart(2, '0') + '-' + String(f.getDate()).padStart(2, '0'); }
+function deClave(k) { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); }
+/** "07:30" → 450 minutos. */
+function aMin(hm) { if (!hm) return null; const [h, m] = hm.split(':').map(Number); return isFinite(h) && isFinite(m) ? h * 60 + m : null; }
+/** 450 → "07:30" (para inputs de hora). */
+function aHM(min) { min = ((Math.round(min) % 1440) + 1440) % 1440; return String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0'); }
+/** 450 → "7:30 AM". */
+function hora12(min) { min = ((Math.round(min) % 1440) + 1440) % 1440; let h = Math.floor(min / 60); const m = min % 60; const s = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return h + ':' + String(m).padStart(2, '0') + '\u00a0' + s; }
+/** Horas con coma y hasta 2 decimales ("6,25"). */
+function fmtH(h) { return String(Math.round(h * 100) / 100).replace('.', ','); }
+function fmtUSD(v) { return '$' + (Math.round(v * 100) / 100).toLocaleString('es-CO', { maximumFractionDigits: 2 }); }
+/** Lee un número aceptando coma o punto. Devuelve null si no es válido. */
+function leerNum(v) {
+  let t = String(v).trim().replace(/[\s$]/g, '');
+  if (!t) return null;
+  if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(t)) t = t.replace(/\./g, '').replace(',', '.');      // 1.200 o 1.200,50
+  else if (/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(t)) t = t.replace(/,/g, '');                    // 1,200 o 1,200.50
+  else t = t.replace(',', '.');                                                               // 120,5
+  if (!/^-?\d*\.?\d+$/.test(t)) return null;
+  const n = parseFloat(t); return isFinite(n) ? n : null;
+}
+const redondear = (h) => Math.round(h * 4) / 4; // múltiplos de 15 min
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/** Horas reales de un registro {inicio, fin, pausa}. Soporta turnos que pasan la medianoche. */
+function horasReales(r) {
+  if (!r || esAusencia(r)) return 0;
+  const a = aMin(r.inicio), b0 = aMin(r.fin);
+  if (a === null || b0 === null) return 0;
+  if (b0 === a) return 0;            // mismo inicio y fin: no hay turno (antes contaba 24 h)
+  let b = b0; if (b < a) b += 1440;  // fin menor que inicio: el turno pasó la medianoche
+  return Math.max(0, (b - a - (Number(r.pausa) || 0)) / 60);
+}
+/** true si el registro es una falta o un descanso (no se trabajó). */
+function esAusencia(r) { return !!r && (r.estado === 'falta' || r.estado === 'descanso'); }
+/** Categoría (mañana/tarde/noche) según minuto de inicio. */
+function categoria(min) { if (min === null || min === undefined) return CATEGORIAS[0]; return CATEGORIAS.find(c => min >= c.desde && min < c.hasta) || CATEGORIAS[0]; }
+
+/* =====================================================================
+   3. DATOS Y PERSISTENCIA
+   store = {
+     v: 2,
+     config: {...ajustes},
+     dias: { 'AAAA-MM-DD': { plan:{horas?, inicio?}, real:{inicio, fin, pausa}, usd } },
+     opciones: { '<lunes AAAA-MM-DD>': 'opt1' | 'opt2' }
+   }
+   ===================================================================== */
+const LLAVE = 'streamplanner:v2';
+function storeVacio() { return { v: 2, config: copia(CONFIG_BASE), dias: {}, opciones: {} }; }
+/** Completa ajustes faltantes (por si un respaldo viene incompleto). */
+function normalizar(s) {
+  const base = storeVacio();
+  if (!s || typeof s !== 'object') return base;
+  const cfgIn = (s.config && typeof s.config === 'object') ? s.config : {};
+  const cfg = Object.assign(copia(CONFIG_BASE), cfgIn);
+  // Cada ajuste debe tener el tipo correcto; si no, se usa el de fábrica
+  Object.keys(CONFIG_BASE).forEach(k => {
+    const ok = Array.isArray(CONFIG_BASE[k]) ? Array.isArray(cfg[k]) && (k === 'diasRojos' || cfg[k].length === CONFIG_BASE[k].length)
+      : typeof cfg[k] === typeof CONFIG_BASE[k] && (typeof cfg[k] !== 'number' || isFinite(cfg[k]));
+    if (!ok) cfg[k] = copia(CONFIG_BASE[k]);
+  });
+  cfg.turnos = { am: Object.assign(copia(CONFIG_BASE.turnos.am), (s.config && s.config.turnos && s.config.turnos.am) || {}),
+                 pm: Object.assign(copia(CONFIG_BASE.turnos.pm), (s.config && s.config.turnos && s.config.turnos.pm) || {}) };
+  cfg.finde = Object.assign(copia(CONFIG_BASE.finde), (s.config && s.config.finde) || {});
+  cfg.gh = Object.assign(copia(CONFIG_BASE.gh), (cfgIn.gh && typeof cfgIn.gh === 'object') ? cfgIn.gh : {});
+  const esObj = (o) => o && typeof o === 'object' && !Array.isArray(o);
+  return { v: 2, config: cfg, dias: esObj(s.dias) ? s.dias : {}, opciones: esObj(s.opciones) ? s.opciones : {} };
+}
+function cargarStore() {
+  let s = null;
+  try { const raw = localStorage.getItem(LLAVE); if (raw) s = JSON.parse(raw); } catch (e) {}
+  s = normalizar(s);
+  // Migración de la versión 1 (una llave por semana con caja y horas)
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      const m = k && k.match(/^streamplanner:(\d{4}-\d{2}-\d{2})$/);
+      if (!m) continue;
+      const v1 = JSON.parse(localStorage.getItem(k) || '{}');
+      Object.entries(v1.caja || {}).forEach(([f, usd]) => { (s.dias[f] = s.dias[f] || {}).usd = Number(usd); });
+      Object.entries(v1.horas || {}).forEach(([f, h]) => { const d = (s.dias[f] = s.dias[f] || {}); d.plan = Object.assign(d.plan || {}, { horas: Number(h) }); });
+      if (v1.opcion) s.opciones[m[1]] = v1.opcion;
+      localStorage.removeItem(k); i--;
+    }
+  } catch (e) {}
+  return s;
+}
+function guardarStore() {
+  try { localStorage.setItem(LLAVE, JSON.stringify(store)); } catch (e) {}
+  if (typeof programarSync === 'function') programarSync(); // sube el calendario a GitHub si está conectado
+}
+/** Devuelve (y crea si hace falta) el registro de una fecha. */
+function dia(k) { return (store.dias[k] = store.dias[k] || {}); }
+/** Borra registros de día que quedaron vacíos. */
+function limpiarDia(k) {
+  const d = store.dias[k]; if (!d) return;
+  if (d.plan && d.plan.horas === undefined && !d.plan.inicio) delete d.plan;
+  if (d.usd === undefined || d.usd === null) delete d.usd;
+  if (!d.plan && !d.real && d.usd === undefined) delete store.dias[k];
+}
+
+/* =====================================================================
+   4. MOTOR DE PLANIFICACIÓN (función pura: no toca la pantalla)
+   Pasos: plan base → regla de quincena → ruta de fin de semana según
+   caja → ediciones manuales y días ya registrados → rebalanceo →
+   horarios, pausas y logística.
+   ===================================================================== */
+function planificar(lunes, s) {
+  const cfg = s.config, avisos = [];
+  const rojosMes = cfg.diasRojos || [];
+  const turnoDe = (f) => cfg.turnos[f] || cfg.turnos.am;
+
+  // 4.1 Días con su plan base
+  const dias = [];
+  for (let i = 0; i < 7; i++) {
+    const fecha = sumarDias(lunes, i), key = clave(fecha), reg = s.dias[key] || {};
+    dias.push({ i, fecha, key, reg, rojo: rojosMes.includes(fecha.getDate()),
+      horas: i < 5 ? Math.min(cfg.maxPermitido, Number(cfg.base[i]) || 0) : 0, franja: cfg.franjaDia[i] || 'am', notas: [], fijo: false });
+  }
+
+  // 4.2 Quincena: lunes rojo con descanso → se trabaja (franja tarde) y el descanso pasa a miércoles o jueves
+  if (dias[0].rojo && dias[0].horas === 0) {
+    const destino = [2, 3].find(i => !dias[i].rojo && dias[i].horas > 0);
+    if (destino !== undefined) {
+      dias[0].horas = dias[destino].horas; dias[destino].horas = 0;
+      dias[destino].notas.push('Descanso movido por quincena');
+    } else {
+      dias[0].horas = 6;
+      avisos.push({ tipo: 'orange', txt: '<b>Sin descanso entre semana:</b> no hay un día libre disponible por la quincena.' });
+    }
+    dias[0].franja = 'pm'; dias[0].notas.push('Día rojo');
+  }
+  // Martes rojo → franja de tarde (Prime Time)
+  if (dias[1].rojo && cfg.franjaDia[1] === 'am') { dias[1].franja = 'pm'; dias[1].notas.push('Día rojo · Prime Time'); }
+  // Cualquier otro día rojo que quedó en descanso por el plan base
+  dias.forEach(d => { if (d.rojo && d.i > 0 && d.i < 5 && d.horas === 0 && !d.notas.length) avisos.push({ tipo: 'red', txt: '<b>' + NOMBRES_DIA[d.i] + ' es día rojo</b> y tu plan base lo tiene en descanso.' }); });
+
+  // 4.3 Caja y ruta de fin de semana
+  const caja = dias.reduce((t, d) => t + (Number(d.reg.usd) || 0), 0);
+  const cumple = caja >= cfg.metaUSD;
+  const domRojo = dias[6].rojo;
+  const preferida = s.opciones[clave(lunes)] || 'opt1';
+  const modo = !cumple ? 'g42' : (preferida === 'opt1' && !domRojo ? 'opt1' : 'opt2');
+  [dias[5].horas, dias[6].horas] = cfg.finde[modo].map(h => Math.min(cfg.maxPermitido, Number(h) || 0));
+  if (modo === 'opt1') dias[6].notas.push('Libre por Modo Libertad');
+  const meta = cumple ? cfg.horasCumple : cfg.horasNoCumple;
+
+  // 4.4 Ediciones de plan, inicio personalizado y registros reales
+  dias.forEach(d => {
+    d.horasPlan = d.horas;                      // lo que decía el plan antes de rebalancear
+    const p = d.reg.plan || {};
+    if (p.horas !== undefined) { d.horas = d.horasPlan = Math.min(cfg.maxPermitido, Math.max(0, Number(p.horas))); d.fijo = true; d.editado = true; }
+    d.inicio = p.inicio ? aMin(p.inicio) : aMin(turnoDe(d.franja).inicio);
+    if (p.inicio) d.editado = true;
+    if (d.reg.real) {
+      d.real = d.reg.real; d.horasReal = horasReales(d.real); d.horas = d.horasReal; d.fijo = true;
+      d.ausencia = esAusencia(d.real) ? d.real.estado : null;
+      if (d.ausencia === 'falta' && d.horasPlan > 0)
+        avisos.push({ tipo: 'orange', txt: '<b>Faltaste el ' + NOMBRES_DIA[d.i].toLowerCase() + ':</b> sus ' + fmtH(d.horasPlan) + '\u00a0h se reparten en los días que quedan.' });
+    }
+    if (d.editado && d.horasPlan === 0 && (d.rojo || d.i >= 5) && !d.real)
+      avisos.push({ tipo: 'red', txt: '<b>' + NOMBRES_DIA[d.i] + ':</b> la regla prohíbe descansar en días rojos y fines de semana.' });
+  });
+
+  // 4.5 Rebalanceo hacia viernes → sábado → domingo (solo si hay días fijos)
+  if (dias.some(d => d.fijo)) {
+    let diff = redondear(meta - dias.reduce((t, d) => t + d.horas, 0));
+    if (diff > 0) {
+      const hoy = clave(new Date());
+      // Orden de reparto: viernes → sábado → domingo, y luego los demás días
+      // de trabajo que aún no han pasado (primero los más cercanos al fin de semana)
+      const orden = [dias[4], dias[5], dias[6]].concat(dias.slice(0, 4).reverse().filter(d => d.horas > 0 && d.key >= hoy));
+      const repartir = (tope, nota) => {
+        for (const d of orden) {
+          if (diff <= 0) break;
+          if (d.fijo) continue;
+          const sube = Math.min(tope - d.horas, diff);
+          if (sube > 0) { d.horas += sube; diff -= sube; d.notas.push('+' + fmtH(sube) + ' h ' + nota); }
+        }
+      };
+      repartir(cfg.maxDia, 'rebalanceo');                   // 1ª ronda: sin pasar del recomendado
+      if (diff > 0) repartir(cfg.maxPermitido, 'jornada larga'); // 2ª ronda: hasta el permitido, con alerta
+      if (diff > 0) avisos.push({ tipo: 'red', txt: '<b>Faltan ' + fmtH(diff) + ' h</b> para las ' + meta + ' h y no caben ni con jornadas de ' + cfg.maxPermitido + ' h.' });
+    } else if (diff < 0) {
+      for (const i of [6, 5, 4]) {
+        const d = dias[i]; if (d.fijo || diff >= 0) continue;
+        const piso = (d.rojo || d.i >= 5) && d.horas > 0 ? Math.min(d.horas, 3.5) : 0; // no dejar en cero un día prohibido
+        const baja = Math.min(d.horas - piso, -diff);
+        if (baja > 0) { d.horas -= baja; diff += baja; d.notas.push('−' + fmtH(baja) + ' h rebalanceo'); }
+      }
+    }
+  }
+
+  // 4.6 Horarios, pausa, logística y acumulado
+  let acum = 0;
+  dias.forEach(d => {
+    d.descanso = d.horas === 0;
+    const t = turnoDe(d.franja), ini0 = aMin(t.inicio);
+    d.conPausa = d.horas >= cfg.pausaDesde && cfg.pausaMin > 0;
+    const min = Math.round(d.horas * 60);
+    d.bloque1 = d.conPausa ? Math.round(min / 2) : min;
+    d.fin = d.inicio + min + (d.conPausa ? cfg.pausaMin : 0);
+    // La logística se desplaza igual que el inicio
+    const desfase = d.inicio - ini0;
+    d.despertador = aMin(t.despertador) + desfase; d.didi = aMin(t.didi) + desfase; d.llegada = aMin(t.llegada) + desfase;
+    d.categoria = categoria(d.real && !d.ausencia ? aMin(d.real.inicio) : d.inicio);
+    acum += d.horas; d.acumulado = acum;
+  });
+
+  // Alerta por cada día que supera el límite recomendado
+  dias.forEach(d => {
+    d.larga = d.horas > cfg.maxDia + 0.01;
+    if (d.larga) avisos.push({ tipo: 'orange', txt: '<b>Jornada larga el ' + NOMBRES_DIA[d.i].toLowerCase() + ':</b> ' +
+      (d.real ? 'trabajaste ' : 'quedó de ') + fmtH(Math.round(d.horas * 100) / 100) + '\u00a0h, más de las ' + cfg.maxDia + '\u00a0h recomendadas.' });
+  });
+  const horasReal = dias.reduce((t, d) => t + (d.horasReal || 0), 0);
+  const rojos = dias.filter(d => d.rojo);
+  if (rojos.length) avisos.unshift({ tipo: 'red', txt: '<b>Días rojos</b> (' + rojos.map(d => CORTO_DIA[d.i] + ' ' + d.fecha.getDate()).join(', ') + '): no se descansa.' });
+  if (cumple) avisos.unshift({ tipo: 'green', txt: '<b>Modo Libertad activado.</b> Llegaste a ' + fmtUSD(caja) + '; la meta baja a ' + cfg.horasCumple + ' h.' });
+  if (cumple && preferida === 'opt1' && domRojo) avisos.push({ tipo: 'orange', txt: 'El domingo es día rojo, así que se aplica la Opción 2.' });
+
+  return { lunes, dias, caja, cumple, modo, meta, total: acum, horasReal, banco: dias.slice(0, 5).reduce((t, d) => t + d.horas, 0), avisos, domRojo };
+}
+
+/* =====================================================================
+   5. ESTADÍSTICAS (a partir de los registros reales)
+   ===================================================================== */
+function estadisticas(s, rango, lunesVista) {
+  // Semanas que entran en el rango
+  let semanas;
+  if (rango === 'sem') semanas = [clave(lunesVista)];
+  else {
+    const todas = new Set(Object.keys(s.dias).filter(k => s.dias[k].real || s.dias[k].usd).map(k => clave(lunesDe(deClave(k)))));
+    semanas = [...todas].sort();
+    if (rango === '4s') { const desde = clave(sumarDias(lunesVista, -21)), hasta = clave(lunesVista); semanas = semanas.filter(w => w >= desde && w <= hasta); }
+  }
+  const r = { dias: 0, horas: 0, usd: 0, usdConHoras: 0, horasConUsd: 0, horasPlan: 0, cumplidos: 0, cortos: 0, faltas: 0, descansos: 0, horasPerdidas: 0, semanas: [], mejorDia: null,
+    cat: {}, dow: Array.from({ length: 7 }, () => ({ usd: 0, n: 0, horas: 0 })) };
+  CATEGORIAS.forEach(c => r.cat[c.id] = { ...c, usd: 0, horas: 0, n: 0 });
+
+  semanas.forEach(w => {
+    const plan = planificar(deClave(w), s);
+    let hW = 0, uW = 0, nW = 0, fW = 0;
+    plan.dias.forEach(d => {
+      const usd = Number(d.reg.usd) || 0;
+      if (!d.real && !usd) return;
+      // Faltas y descansos tomados: se cuentan aparte y no entran a las franjas
+      if (d.ausencia === 'falta') { r.faltas++; fW++; r.horasPerdidas += d.horasPlan; r.horasPlan += d.horasPlan; return; }
+      if (d.ausencia === 'descanso') { r.descansos++; return; }
+      const h = d.horasReal || 0;
+      if (h > 0) { r.dias++; nW++; }
+      r.horas += h; r.usd += usd; hW += h; uW += usd;
+      if (h > 0 && usd > 0) { r.usdConHoras += usd; r.horasConUsd += h; }
+      if (d.real) {
+        r.horasPlan += d.horasPlan;
+        if (h + 0.05 >= d.horasPlan) r.cumplidos++; else r.cortos++;
+        const c = r.cat[d.categoria.id]; c.usd += usd; c.horas += h; c.n++;
+      }
+      if (usd) { r.dow[d.i].usd += usd; r.dow[d.i].n++; r.dow[d.i].horas += h; }
+      if (usd && (!r.mejorDia || usd > r.mejorDia.usd)) r.mejorDia = { usd, fecha: d.fecha, i: d.i, h };
+    });
+    r.semanas.push({ lunes: plan.lunes, horas: hW, usd: uW, dias: nW, faltas: fW, meta: plan.meta, cumpleUSD: plan.cumple, cumpleHoras: hW + 0.05 >= plan.meta, metaUSD: s.config.metaUSD });
+  });
+  r.porHora = r.horasConUsd ? r.usdConHoras / r.horasConUsd : 0;
+  return r;
+}
+
+/* =====================================================================
+   6. DATOS DE EJEMPLO (solo para ver cómo lucen las estadísticas)
+   ===================================================================== */
+function storeEjemplo() {
+  const s = storeVacio(); s.config = copia(store.config);
+  let semilla = 7; const azar = () => (semilla = (semilla * 9301 + 49297) % 233280) / 233280;
+  for (let w = 5; w >= 0; w--) {
+    const lunes = sumarDias(lunesDe(new Date()), -7 * (w + 1));
+    const plan = planificar(lunes, s);
+    plan.dias.forEach(d => {
+      if (d.descanso) return;
+      if (azar() < 0.06) { s.dias[d.key] = { real: { estado: 'falta', nota: 'Ejemplo' } }; return; }
+      const ini = d.inicio + Math.round((azar() - .3) * 20);
+      const horas = Math.max(2, d.horas - (azar() < .25 ? 1 + azar() : azar() * .3));
+      const tasa = (d.franja === 'pm' ? 17 : 11) * (0.7 + azar() * .7) * (d.i === 4 || d.i === 5 ? 1.25 : 1);
+      s.dias[d.key] = { real: { inicio: aHM(ini), fin: aHM(ini + horas * 60 + (horas >= 4 ? 15 : 0)), pausa: horas >= 4 ? 15 : 0 }, usd: Math.round(horas * tasa) };
+    });
+  }
+  return s;
+}
+
+/* =====================================================================
+   7. GENERADOR iCalendar (.ics, RFC 5545)
+   ===================================================================== */
+function icsFecha(f, min) {
+  const d = new Date(f.getFullYear(), f.getMonth(), f.getDate(), 0, min); const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + 'T' + p(d.getHours()) + p(d.getMinutes()) + '00';
+}
+function icsTexto(s) { return String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n'); }
+/** Dobla líneas de más de 75 bytes, como pide el estándar. */
+function icsDoblar(linea) {
+  const enc = new TextEncoder(), out = []; let act = '', bytes = 0;
+  for (const ch of linea) { const b = enc.encode(ch).length; if (bytes + b > (out.length ? 74 : 75)) { out.push(act); act = ''; bytes = 0; } act += ch; bytes += b; }
+  out.push(act); return out.join('\r\n ');
+}
+/**
+ * Construye el .ics para una o varias semanas.
+ * - UID estable por día y tipo de evento: así el calendario suscrito actualiza
+ *   los eventos en vez de duplicarlos.
+ * - Una sola alerta por evento (evita notificaciones dobles).
+ * - REFRESH-INTERVAL / X-PUBLISHED-TTL: pide al iPhone revisar cada hora.
+ */
+function generarICS(planes, cfg) {
+  if (!Array.isArray(planes)) planes = [planes];
+  const ahora = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//StreamPlanner//Horario semanal//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'X-WR-CALNAME:' + icsTexto(cfg.icsNombre || 'StreamPlanner'), 'X-WR-TIMEZONE:America/Bogota',
+    'REFRESH-INTERVAL;VALUE=DURATION:PT1H', 'X-PUBLISHED-TTL:PT1H', 'BEGIN:VTIMEZONE', 'TZID:America/Bogota', 'BEGIN:STANDARD',
+    'DTSTART:19700101T000000', 'TZOFFSETFROM:-0500', 'TZOFFSETTO:-0500', 'TZNAME:COT', 'END:STANDARD', 'END:VTIMEZONE'];
+  let n = 0;
+  const ev = (f, a, b, titulo, desc, tipo) => {
+    n++;
+    L.push('BEGIN:VEVENT', 'UID:sp-' + clave(f).replace(/-/g, '') + '-' + tipo + '@streamplanner', 'DTSTAMP:' + ahora,
+      'DTSTART;TZID=America/Bogota:' + icsFecha(f, a), 'DTEND;TZID=America/Bogota:' + icsFecha(f, b),
+      'SUMMARY:' + icsTexto(titulo), 'DESCRIPTION:' + icsTexto(desc),
+      'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsTexto(titulo), 'TRIGGER:-PT0M', 'END:VALARM', 'END:VEVENT');
+  };
+  planes.forEach(plan => plan.dias.forEach(d => {
+    if (d.descanso || d.real) return; // los días ya registrados no necesitan alarma
+    const et = NOMBRES_DIA[d.i] + ' · ' + fmtH(d.horas) + '\u00a0h · ' + cfg.turnos[d.franja].nombre;
+    ev(d.fecha, d.despertador, d.despertador + 10, '⏰ Despertador y Alistamiento', et, 'despertar');
+    ev(d.fecha, d.didi, d.didi + 5, '🛵 Pedir Didi Moto', 'Llegada ' + hora12(d.llegada), 'moto');
+    ev(d.fecha, d.inicio, d.inicio + d.bloque1, '💻 Inicio Conexión Trabajo', et, 'inicio');
+    if (d.conPausa) {
+      const p = d.inicio + d.bloque1;
+      ev(d.fecha, p, p + cfg.pausaMin, '☕ Descanso ' + cfg.pausaMin + ' Minutos', 'Pausa activa', 'pausa');
+      ev(d.fecha, p + cfg.pausaMin, d.fin, '💻 Continuación Trabajo', et, 'regreso');
+    }
+    ev(d.fecha, d.fin, d.fin + 5, '🏁 Fin de Turno', 'Acumulado de la semana: ' + fmtH(d.acumulado) + '\u00a0h', 'fin');
+  }));
+  L.push('END:VCALENDAR');
+  return { texto: L.map(icsDoblar).join('\r\n') + '\r\n', eventos: n };
+}
+
+/* =====================================================================
+   7b. CONEXIÓN CON GITHUB
+   La app escribe el .ics en el repositorio con la API de GitHub
+   (PUT /repos/{dueño}/{repo}/contents/{archivo}). El iPhone está suscrito
+   al enlace "raw" de ese archivo, así que se actualiza solo.
+   El token se guarda aparte (solo en este navegador) y nunca entra en
+   los respaldos ni en el calendario.
+   ===================================================================== */
+const LLAVE_TOKEN = 'streamplanner:ghtoken';
+const LLAVE_SYNC = 'streamplanner:ghsync';
+const EN_VISOR_CLAUDE = typeof window !== 'undefined' && typeof window.claude !== 'undefined'; // dentro de Claude no hay red
+const leerToken = () => { try { return localStorage.getItem(LLAVE_TOKEN) || ''; } catch (e) { return ''; } };
+const guardarToken = (t) => { try { t ? localStorage.setItem(LLAVE_TOKEN, t) : localStorage.removeItem(LLAVE_TOKEN); } catch (e) {} };
+const leerEstadoSync = () => { try { return JSON.parse(localStorage.getItem(LLAVE_SYNC) || 'null'); } catch (e) { return null; } };
+const guardarEstadoSync = (e) => { try { localStorage.setItem(LLAVE_SYNC, JSON.stringify(e)); } catch (x) {} };
+/** Codifica cada parte de una ruta para la URL, respetando las "/" (la rama puede tener "/"). */
+const rutaURL = (r) => String(r).split('/').map(encodeURIComponent).join('/');
+/** Enlaces que se arman solos a partir de usuario, repo, rama y archivo. */
+function enlacesGH(gh) {
+  const raw = 'https://raw.githubusercontent.com/' + rutaURL(gh.owner) + '/' + rutaURL(gh.repo) + '/' + rutaURL(gh.branch) + '/' + rutaURL(gh.ruta);
+  return { raw, webcal: raw.replace(/^https:\/\//, 'webcal://'),
+    editar: 'https://github.com/' + rutaURL(gh.owner) + '/' + rutaURL(gh.repo) + '/edit/' + rutaURL(gh.branch) + '/' + rutaURL(gh.ruta) };
+}
+/** Texto UTF-8 ↔ base64 (la API de GitHub manda y recibe el contenido así). */
+function aBase64(txt) { const b = new TextEncoder().encode(txt); let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); }
+function deBase64(b64) { const s = atob(String(b64).replace(/\s/g, '')); const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return new TextDecoder().decode(b); }
+/** Para comparar dos calendarios sin contar la fecha de generación (DTSTAMP). */
+const sinSello = (t) => t.replace(/^DTSTAMP:.*$/gm, '').replace(/\r/g, '');
+/** Planes que se suben: la semana de HOY (no la que estés mirando) y, si se pidió, la siguiente. */
+function planesSync() {
+  const lunes = lunesDe(new Date()), n = store.config.icsSemanas === 2 ? 2 : 1;
+  return Array.from({ length: n }, (_, k) => planificar(sumarDias(lunes, 7 * k), store));
+}
+/** Mensaje claro para cada error de la API. */
+function errorGH(status) {
+  if (status === 401) return 'El token no es válido o venció. Crea uno nuevo.';
+  if (status === 403) return 'El token no tiene permiso de escritura (Contents: Read and write) en ese repositorio.';
+  if (status === 404) return 'No se encontró el repositorio o la rama. Revisa usuario, repositorio y rama, y que el token incluya ese repositorio.';
+  if (status === 409 || status === 422) return 'GitHub rechazó el cambio (la rama cambió al mismo tiempo). Vuelve a intentar.';
+  return 'GitHub respondió con error ' + status + '.';
+}
+
+let syncTimer = null, syncEnCurso = false, syncPendiente = false;
+/** Programa una subida unos segundos después del último cambio (agrupa cambios seguidos). */
+function programarSync() {
+  if (EN_VISOR_CLAUDE || !store || !store.config.gh.auto || !leerToken()) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => subirCalendario(false), 4000);
+}
+/**
+ * Sube el calendario a GitHub.
+ * @param {boolean} manual  true cuando el usuario tocó un botón (muestra mensajes).
+ */
+async function subirCalendario(manual) {
+  if (EN_VISOR_CLAUDE) { if (manual) toast('Dentro de Claude no hay conexión: abre la app desde tu GitHub Pages'); return; }
+  const token = leerToken(), gh = store.config.gh;
+  if (!token) { if (manual) toast('Primero pega tu token en Ajustes'); return; }
+  if (syncEnCurso) { syncPendiente = true; return; }
+  syncEnCurso = true; pintarSync('subiendo');
+  const url = 'https://api.github.com/repos/' + rutaURL(gh.owner) + '/' + rutaURL(gh.repo) + '/contents/' + rutaURL(gh.ruta);
+  const headers = { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+  try {
+    const texto = generarICS(planesSync(), store.config).texto;
+    // 1) Leer el archivo actual para obtener su "sha" (GitHub lo pide para reemplazarlo)
+    let sha;
+    const r1 = await fetch(url + '?ref=' + encodeURIComponent(gh.branch), { headers, cache: 'no-store' });
+    if (r1.ok) {
+      const actual = await r1.json(); sha = actual.sha;
+      if (actual.content && sinSello(deBase64(actual.content)) === sinSello(texto)) {
+        guardarEstadoSync({ t: Date.now(), ok: true, msg: 'Ya estaba al día' });
+        if (manual) toast('El calendario ya estaba al día');
+        return;
+      }
+    } else if (r1.status !== 404) throw { status: r1.status };
+    // 2) Escribir la versión nueva
+    const r2 = await fetch(url, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
+      body: JSON.stringify({ message: 'StreamPlanner: actualiza turnos ' + clave(new Date()), content: aBase64(texto), branch: gh.branch, sha }) });
+    if (!r2.ok) throw { status: r2.status };
+    guardarEstadoSync({ t: Date.now(), ok: true, msg: 'Subido' });
+    if (manual) toast('Calendario subido a GitHub');
+  } catch (e) {
+    const msg = e && e.status ? errorGH(e.status) : 'Sin internet o GitHub no responde. Se reintenta con el próximo cambio.';
+    guardarEstadoSync({ t: Date.now(), ok: false, msg });
+    if (manual) toast(msg);
+  } finally {
+    syncEnCurso = false; pintarSync();
+    if (syncPendiente) { syncPendiente = false; programarSync(); }
+  }
+}
+/** "hace 3 min" */
+function haceCuanto(t) {
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return 'hace un momento'; if (m < 60) return 'hace ' + m + ' min';
+  const h = Math.round(m / 60); if (h < 24) return 'hace ' + h + ' h';
+  return 'hace ' + Math.round(h / 24) + ' días';
+}
+/** Pinta el estado de la conexión en Semana y en Ajustes. */
+function pintarSync(estado) {
+  if (typeof document === 'undefined' || !document.getElementById('syncTxt')) return;
+  const token = leerToken(), e = leerEstadoSync();
+  let txt, color;
+  if (EN_VISOR_CLAUDE) { txt = 'Dentro de Claude no hay conexión. Abre la app desde tu GitHub Pages.'; color = 'var(--label3)'; }
+  else if (estado === 'subiendo') { txt = 'Subiendo…'; color = 'var(--tint)'; }
+  else if (!token) { txt = 'Sin conectar: falta el token'; color = 'var(--label3)'; }
+  else if (!e) { txt = 'Conectado · aún no se ha subido'; color = 'var(--tint)'; }
+  else if (e.ok) { txt = (e.msg === 'Ya estaba al día' ? 'Al día' : 'Subido') + ' ' + haceCuanto(e.t) + (store.config.gh.auto ? ' · automático' : ' · manual'); color = '#34C759'; }
+  else { txt = 'Error ' + haceCuanto(e.t) + ': ' + e.msg; color = 'var(--red)'; }
+  $('syncTxt').textContent = txt; $('syncTxt2').textContent = txt;
+  $('syncIcon').style.background = color;
+  $('btnSyncNow').disabled = EN_VISOR_CLAUDE || estado === 'subiendo';
+  $('btnSyncTest').disabled = EN_VISOR_CLAUDE || estado === 'subiendo';
+  $('tokenEstado').textContent = token ? 'Guardado en este celular (…' + token.slice(-4) + ')' : 'Sin token';
+  $('btnTokenDel').hidden = !token;
+}
+
+/* =====================================================================
+   8. INTERFAZ
+   ===================================================================== */
+const $ = (id) => document.getElementById(id);
+let store = cargarStore();
+let semana = lunesDe(new Date());
+let plan = null;               // plan de la semana en vista
+let abierto = null;            // índice del día abierto en una hoja
+let rango = '4s';              // periodo de estadísticas
+let verEjemplo = false;        // estadísticas con datos de ejemplo
+let hoyKey = clave(new Date()); // se actualiza en cada render
+
+/** Texto de franja de un día del plan. */
+const franjaTxt = (d) => d.descanso ? 'Descanso' : hora12(d.inicio) + ' – ' + hora12(d.fin);
+const nombreModo = (p) => p.modo === 'g42' ? 'Garantía ' + store.config.horasNoCumple + '\u00a0h' : p.modo === 'opt1' ? 'Libertad · Opción 1' : 'Libertad · Opción 2';
+
+/** Recalcula y pinta todo lo visible. */
+function render() {
+  const cfg = store.config;
+  hoyKey = clave(new Date());
+  plan = planificar(semana, store);
+  const dom = sumarDias(semana, 6);
+  $('weekLabel').innerHTML = semana.getDate() + (semana.getMonth() === dom.getMonth() ? '' : ' ' + MESES[semana.getMonth()]) + ' – ' + dom.getDate() + ' ' + MESES[dom.getMonth()] +
+    '<small>' + (clave(semana) === clave(lunesDe(new Date())) ? 'Esta semana' : dom.getFullYear()) + '</small>';
+  renderSemana(cfg); renderRegistro(cfg); renderInicio();
+  if (!$('tab-stats').hidden) renderStats();
+  if (abierto !== null && $('sheetPlan').classList.contains('open')) pintarHojaPlan();
+}
+
+function renderSemana(cfg) {
+  const p = plan;
+  $('subtitle').textContent = nombreModo(p) + ' · meta ' + p.meta + '\u00a0h';
+  $('ringPlan').style.strokeDashoffset = (326.7 * (1 - Math.min(1, p.total / p.meta))).toFixed(1);
+  $('ringHours').textContent = fmtH(p.total);
+  $('ringTarget').textContent = 'de ' + p.meta + '\u00a0h';
+  $('kpiCash').textContent = fmtUSD(p.caja) + ' / ' + fmtUSD(cfg.metaUSD);
+  $('cashBar').style.width = Math.min(100, p.caja / cfg.metaUSD * 100) + '%';
+  $('kpiReal').textContent = fmtH(p.horasReal) + ' / ' + p.meta + '\u00a0h';
+  $('realBar').style.width = Math.min(100, p.horasReal / p.meta * 100) + '%';
+  const nR = p.dias.filter(d => d.rojo).length;
+  $('pills').innerHTML = '<span class="pill ' + (p.cumple ? 'green' : '') + '">' + nombreModo(p) + '</span>' +
+    (nR ? '<span class="pill red">' + nR + (nR > 1 ? ' días rojos' : ' día rojo') + '</span>' : '<span class="pill gray">Sin días rojos</span>') +
+    (p.dias.some(d => d.fijo) ? '<span class="pill orange">Rebalanceada</span>' : '');
+  $('alerts').innerHTML = p.avisos.map(a => '<div class="alert ' + a.tipo + '">' + a.txt + '</div>').join('');
+
+  $('dayList').innerHTML = p.dias.map(d => {
+    const tags = [];
+    if (d.rojo) tags.push('<span class="tag red">Rojo</span>');
+    if (d.ausencia) tags.push(d.ausencia === 'falta' ? '<span class="tag red">Faltó</span>' : '<span class="tag gray">Descansó</span>');
+    else if (d.real) tags.push('<span class="tag green">Hecho</span>');
+    else if (!d.descanso) tags.push('<span class="tag ' + (d.franja === 'am' ? 'gray' : 'tint') + '">' + esc(cfg.turnos[d.franja].nombre) + '</span>');
+    if (d.editado && !d.real) tags.push('<span class="tag orange">Editado</span>');
+    if (d.larga) tags.push('<span class="tag orange">Jornada larga</span>');
+    const sub = d.ausencia ? [(d.ausencia === 'falta' ? 'Falta registrada' : 'Descanso tomado') + (d.real.nota ? ': ' + d.real.nota : '')]
+      : d.real ? ['Real ' + hora12(aMin(d.real.inicio)) + ' – ' + hora12(aMin(d.real.fin))] : [franjaTxt(d)];
+    return '<button class="cell tap' + (d.rojo ? ' isred' : '') + (d.descanso && !d.real ? ' rest' : '') + (d.key === hoyKey ? ' istoday' : '') + '" data-plan="' + d.i + '">' +
+      '<div class="date"><span>' + CORTO_DIA[d.i] + '</span><b class="num">' + d.fecha.getDate() + '</b></div>' +
+      '<div class="grow"><div class="t">' + NOMBRES_DIA[d.i] + tags.join('') + '</div><div class="s">' + esc(sub.concat(d.notas).join(' · ')) + '</div></div>' +
+      '<div class="hrs"><b class="num">' + (d.descanso ? '—' : fmtH(d.horas) + '\u00a0h') + '</b><span class="num">Σ ' + fmtH(d.acumulado) + '</span></div>' +
+      '<svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l6 6-6 6"/></svg></button>';
+  }).join('');
+
+  // Decisión del viernes
+  const falta = Math.max(0, cfg.metaUSD - p.caja), [s1, d1] = cfg.finde.opt1, [s2, d2] = cfg.finde.opt2, [sg, dg] = cfg.finde.g42;
+  $('opt1s').textContent = 'Sáb ' + fmtH(s1) + ' h · Dom ' + (d1 ? fmtH(d1) + '\u00a0h' : 'libre');
+  $('opt2s').textContent = 'Sáb ' + fmtH(s2) + ' h · Dom ' + fmtH(d2) + '\u00a0h';
+  if (p.cumple) {
+    $('decTitle').textContent = 'Meta cumplida: fin de semana corto';
+    $('decText').textContent = 'Plan actual: sábado ' + franjaTxt(p.dias[5]) + ' y domingo ' + (p.dias[6].descanso ? 'libre' : franjaTxt(p.dias[6])) + '. Total ' + fmtH(p.total) + ' h.';
+  } else {
+    $('decTitle').textContent = 'Faltan ' + fmtUSD(falta) + ' para la meta';
+    $('decText').textContent = 'Si la caja no llega a ' + fmtUSD(cfg.metaUSD) + ': sábado ' + fmtH(sg) + ' h y domingo ' + fmtH(dg) + ' h para completar ' + cfg.horasNoCumple + ' h. Si llega, anótalo en Registro y el fin de semana se recorta solo.';
+  }
+  const opt = store.opciones[clave(semana)] || 'opt1';
+  $('opt1').setAttribute('aria-pressed', String(opt === 'opt1' && !p.domRojo));
+  $('opt2').setAttribute('aria-pressed', String(opt === 'opt2' || p.domRojo));
+  $('opt1').disabled = !p.cumple || p.domRojo; $('opt2').disabled = !p.cumple;
+
+  const planes = planesICS(), ics = generarICS(planes, cfg);
+  const pendientes = [].concat(...planes.map(x => x.dias)).filter(d => !d.descanso && !d.real);
+  $('icsCount').textContent = ics.eventos;
+  $('icsInfo').textContent = pendientes.length + ' días pendientes · aviso al inicio de cada evento';
+  document.querySelectorAll('[data-icsw]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.icsw) === (cfg.icsSemanas || 1))));
+  $('lnkEdit').href = enlacesGH(cfg.gh).editar;
+  pintarSync();
+  // Despertadores para la app Reloj (solo días que no han pasado)
+  const futuros = pendientes.filter(d => d.key >= hoyKey);
+  $('clockList').innerHTML = futuros.length ? futuros.map(d =>
+    '<div class="cell"><div class="date"><span>' + CORTO_DIA[d.i] + '</span><b class="num">' + d.fecha.getDate() + '</b></div>' +
+    '<div class="grow"><div class="t num">⏰ ' + hora12(d.despertador) + '</div><div class="s">🛵 Didi ' + hora12(d.didi) + ' · inicio ' + hora12(d.inicio) + '</div></div></div>').join('')
+    : '<div class="cell"><div class="grow"><div class="s" style="margin:0">No quedan turnos pendientes en este rango.</div></div></div>';
+}
+
+function renderRegistro(cfg) {
+  const p = plan, falta = Math.max(0, p.meta - p.horasReal), faltaUSD = Math.max(0, cfg.metaUSD - p.caja);
+  $('regHours').textContent = fmtH(p.horasReal) + ' / ' + p.meta + '\u00a0h';
+  $('regHoursBar').style.width = Math.min(100, p.horasReal / p.meta * 100) + '%';
+  $('regCash').textContent = fmtUSD(p.caja) + ' / ' + fmtUSD(cfg.metaUSD);
+  $('regCashBar').style.width = Math.min(100, p.caja / cfg.metaUSD * 100) + '%';
+  $('regMissing').textContent = (falta ? fmtH(falta) + '\u00a0h' : 'Horas listas') + ' · ' + (faltaUSD ? fmtUSD(faltaUSD) : 'meta $ lista');
+
+  $('regList').innerHTML = p.dias.map(d => {
+    const usd = Number(d.reg.usd) || 0;
+    let estado, sub;
+    if (d.ausencia) {
+      estado = d.ausencia === 'falta' ? '<span class="tag red">Faltó</span>' : '<span class="tag gray">Descansó</span>';
+      sub = (d.real.nota ? esc(d.real.nota) + ' · ' : '') + 'plan ' + fmtH(d.horasPlan) + '\u00a0h';
+    } else if (d.real) {
+      const dif = d.horasReal - d.horasPlan;
+      estado = (dif >= -0.05 ? '<span class="tag green">Cumplido</span>' : '<span class="tag orange">Faltó ' + fmtH(-dif) + ' h</span>') +
+        (d.larga ? '<span class="tag orange">Jornada larga</span>' : '');
+      sub = hora12(aMin(d.real.inicio)) + ' – ' + hora12(aMin(d.real.fin)) + (Number(d.real.pausa) ? ' · pausa ' + d.real.pausa + ' min' : '') + ' · plan ' + fmtH(d.horasPlan) + '\u00a0h';
+    } else {
+      estado = d.descanso ? '<span class="tag gray">Descanso</span>' : (d.key < hoyKey ? '<span class="tag red">Sin registro</span>' : '<span class="tag gray">Pendiente</span>');
+      sub = d.descanso ? 'Sin turno planeado' : 'Plan ' + franjaTxt(d) + ' · ' + fmtH(d.horas) + '\u00a0h' + (d.key < hoyKey ? ' · toca para marcar' : '');
+    }
+    return '<button class="cell tap' + (d.key === hoyKey ? ' istoday' : '') + (d.rojo ? ' isred' : '') + '" data-real="' + d.i + '">' +
+      '<div class="date"><span>' + CORTO_DIA[d.i] + '</span><b class="num">' + d.fecha.getDate() + '</b></div>' +
+      '<div class="grow"><div class="t">' + (d.ausencia ? NOMBRES_DIA[d.i] : d.real ? fmtH(d.horasReal) + '\u00a0h reales' : NOMBRES_DIA[d.i]) + estado + '</div><div class="s">' + sub + '</div></div>' +
+      '<div class="hrs"><b class="num">' + (usd ? fmtUSD(usd) : '—') + '</b><span>USD</span></div>' +
+      '<svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l6 6-6 6"/></svg></button>';
+  }).join('');
+}
+
+/** Planes que entran al calendario: la semana en vista y, si se pidió, la siguiente. */
+function planesICS() {
+  const n = store.config.icsSemanas === 2 ? 2 : 1;
+  return Array.from({ length: n }, (_, k) => k === 0 ? plan : planificar(sumarDias(semana, 7 * k), store));
+}
+
+/* ---------- Portada de inicio ---------- */
+/** 135 → "2 h 15 min" */
+function fmtDur(min) { min = Math.max(0, Math.round(min)); const h = Math.floor(min / 60), m = min % 60; return h ? h + '\u00a0h' + (m ? ' ' + m + '\u00a0min' : '') : m + '\u00a0min'; }
+const MESES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+function renderInicio() {
+  const cfg = store.config, ahora = new Date();
+  const lunesHoy = lunesDe(ahora), ph = planificar(lunesHoy, store);
+  const iHoy = (ahora.getDay() + 6) % 7, d = ph.dias[iHoy];
+  const minAhora = ahora.getHours() * 60 + ahora.getMinutes();
+  const hh = ahora.getHours();
+  $('homeHello').textContent = hh < 12 ? 'Buenos días' : hh < 19 ? 'Buenas tardes' : 'Buenas noches';
+  $('homeDate').textContent = NOMBRES_DIA[iHoy] + ' ' + ahora.getDate() + ' de ' + MESES_L[ahora.getMonth()];
+
+  // Busca el próximo turno pendiente (hoy en adelante, esta semana o la siguiente)
+  const proximo = () => {
+    const sig = planificar(sumarDias(lunesHoy, 7), store);
+    return ph.dias.slice(iHoy + 1).concat(sig.dias).find(x => !x.descanso && !x.real);
+  };
+
+  // Estado de la tarjeta "Hoy"
+  let chip, clase = '', grande, meta, pieK = '', pieV = '', boton = '', barra = null;
+  if (d.ausencia) {
+    chip = d.ausencia === 'falta' ? 'Falta registrada' : 'Descanso registrado';
+    grande = d.ausencia === 'falta' ? 'Hoy no transmitiste' : 'Día de descanso';
+    meta = d.real.nota || 'Las horas del día se repartieron en el resto de la semana.';
+  } else if (d.real) {
+    chip = 'Turno registrado'; clase = 'ok';
+    grande = hora12(aMin(d.real.inicio)) + ' – ' + hora12(aMin(d.real.fin));
+    meta = fmtH(Math.round(d.horasReal * 100) / 100) + '\u00a0h reales' + (d.reg.usd ? ' · ' + fmtUSD(d.reg.usd) : '');
+  } else if (d.descanso) {
+    const px = proximo();
+    chip = 'Hoy descansas'; grande = 'Día libre';
+    meta = px ? 'Próximo turno: ' + NOMBRES_DIA[px.i].toLowerCase() + ' ' + px.fecha.getDate() + ' a las ' + hora12(px.inicio) + ' · despertador ' + hora12(px.despertador) : 'No hay turnos pendientes.';
+  } else if (minAhora < d.despertador) {
+    chip = 'Hoy transmites'; clase = 'on'; grande = hora12(d.inicio) + ' – ' + hora12(d.fin);
+    meta = fmtH(d.horas) + '\u00a0h · ' + cfg.turnos[d.franja].nombre + ' · despertador ' + hora12(d.despertador) + ' · Didi ' + hora12(d.didi);
+    pieK = 'Te despiertas en'; pieV = fmtDur(d.despertador - minAhora);
+  } else if (minAhora < d.inicio) {
+    chip = 'Alistamiento'; clase = 'on'; grande = hora12(d.inicio) + ' – ' + hora12(d.fin);
+    meta = minAhora < d.didi ? 'Pide el Didi a las ' + hora12(d.didi) + ' · llegada ' + hora12(d.llegada) : 'Llegada ' + hora12(d.llegada);
+    pieK = 'Te conectas en'; pieV = fmtDur(d.inicio - minAhora);
+  } else if (minAhora < d.fin) {
+    chip = 'En vivo ahora'; clase = 'live'; grande = hora12(d.inicio) + ' – ' + hora12(d.fin);
+    const pausaIni = d.inicio + d.bloque1;
+    meta = d.conPausa ? (minAhora < pausaIni ? 'Pausa activa a las ' + hora12(pausaIni) : 'Pausa hecha · ya vas en la segunda parte') : 'Turno corto, sin pausa';
+    pieK = 'Terminas en'; pieV = fmtDur(d.fin - minAhora);
+    barra = (minAhora - d.inicio) / (d.fin - d.inicio);
+  } else {
+    chip = 'Turno terminado'; grande = hora12(d.inicio) + ' – ' + hora12(d.fin);
+    meta = 'Anota cómo te fue para llevar tus horas reales.';
+  }
+  if (!d.real) boton = '<button class="btn light" data-go="hoy">' + (d.descanso ? 'Registrar igual' : 'Registrar hoy') + '</button>';
+  $('homeHero').innerHTML = '<span class="chip ' + clase + '"><i></i>' + chip + '</span>' +
+    '<div class="range">' + grande + '</div><div class="meta">' + esc(meta) + '</div>' +
+    (barra !== null ? '<div class="prog"><i style="width:' + Math.round(barra * 100) + '%"></i></div>' : '') +
+    '<div class="foot"><div>' + (pieK ? '<div class="k">' + pieK + '</div><b>' + pieV + '</b>' : '') + '</div>' + boton + '</div>';
+
+  // Tira de la semana
+  $('homeStrip').innerHTML = ph.dias.map(x => {
+    const c = ['sd'];
+    if (x.ausencia === 'falta') c.push('miss'); else if (x.real && !x.ausencia) c.push('done'); else if (x.descanso) c.push('rest');
+    if (x.i === iHoy) c.push('today'); if (x.rojo) c.push('red');
+    const abajo = x.ausencia === 'falta' ? 'falta' : x.real && !x.ausencia ? fmtH(Math.round(x.horasReal * 10) / 10) + 'h' : x.descanso ? 'libre' : fmtH(x.horas) + 'h';
+    return '<button class="' + c.join(' ') + '" data-strip="' + x.i + '" aria-label="' + NOMBRES_DIA[x.i] + '"><span>' + CORTO_DIA[x.i].charAt(0) + '</span><b>' + x.fecha.getDate() + '</b><small>' + abajo + '</small></button>';
+  }).join('');
+
+  // Tarjetas de horas y caja
+  $('homeTiles').innerHTML =
+    '<div class="tile"><div class="k">Horas reales</div><div class="v num">' + fmtH(Math.round(ph.horasReal * 10) / 10) + '<span style="font-size:15px;color:var(--label2);font-weight:500"> / ' + ph.meta + '\u00a0h</span></div><div class="meter tint"><i style="width:' + Math.min(100, ph.horasReal / ph.meta * 100) + '%"></i></div></div>' +
+    '<div class="tile"><div class="k">Caja</div><div class="v num">' + fmtUSD(Math.round(ph.caja)) + '<span style="font-size:15px;color:var(--label2);font-weight:500"> / ' + fmtUSD(cfg.metaUSD) + '</span></div><div class="meter"><i style="width:' + Math.min(100, ph.caja / cfg.metaUSD * 100) + '%"></i></div></div>';
+  $('homeAlerts').innerHTML = ph.avisos.slice(0, 2).map(a => '<div class="alert ' + a.tipo + '">' + a.txt + '</div>').join('');
+}
+
+/* ---------- Estadísticas ---------- */
+function renderStats() {
+  const fuente = verEjemplo ? storeEjemplo() : store;
+  const vista = verEjemplo ? sumarDias(lunesDe(new Date()), -7) : semana;
+  const r = estadisticas(fuente, rango, vista);
+  document.querySelectorAll('[data-rango]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.rango === rango)));
+  $('statsSub').textContent = rango === 'sem' ? 'Semana del ' + vista.getDate() + ' ' + MESES[vista.getMonth()] : rango === '4s' ? 'Últimas 4 semanas hasta la semana en vista' : 'Todo tu historial';
+  const banner = verEjemplo ? '<div class="banner"><span><b>Datos de ejemplo.</b> No son tus registros.</span><button class="linkbtn" id="hideDemo">Ocultar</button></div>' : '';
+
+  if (!r.dias && !r.usd && !r.faltas && !r.descansos) {
+    $('statsBody').innerHTML = banner + '<div class="group section"><div class="empty">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>' +
+      '<h3>Aún no hay registros</h3><p>Cuando anotes tus turnos reales en Registro verás aquí horas, dinero y tus mejores franjas.</p>' +
+      '<div class="stack" style="max-width:280px;margin:0 auto"><button class="btn" data-goto="registro">Ir a Registro</button><button class="btn plain" id="showDemo">Ver con datos de ejemplo</button></div></div></div>';
+    return;
+  }
+
+  // Tarjetas principales
+  const cumplidas = r.semanas.filter(w => w.cumpleHoras).length, metaOK = r.semanas.filter(w => w.cumpleUSD).length;
+  let html = banner + '<section class="section"><div class="tiles">' +
+    tile('Días trabajados', r.dias, r.cumplidos + ' completos · ' + r.cortos + ' cortos') +
+    tile('Horas reales', fmtH(Math.round(r.horas * 10) / 10) + '\u00a0h', 'Plan ' + fmtH(Math.round(r.horasPlan * 10) / 10) + '\u00a0h') +
+    tile('Facturado', fmtUSD(Math.round(r.usd)), r.semanas.length + (r.semanas.length === 1 ? ' semana' : ' semanas')) +
+    tile('Por hora', fmtUSD(Math.round(r.porHora * 100) / 100), 'Promedio real') +
+    tile('Faltas', r.faltas, r.faltas ? fmtH(Math.round(r.horasPerdidas * 10) / 10) + '\u00a0h sin hacer' : 'Ninguna en el periodo') +
+    tile('Descansos tomados', r.descansos, 'Fuera de los planeados') +
+    '</div></section>';
+
+  // Dinero por franja
+  const cats = Object.values(r.cat);
+  const maxCat = Math.max(1, ...cats.map(c => c.usd));
+  const mejorCat = cats.filter(c => c.horas > 0).sort((a, b) => b.usd / b.horas - a.usd / a.horas)[0];
+  html += '<section class="section"><div class="section-h">Dinero por franja</div><div class="group"><div class="bars">' +
+    cats.map(c => '<div class="barrow"><div class="top"><span>' + c.nombre + (mejorCat && c.id === mejorCat.id ? ' <span class="tag green">Mejor $/h</span>' : '') + '</span><span class="num">' + fmtUSD(Math.round(c.usd)) + '</span></div>' +
+      '<div class="track"><i style="width:' + (c.usd / maxCat * 100) + '%"></i></div>' +
+      '<div class="sub num">' + c.n + ' días · ' + fmtH(Math.round(c.horas * 10) / 10) + '\u00a0h · ' + (c.horas ? fmtUSD(Math.round(c.usd / c.horas * 100) / 100) + '/h' : 'sin horas') + '</div></div>').join('') +
+    '</div></div><div class="section-f">' + CATEGORIAS.map(c => c.nombre + ': ' + c.desc.split(' · ')[0].toLowerCase()).join('. ') + '.</div></section>';
+
+  // Promedio por día de la semana (columnas)
+  const prom = r.dow.map(x => x.n ? x.usd / x.n : 0), maxP = Math.max(1, ...prom), mejor = prom.indexOf(Math.max(...prom));
+  html += '<section class="section"><div class="section-h">Promedio facturado por día</div><div class="group">' +
+    '<div class="cols">' + prom.map((v, i) => '<div class="col' + (i === mejor && v > 0 ? ' best' : '') + '" title="' + NOMBRES_DIA[i] + ': ' + fmtUSD(Math.round(v)) + ' en ' + r.dow[i].n + ' días"><small class="num">' + (v ? '$' + Math.round(v) : '') + '</small><i style="height:' + (v / maxP * 100) + '%"></i></div>').join('') + '</div>' +
+    '<div class="colnames">' + CORTO_DIA.map(d => '<span>' + d + '</span>').join('') + '</div></div>' +
+    (prom[mejor] > 0 ? '<div class="section-f">Tu mejor día en promedio es el <b>' + NOMBRES_DIA[mejor].toLowerCase() + '</b> con ' + fmtUSD(Math.round(prom[mejor])) + '.' + (r.mejorDia ? ' Récord: ' + fmtUSD(r.mejorDia.usd) + ' el ' + NOMBRES_DIA[r.mejorDia.i].toLowerCase() + ' ' + r.mejorDia.fecha.getDate() + ' ' + MESES[r.mejorDia.fecha.getMonth()] + '.' : '') + '</div>' : '') +
+    '</section>';
+
+  // Semanas
+  html += '<section class="section"><div class="section-h">Semanas · ' + cumplidas + ' de ' + r.semanas.length + ' con horas completas · ' + metaOK + ' con meta de dinero</div><div class="group">' +
+    r.semanas.slice().reverse().map(w => '<div class="cell"><div class="grow"><div class="t">' + w.lunes.getDate() + ' ' + MESES[w.lunes.getMonth()] + ' – ' + sumarDias(w.lunes, 6).getDate() + ' ' + MESES[sumarDias(w.lunes, 6).getMonth()] + '</div>' +
+      '<div class="s">' + w.dias + ' días' + (w.faltas ? ' · ' + w.faltas + (w.faltas > 1 ? ' faltas' : ' falta') : '') + ' · ' + fmtH(Math.round(w.horas * 10) / 10) + ' de ' + w.meta + '\u00a0h</div></div>' +
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none"><b class="num">' + fmtUSD(Math.round(w.usd)) + '</b>' +
+      '<span class="tag ' + (w.cumpleUSD ? 'green' : 'gray') + '">' + (w.cumpleUSD ? 'Meta $ ✓' : 'Meta $ ✗') + '</span><span class="tag ' + (w.cumpleHoras ? 'green' : 'orange') + '">' + (w.cumpleHoras ? 'Horas ✓' : 'Horas ✗') + '</span></div></div>').join('') +
+    '</div></section>';
+  $('statsBody').innerHTML = html;
+}
+function tile(k, v, d) { return '<div class="tile"><div class="k">' + k + '</div><div class="v num">' + v + '</div><div class="d">' + d + '</div></div>'; }
+
+/* ---------- Ajustes ---------- */
+function renderAjustes() {
+  const cfg = store.config;
+  const links = enlacesGH(cfg.gh);
+  $('webcalTxt').textContent = links.raw;
+  $('lnkWebcal').href = links.webcal;
+  $('tokRepo').textContent = cfg.gh.repo;
+  ['owner', 'repo', 'branch', 'ruta'].forEach(k => { const el = $('gh-' + k); if (el !== document.activeElement) el.value = cfg.gh[k]; });
+  document.querySelectorAll('[data-ghauto]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.ghauto === '1') === !!cfg.gh.auto)));
+  pintarSync();
+  document.querySelectorAll('[data-cfg]').forEach(inp => {
+    if (inp === document.activeElement) return;
+    const v = cfg[inp.dataset.cfg];
+    inp.value = Array.isArray(v) ? v.join(', ') : v;
+  });
+  const segFranja = (i) => '<div class="seg mini" role="group" aria-label="Franja ' + NOMBRES_DIA[i] + '">' +
+    ['am', 'pm'].map(f => '<button data-franja="' + i + '" data-v="' + f + '" aria-pressed="' + (cfg.franjaDia[i] === f) + '">' + esc(cfg.turnos[f].nombre) + '</button>').join('') + '</div>';
+  $('cfgDays').innerHTML = [0, 1, 2, 3, 4].map(i =>
+    '<div class="cell"><div class="grow"><div class="t">' + NOMBRES_DIA[i] + '</div>' + (Number(cfg.base[i]) ? '' : '<div class="s">Descanso</div>') + '</div>' +
+    '<label class="field" style="width:72px"><input id="cfg-base-' + i + '" data-path="base.' + i + '" inputmode="decimal" autocomplete="off" value="' + cfg.base[i] + '" aria-label="Horas ' + NOMBRES_DIA[i] + '"><span>h</span></label>' + segFranja(i) + '</div>').join('');
+  const filaH = (txt, path, val, id) => '<div class="cell"><div class="grow"><div class="t">' + txt + '</div></div><label class="field" style="width:84px"><input id="' + id + '" data-path="' + path + '" inputmode="decimal" autocomplete="off" value="' + val + '"><span>h</span></label></div>';
+  $('cfgWeekend').innerHTML =
+    '<div class="cell"><div class="grow"><div class="t">Sábado</div><div class="s">Franja</div></div>' + segFranja(5) + '</div>' +
+    '<div class="cell"><div class="grow"><div class="t">Domingo</div><div class="s">Franja</div></div>' + segFranja(6) + '</div>' +
+    filaH('Sin meta · sábado', 'finde.g42.0', cfg.finde.g42[0], 'cfg-g42-0') + filaH('Sin meta · domingo', 'finde.g42.1', cfg.finde.g42[1], 'cfg-g42-1') +
+    filaH('Opción 1 · sábado', 'finde.opt1.0', cfg.finde.opt1[0], 'cfg-o1-0') + filaH('Opción 1 · domingo', 'finde.opt1.1', cfg.finde.opt1[1], 'cfg-o1-1') +
+    filaH('Opción 2 · sábado', 'finde.opt2.0', cfg.finde.opt2[0], 'cfg-o2-0') + filaH('Opción 2 · domingo', 'finde.opt2.1', cfg.finde.opt2[1], 'cfg-o2-1');
+  const filaT = (f, campo, txt) => '<div class="cell"><div class="grow"><div class="t">' + txt + '</div></div><label class="field time"><input type="time" step="300" id="cfg-' + f + '-' + campo + '" data-path="turnos.' + f + '.' + campo + '" value="' + cfg.turnos[f][campo] + '"></label></div>';
+  $('cfgTurnos').innerHTML = ['am', 'pm'].map(f =>
+    '<div class="cell"><div class="grow"><div class="t"><b>' + esc(cfg.turnos[f].nombre) + '</b></div></div><label class="field wide" style="width:150px"><input id="cfg-' + f + '-nombre" data-path="turnos.' + f + '.nombre" value="' + esc(cfg.turnos[f].nombre) + '" aria-label="Nombre de la franja" style="text-align:right"></label></div>' +
+    filaT(f, 'inicio', 'Inicio') + filaT(f, 'despertador', 'Despertador') + filaT(f, 'didi', 'Pedir Didi') + filaT(f, 'llegada', 'Llegada')).join('');
+}
+/** Asigna un valor dentro de config usando una ruta tipo "finde.g42.0". */
+function setRuta(obj, ruta, valor) { const p = ruta.split('.'); let o = obj; for (let i = 0; i < p.length - 1; i++) o = o[p[i]]; o[p[p.length - 1]] = valor; }
+
+/* ---------- Hoja de plan ---------- */
+function abrirHoja(id) {
+  $(id).classList.add('open'); $('backdrop').classList.add('open');
+  setTimeout(() => { const f = $(id).querySelector('.sheet-head button:last-child'); if (f) f.focus({ preventScroll: true }); }, 50);
+}
+function cerrarHojas() { document.querySelectorAll('.sheet.open').forEach(s => s.classList.remove('open')); $('backdrop').classList.remove('open'); abierto = null; }
+function pintarHojaPlan() {
+  const d = plan.dias[abierto], cfg = store.config;
+  $('planTitle').textContent = NOMBRES_DIA[d.i] + ' ' + d.fecha.getDate() + ' ' + MESES[d.fecha.getMonth()];
+  $('planHrs').textContent = fmtH(d.horas) + '\u00a0h';
+  $('planHint').textContent = d.ausencia ? (d.ausencia === 'falta' ? 'Registrado como falta' : 'Registrado como descanso') : d.real ? 'Ya registrado: ' + fmtH(d.horasReal) + '\u00a0h reales' : (d.larga ? 'Jornada larga' : d.editado ? 'Editado' : 'Automático') + ' · recomendado ' + cfg.maxDia + '\u00a0h, máx. ' + cfg.maxPermitido + '\u00a0h';
+  if (document.activeElement !== $('planStart')) $('planStart').value = aHM(d.inicio);
+  $('planFranja').textContent = 'Franja ' + cfg.turnos[d.franja].nombre.toLowerCase() + ' · ' + d.categoria.nombre.toLowerCase();
+  $('planRest').hidden = d.descanso || !!d.real;
+  // Si ya está registrado, lo que manda es el registro: se bloquean horas e inicio
+  $('planMinus').disabled = $('planPlus').disabled = $('planStart').disabled = !!d.real;
+  $('planReset').hidden = !!d.real;
+  if (d.descanso) { $('planTimeline').innerHTML = '<div class="tl"><time>Todo el día</time><span>Descanso</span></div>'; return; }
+  const filas = [[d.despertador, '⏰ Despertador y alistamiento'], [d.didi, '🛵 Pedir Didi Moto'], [d.llegada, '📍 Llegada'], [d.inicio, '💻 Inicio de conexión']];
+  if (d.conPausa) filas.push([d.inicio + d.bloque1, '☕ Pausa activa ' + cfg.pausaMin + ' min'], [d.inicio + d.bloque1 + cfg.pausaMin, '💻 Continuación']);
+  filas.push([d.fin, '🏁 Fin de turno']);
+  $('planTimeline').innerHTML = filas.map(f => '<div class="tl"><time>' + hora12(f[0]) + '</time><span>' + f[1] + '</span></div>').join('');
+}
+function cambiarHorasPlan(delta) {
+  const d = plan.dias[abierto];
+  if (d.real) { toast('Este día ya está registrado; cámbialo en Registro'); return; }
+  const base = d.reg.plan && d.reg.plan.horas !== undefined ? d.reg.plan.horas : d.horas;
+  const reg = dia(d.key); reg.plan = reg.plan || {};
+  const nuevo = Math.min(store.config.maxPermitido, Math.max(0, base + delta));
+  if (delta > 0 && base >= store.config.maxPermitido) { toast('Máximo permitido: ' + store.config.maxPermitido + '\u00a0h por día'); return; }
+  reg.plan.horas = nuevo;
+  guardarStore(); render();
+  if (nuevo > store.config.maxDia) toast('Jornada larga: más de ' + store.config.maxDia + '\u00a0h recomendadas');
+}
+
+/* ---------- Hoja de registro real ---------- */
+let estadoReal = 'trabajo'; // 'trabajo' | 'falta' | 'descanso'
+/** Cambia el tipo de registro y muestra solo los campos que aplican. */
+function ponerEstado(e) {
+  estadoReal = e;
+  document.querySelectorAll('#realEstado [data-estado]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.estado === e)));
+  $('realWork').hidden = e !== 'trabajo';
+  $('realFill').hidden = e !== 'trabajo';
+  $('realNotaSec').hidden = e === 'trabajo';
+  actualizarCalculo();
+}
+function abrirReal(i) {
+  abierto = i;
+  const d = plan.dias[i];
+  $('realNota').value = (d.real && d.real.nota) || '';
+  $('realTitle').textContent = CORTO_DIA[d.i] + ' ' + d.fecha.getDate() + ' ' + MESES[d.fecha.getMonth()];
+  const r = d.real || {};
+  $('realStart').value = r.inicio || '';
+  $('realEnd').value = r.fin || '';
+  $('realPause').value = r.pausa ?? (d.real ? 0 : '');
+  $('realUSD').value = d.reg.usd ?? '';
+  $('realDelete').hidden = !d.real && d.reg.usd === undefined;
+  ponerEstado(d.real ? (d.real.estado || 'trabajo') : 'trabajo');
+  abrirHoja('sheetReal');
+}
+function borradorReal() { return { inicio: $('realStart').value, fin: $('realEnd').value, pausa: Math.max(0, leerNum($('realPause').value) || 0) }; }
+function actualizarCalculo() {
+  const d = plan.dias[abierto]; if (!d) return;
+  if (estadoReal !== 'trabajo') {
+    $('realHrs').textContent = '0\u00a0h';
+    $('realPlanTxt').textContent = d.horasPlan > 0 ? 'Las ' + fmtH(d.horasPlan) + '\u00a0h del plan se reparten en los días que quedan' : 'Día sin turno planeado';
+    return;
+  }
+  const h = horasReales(borradorReal());
+  $('realHrs').textContent = fmtH(Math.round(h * 100) / 100) + '\u00a0h';
+  $('realPlanTxt').textContent = d.descanso && !d.real ? 'Día sin turno planeado' : 'Plan: ' + fmtH(d.horasPlan) + '\u00a0h' + (h ? (h + 0.05 >= d.horasPlan ? ' · cumplido' : ' · faltan ' + fmtH(Math.round((d.horasPlan - h) * 100) / 100) + '\u00a0h') : '');
+}
+
+/* ---------- Mensajes ---------- */
+let toastT;
+function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2400); }
+let accionDialogo = null;
+function confirmar(titulo, texto, boton, accion) { $('dlgTitle').textContent = titulo; $('dlgText').textContent = texto; $('dlgYes').textContent = boton; accionDialogo = accion; $('dialog').classList.add('open'); $('dlgNo').focus(); }
+function cerrarDialogo() { $('dialog').classList.remove('open'); accionDialogo = null; }
+
+/* =====================================================================
+   9. EVENTOS
+   ===================================================================== */
+$('prevWeek').onclick = () => { semana = sumarDias(semana, -7); render(); };
+$('nextWeek').onclick = () => { semana = sumarDias(semana, 7); render(); };
+$('weekLabel').onclick = () => { semana = lunesDe(new Date()); render(); };
+
+// Pestañas
+function irA(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === tab)));
+  ['inicio', 'semana', 'registro', 'stats', 'ajustes'].forEach(n => { $('tab-' + n).hidden = n !== tab; });
+  $('weekNav').hidden = tab === 'inicio' || tab === 'ajustes'; // la portada siempre muestra hoy
+  if (tab === 'inicio') renderInicio();
+  if (tab === 'stats') renderStats();
+  if (tab === 'ajustes') renderAjustes();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => irA(t.dataset.tab)));
+
+// Abrir hojas desde las listas
+$('dayList').addEventListener('click', e => { const b = e.target.closest('[data-plan]'); if (!b) return; abierto = Number(b.dataset.plan); pintarHojaPlan(); abrirHoja('sheetPlan'); });
+$('regList').addEventListener('click', e => { const b = e.target.closest('[data-real]'); if (b) abrirReal(Number(b.dataset.real)); });
+$('backdrop').onclick = cerrarHojas;
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = cerrarHojas);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if ($('dialog').classList.contains('open')) cerrarDialogo(); else cerrarHojas(); } });
+
+// Hoja de plan
+$('planMinus').onclick = () => cambiarHorasPlan(-0.5);
+$('planPlus').onclick = () => cambiarHorasPlan(0.5);
+$('planStart').addEventListener('change', e => {
+  const reg = dia(plan.dias[abierto].key); reg.plan = reg.plan || {};
+  if (e.target.value) reg.plan.inicio = e.target.value; else delete reg.plan.inicio;
+  limpiarDia(plan.dias[abierto].key); guardarStore(); render();
+});
+$('planRest').onclick = () => {
+  const reg = dia(plan.dias[abierto].key); reg.plan = Object.assign(reg.plan || {}, { horas: 0 });
+  guardarStore(); render(); toast('Día marcado como descanso; el plan se rebalanceó');
+};
+$('planReset').onclick = () => { const k = plan.dias[abierto].key; if (store.dias[k]) delete store.dias[k].plan; limpiarDia(k); guardarStore(); render(); toast('Día devuelto al plan automático'); };
+
+// Hoja de registro
+$('realEstado').addEventListener('click', e => { const b = e.target.closest('[data-estado]'); if (b) ponerEstado(b.dataset.estado); });
+['realStart', 'realEnd', 'realPause'].forEach(id => $(id).addEventListener('input', actualizarCalculo));
+$('realFill').onclick = () => {
+  const d = plan.dias[abierto]; if (d.descanso) { toast('Ese día no tiene turno planeado'); return; }
+  $('realStart').value = aHM(d.inicio); $('realEnd').value = aHM(d.fin); $('realPause').value = d.conPausa ? store.config.pausaMin : 0; actualizarCalculo();
+};
+$('realSave').onclick = () => {
+  const d = plan.dias[abierto], r = borradorReal(), reg = dia(d.key), antes = plan.cumple;
+  if (estadoReal !== 'trabajo') {
+    // Falta o descanso: sin horas ni dinero, con motivo opcional
+    reg.real = { estado: estadoReal }; const nota = $('realNota').value.trim(); if (nota) reg.real.nota = nota;
+    delete reg.usd;
+  } else {
+    if ((r.inicio && !r.fin) || (!r.inicio && r.fin)) { toast('Pon la hora de inicio y la de fin'); return; }
+    if (r.inicio && r.inicio === r.fin) { toast('El inicio y el fin no pueden ser iguales'); return; }
+    if (r.inicio && horasReales(r) > 20) { toast('Más de 20 h en un día: revisa las horas'); return; }
+    if (r.inicio && horasReales(r) === 0) { toast('La pausa es igual o mayor que el turno'); return; }
+    const usdTxt = $('realUSD').value.trim();
+    if (usdTxt && leerNum(usdTxt) === null) { toast('Escribe el dinero solo con números, ej. 120,50'); return; }
+    if (!r.inicio && !usdTxt) { toast('Escribe tus horas o lo facturado'); return; }
+    if (r.inicio && r.fin) reg.real = r; else delete reg.real;
+    const usd = leerNum($('realUSD').value);
+    if (usd !== null && usd >= 0) reg.usd = usd; else delete reg.usd;
+  }
+  limpiarDia(d.key); guardarStore(); cerrarHojas(); render();
+  if (estadoReal !== 'trabajo') { toast(estadoReal === 'falta' ? 'Falta registrada; el plan se ajustó' : 'Descanso registrado'); return; }
+  if (reg.real && horasReales(reg.real) > store.config.maxDia + 0.01) { toast('Guardado · jornada larga de ' + fmtH(Math.round(horasReales(reg.real) * 100) / 100) + '\u00a0h'); return; }
+  toast(!antes && plan.cumple ? 'Modo Libertad activado: meta de ' + store.config.horasCumple + '\u00a0h' : 'Registro guardado');
+};
+$('realDelete').onclick = () => {
+  const k = plan.dias[abierto].key;
+  confirmar('¿Borrar el registro?', 'Se quitan las horas reales y el dinero de este día.', 'Borrar', () => {
+    if (store.dias[k]) { delete store.dias[k].real; delete store.dias[k].usd; } limpiarDia(k); guardarStore(); cerrarHojas(); render(); toast('Registro borrado');
+  });
+};
+
+// Opciones de fin de semana
+$('opt1').onclick = () => { store.opciones[clave(semana)] = 'opt1'; guardarStore(); render(); };
+$('opt2').onclick = () => { store.opciones[clave(semana)] = 'opt2'; guardarStore(); render(); };
+
+// Estadísticas (delegación porque el contenido se repinta)
+$('tab-stats').addEventListener('click', e => {
+  const r = e.target.closest('[data-rango]'); if (r) { rango = r.dataset.rango; renderStats(); return; }
+  if (e.target.closest('#showDemo')) { verEjemplo = true; renderStats(); return; }
+  if (e.target.closest('#hideDemo')) { verEjemplo = false; renderStats(); return; }
+  const g = e.target.closest('[data-goto]'); if (g) irA(g.dataset.goto);
+});
+
+// Ajustes: campos simples (data-cfg) y anidados (data-path)
+$('tab-ajustes').addEventListener('change', e => {
+  const inp = e.target, cfg = store.config;
+  if (!inp.dataset.cfg && !inp.dataset.path) return; // token, respaldo, etc. tienen su propio manejo
+  if (inp.dataset.cfg) {
+    const k = inp.dataset.cfg;
+    if (CFG_TEXTO.includes(k)) cfg[k] = inp.value.trim() || CONFIG_BASE[k];
+    else if (k === 'diasRojos') {
+      const lista = [...new Set(inp.value.split(/[,\s]+/).filter(Boolean).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= 31))].sort((a, b) => a - b);
+      if (inp.value.trim() && !lista.length) { toast('Escribe días del 1 al 31 separados por coma'); renderAjustes(); return; }
+      cfg.diasRojos = lista;
+    }
+    else {
+      // Rangos permitidos por ajuste: [mínimo, máximo, mensaje]
+      const RANGOS = { metaUSD: [1, 100000, 'La meta debe ser mayor a $0'], horasCumple: [1, 112, 'Escribe horas entre 1 y 112'],
+        horasNoCumple: [1, 112, 'Escribe horas entre 1 y 112'], maxDia: [1, 24, 'El recomendado va de 1 a 24 h'], maxPermitido: [1, 24, 'El máximo permitido va de 1 a 24 h'],
+        pausaMin: [0, 120, 'La pausa va de 0 a 120 min'], pausaDesde: [0, 24, 'Escribe horas entre 0 y 24'] };
+      const n = leerNum(inp.value), [mn, mx, msg] = RANGOS[k] || [0, 1e9, 'Escribe un número válido'];
+      if (n === null || n < mn || n > mx) { toast(msg); renderAjustes(); return; }
+      if (k === 'maxDia' && n > cfg.maxPermitido) { toast('El recomendado no puede pasar del máximo permitido (' + cfg.maxPermitido + '\u00a0h)'); renderAjustes(); return; }
+      if (k === 'maxPermitido' && n < cfg.maxDia) { toast('El máximo permitido no puede ser menor que el recomendado (' + cfg.maxDia + '\u00a0h)'); renderAjustes(); return; }
+      cfg[k] = n;
+    }
+  } else if (inp.dataset.path && inp.dataset.path.startsWith('gh.')) {
+    const v = inp.value.trim().replace(/^\/+|\/+$/g, '');
+    if (!v) { toast('Este campo no puede quedar vacío'); renderAjustes(); return; }
+    setRuta(cfg, inp.dataset.path, v);
+  } else if (inp.dataset.path) {
+    if (inp.type === 'time') { if (!inp.value) { renderAjustes(); return; } setRuta(cfg, inp.dataset.path, inp.value); }
+    else if (inp.dataset.path.endsWith('.nombre')) setRuta(cfg, inp.dataset.path, inp.value.trim() || 'Franja');
+    else {
+      const n = leerNum(inp.value);
+      if (n === null || n < 0 || n > cfg.maxPermitido) { toast('Escribe horas entre 0 y ' + cfg.maxPermitido + ' (tu máximo permitido)'); renderAjustes(); return; }
+      setRuta(cfg, inp.dataset.path, n);
+    }
+  }
+  guardarStore(); render(); renderAjustes(); toast('Ajuste guardado');
+});
+$('tab-ajustes').addEventListener('click', e => {
+  const b = e.target.closest('[data-franja]'); if (!b) return;
+  store.config.franjaDia[Number(b.dataset.franja)] = b.dataset.v; guardarStore(); render(); renderAjustes();
+});
+
+// Respaldo
+function copiarTexto(texto, ok, nodoRespaldo) {
+  const fallo = () => { if (nodoRespaldo) { nodoRespaldo.focus(); nodoRespaldo.select ? nodoRespaldo.select() : null; } toast('No se pudo copiar: selecciónalo y cópialo a mano'); };
+  try { navigator.clipboard.writeText(texto).then(() => toast(ok), fallo); } catch (e) { fallo(); }
+}
+$('btnBackup').onclick = () => { const t = JSON.stringify(store); $('restoreText').value = t; copiarTexto(t, 'Respaldo copiado', $('restoreText')); };
+$('btnRestore').onclick = () => {
+  let s; try { s = JSON.parse($('restoreText').value); } catch (e) { toast('El texto no es un respaldo válido'); return; }
+  if (!s || typeof s.dias !== 'object' || Array.isArray(s.dias) || s.dias === null) { toast('El texto no es un respaldo válido'); return; }
+  confirmar('¿Restaurar respaldo?', 'Se reemplazan tus ajustes y registros actuales por los del respaldo.', 'Restaurar', () => { store = normalizar(s); guardarStore(); render(); renderAjustes(); toast('Respaldo restaurado'); });
+};
+$('btnResetCfg').onclick = () => confirmar('¿Volver a los ajustes de fábrica?', 'Metas, horarios y reglas vuelven a los valores originales. Tus registros no se tocan.', 'Restablecer', () => { store.config = copia(CONFIG_BASE); guardarStore(); render(); renderAjustes(); toast('Ajustes restablecidos'); });
+$('btnWipe').onclick = () => confirmar('¿Borrar todo?', 'Se eliminan ajustes, planes y registros de este navegador. No se puede deshacer.', 'Borrar todo', () => { store = storeVacio(); guardarStore(); render(); renderAjustes(); toast('Datos borrados'); });
+$('dlgNo').onclick = cerrarDialogo;
+$('dlgYes').onclick = () => { const a = accionDialogo; cerrarDialogo(); if (a) a(); };
+
+// Exportar .ics
+$('btnCopy').onclick = () => copiarTexto(generarICS(planesICS(), store.config).texto, 'Calendario copiado: ahora pégalo en GitHub', null);
+document.querySelectorAll('[data-icsw]').forEach(b => b.onclick = () => { store.config.icsSemanas = Number(b.dataset.icsw); guardarStore(); render(); });
+$('btnCopyUrl').onclick = () => copiarTexto(enlacesGH(store.config.gh).raw, 'Enlace copiado', null);
+// Conexión con GitHub
+$('ghToken').addEventListener('change', e => {
+  const t = e.target.value.trim(); e.target.value = '';
+  if (!t) return;
+  if (!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(t)) { toast('Eso no parece un token de GitHub (empieza por github_pat_)'); return; }
+  guardarToken(t); pintarSync(); subirCalendario(true);
+});
+$('btnTokenDel').onclick = () => confirmar('¿Quitar el token?', 'La app deja de subir cambios desde este celular. El token sigue existiendo en GitHub hasta que lo borres allá.', 'Quitar', () => { guardarToken(''); guardarEstadoSync(null); pintarSync(); toast('Token quitado'); });
+$('btnSyncTest').onclick = () => subirCalendario(true);
+$('btnSyncNow').onclick = () => subirCalendario(true);
+document.querySelectorAll('[data-ghauto]').forEach(b => b.onclick = () => { store.config.gh.auto = b.dataset.ghauto === '1'; guardarStore(); renderAjustes(); });
+// El estado "hace X min" se refresca solo
+setInterval(() => pintarSync(), 60000);
+
+// Portada: accesos rápidos y tira de la semana
+function irAHoy() {
+  semana = lunesDe(new Date()); render(); irA('registro');
+  abrirReal((new Date().getDay() + 6) % 7);
+}
+$('tab-inicio').addEventListener('click', e => {
+  const g = e.target.closest('[data-go]');
+  if (g) {
+    const v = g.dataset.go;
+    if (v === 'hoy') irAHoy();
+    else if (v === 'calendario') { semana = lunesDe(new Date()); render(); irA('semana'); $('calSec').scrollIntoView(); }
+    else { semana = lunesDe(new Date()); render(); irA(v); }
+    return;
+  }
+  const st = e.target.closest('[data-strip]');
+  if (st) { semana = lunesDe(new Date()); render(); irA('semana'); abierto = Number(st.dataset.strip); pintarHojaPlan(); abrirHoja('sheetPlan'); }
+});
+// La portada se actualiza sola (cuenta regresiva y estado del turno)
+setInterval(() => { if (!$('tab-inicio').hidden) renderInicio(); }, 30000);
+
+guardarStore(); // deja guardada la migración, si la hubo
+render();
+</script>
+
+</body>
+</html>
