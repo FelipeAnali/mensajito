@@ -1879,10 +1879,14 @@ setInterval(() => { if (!$('tab-inicio').hidden) renderInicio(); }, 30000);
  */
 let tokenDeEnlace = false;
 (function leerEnlaceConfig() {
-  const q = new URLSearchParams(location.hash.slice(1)), t = (q.get('token') || '').trim(), v = q.get('vence') || '';
-  if (!t) return;
+  let hash = location.hash.slice(1);
+  try { hash = decodeURIComponent(hash); } catch (e) {}
+  if (!/token=/.test(hash)) return;
   history.replaceState(null, '', location.pathname + location.search);
-  if (!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(t)) { toast('El enlace no trae un token válido'); return; }
+  // Tolera comillas, espacios o "< >" pegados al token: toma solo la parte con forma de token
+  const m = hash.match(/(github_pat_|ghp_)[A-Za-z0-9_]{20,}/), mv = hash.match(/vence=(\d{4}-\d{2}-\d{2})/);
+  if (!m) { toast(/TU_TOKEN/i.test(hash) ? 'Cambia TU_TOKEN por el token de GitHub' : 'El enlace no trae un token: debe empezar por github_pat_'); return; }
+  const t = m[0], v = mv ? mv[1] : '';
   guardarToken(t); tokenDeEnlace = true;
   if (/^\d{4}-\d{2}-\d{2}$/.test(v)) guardarVence(v);
 })();
