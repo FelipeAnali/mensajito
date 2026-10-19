@@ -182,6 +182,7 @@ b{font-weight:600}
 .alert{padding:11px 14px;border-radius:12px;background:var(--orange-soft);font-size:14px;line-height:1.45}
 .alert.red{background:var(--red-soft)}
 .alert.green{background:var(--green-soft)}
+.linkbtn{border:0;background:none;padding:0;margin-left:4px;font:inherit;font-weight:600;color:var(--tint);cursor:pointer}
 
 /* ---------- Campos ---------- */
 .field{display:flex;align-items:center;gap:4px;background:var(--fill);border-radius:9px;padding:0 10px;flex:none;width:120px;min-height:36px}
@@ -498,9 +499,10 @@ ol.steps li+li{margin-top:6px}
           <div class="seg mini" role="group" aria-label="Semanas a incluir"><button data-icsw="1" aria-pressed="true">Esta</button><button data-icsw="2" aria-pressed="false">+ Próxima</button></div></div>
       </div>
       <div class="stack" style="margin-top:10px">
-        <button class="btn" id="btnSyncNow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>Subir a GitHub ahora</button>
+        <a class="btn" id="lnkWebcal2" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M12 12v6M9 15h6"/></svg>Suscribirme en este iPhone</a>
+        <button class="btn plain" id="btnSyncNow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>Subir a GitHub ahora</button>
       </div>
-      <div class="section-f" id="syncHelp">Con la conexión activa, cada cambio que hagas sube solo el calendario a GitHub y tu iPhone lo actualiza. Se conecta en Ajustes → Conexión con GitHub.</div>
+      <div class="section-f" id="syncHelp">La suscripción se hace una sola vez. Con la conexión activa, los cambios suben solos a GitHub al salir de la app (o 2 min después del último cambio) y el iPhone actualiza el calendario cuando lo revisa. Después de suscribirte, en Calendarios suscritos desactiva <b>Eliminar alertas</b>.</div>
       <details class="manual">
         <summary>Hacerlo a mano (sin conexión)</summary>
         <div class="stack" style="margin-top:10px">
@@ -603,7 +605,8 @@ ol.steps li+li{margin-top:6px}
         <div class="cell"><div class="grow"><div class="t">Archivo</div></div><label class="field" style="width:190px"><input id="gh-ruta" data-path="gh.ruta" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" style="text-align:right"></label></div>
         <div class="cell"><div class="grow"><div class="t">Nombre del calendario</div></div><label class="field" style="width:190px"><input id="cfg-icsNombre" data-cfg="icsNombre" autocomplete="off" style="text-align:right"></label></div>
         <div class="cell"><div class="grow"><div class="t">Token</div><div class="s" id="tokenEstado">Sin token</div></div><label class="field" style="width:190px"><input id="ghToken" type="password" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="github_pat_…" aria-label="Token de GitHub"></label></div>
-        <div class="cell"><div class="grow"><div class="t">Subir cambios solo</div><div class="s">Unos segundos después de cada cambio</div></div>
+        <div class="cell" id="venceRow" hidden><div class="grow"><div class="t">El token vence</div><div class="s">La app avisa 2 semanas antes</div></div><label class="field time" style="width:150px"><input type="date" id="ghVence" aria-label="Fecha de vencimiento del token"></label></div>
+        <div class="cell"><div class="grow"><div class="t">Subir cambios solo</div><div class="s">Al salir de la app o 2 min después del último cambio</div></div>
           <div class="seg mini" role="group" aria-label="Subida automática"><button data-ghauto="1" aria-pressed="true">Sí</button><button data-ghauto="0" aria-pressed="false">No</button></div></div>
       </div>
       <div class="stack" style="margin-top:10px">
@@ -626,14 +629,14 @@ ol.steps li+li{margin-top:6px}
           <li>Nombre: StreamPlanner. Vencimiento: el que prefieras (por ejemplo 1 año).</li>
           <li><b>Repository access → Only select repositories</b> → elige solo <b id="tokRepo">mensajito</b>.</li>
           <li><b>Permissions → Repository permissions → Contents → Read and write</b>. Nada más.</li>
-          <li>Toca <b>Generate token</b>, cópialo y pégalo arriba en Token.</li>
+          <li>Toca <b>Generate token</b>, cópialo y pégalo arriba en Token. Anota la fecha de vencimiento en <b>El token vence</b>.</li>
         </ol>
       </div>
       <div class="section-h" style="margin-top:22px">Suscribirse en el iPhone (una sola vez)</div>
       <div class="group">
         <ol class="steps">
-          <li><b>Ajustes → Calendario → Cuentas → Añadir cuenta → Otra → Añadir calendario suscrito</b>.</li>
-          <li>Pega tu enlace de suscripción y toca <b>Siguiente → Guardar</b>.</li>
+          <li>Toca <b>Suscribirme</b> (aquí o en Semana → Calendario del iPhone) y luego <b>Suscribirse → Guardar</b>.</li>
+          <li>Si no se abre: <b>Ajustes → Apps → Calendario → Cuentas → Añadir cuenta → Otra → Añadir calendario suscrito</b>, pega el enlace y toca <b>Siguiente → Guardar</b>.</li>
           <li><b>Importante:</b> en Calendarios suscritos → tu calendario, desactiva <b>Eliminar alertas</b>.</li>
         </ol>
       </div>
@@ -733,10 +736,14 @@ const CONFIG_BASE = {
   diasRojos: [1, 2, 14, 15, 16, 30, 31],
   // Calendario suscrito en GitHub (lo que funciona en iPhone sin pasar por Mi Fitness)
   // Dónde vive el calendario en GitHub. Con esto se arman solos los enlaces.
-  gh: { owner: 'FelipeAnali', repo: 'mensajito', branch: 'claude/bold-fermat-ta8hnh', ruta: 'calendario/turnos.ics', auto: true },
+  // Repo aparte: el token del celular solo puede tocar ese repo, no la página.
+  gh: { owner: 'FelipeAnali', repo: 'turnos', branch: 'main', ruta: 'turnos.ics', auto: true },
   icsNombre: 'Turnos StreamPlanner',
-  icsSemanas: 1         // semanas que se incluyen al copiar el calendario
+  icsSemanas: 2         // semanas en el calendario: esta y la próxima (las alarmas del lunes llegan desde el domingo)
 };
+/** Ubicación anterior del calendario (rama temporal de mensajito): se migra sola a la nueva. */
+const GH_VIEJO = { repo: 'mensajito', branch: 'claude/bold-fermat-ta8hnh' };
+let ghMigrado = false; // true si al cargar se movió el calendario a la nueva ubicación
 const CFG_TEXTO = ['icsNombre']; // ajustes que son texto, no número
 const NOMBRES_DIA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const CORTO_DIA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -821,6 +828,11 @@ function normalizar(s) {
                  pm: Object.assign(copia(CONFIG_BASE.turnos.pm), (s.config && s.config.turnos && s.config.turnos.pm) || {}) };
   cfg.finde = Object.assign(copia(CONFIG_BASE.finde), (s.config && s.config.finde) || {});
   cfg.gh = Object.assign(copia(CONFIG_BASE.gh), (cfgIn.gh && typeof cfgIn.gh === 'object') ? cfgIn.gh : {});
+  if (cfg.gh.repo === GH_VIEJO.repo && cfg.gh.branch === GH_VIEJO.branch) {
+    cfg.gh = Object.assign(copia(CONFIG_BASE.gh), { auto: cfg.gh.auto });
+    cfg.icsSemanas = CONFIG_BASE.icsSemanas;
+    ghMigrado = true;
+  }
   const esObj = (o) => o && typeof o === 'object' && !Array.isArray(o);
   return { v: 2, config: cfg, dias: esObj(s.dias) ? s.dias : {}, opciones: esObj(s.opciones) ? s.opciones : {} };
 }
@@ -1107,6 +1119,25 @@ function generarICS(planes, cfg) {
    ===================================================================== */
 const LLAVE_TOKEN = 'streamplanner:ghtoken';
 const LLAVE_SYNC = 'streamplanner:ghsync';
+const LLAVE_PEND = 'streamplanner:ghpend';     // hay cambios sin subir (sobrevive si se cierra la app)
+const LLAVE_VENCE = 'streamplanner:ghvence';   // fecha de vencimiento del token (AAAA-MM-DD)
+const ESPERA_SYNC = 120000;                     // respaldo: sube 2 min después del último cambio aunque la app siga abierta
+const leerVence = () => { try { return localStorage.getItem(LLAVE_VENCE) || ''; } catch (e) { return ''; } };
+const guardarVence = (v) => { try { v ? localStorage.setItem(LLAVE_VENCE, v) : localStorage.removeItem(LLAVE_VENCE); } catch (e) {} };
+const hayPendiente = () => { try { return localStorage.getItem(LLAVE_PEND) === '1'; } catch (e) { return false; } };
+const marcarPendiente = (si) => { try { si ? localStorage.setItem(LLAVE_PEND, '1') : localStorage.removeItem(LLAVE_PEND); } catch (e) {} };
+/** Días que le quedan al token (null si no se sabe la fecha). */
+function diasToken() {
+  const v = leerVence(); if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  return Math.round((deClave(v) - hoy) / 86400000);
+}
+/** GitHub manda la fecha de vencimiento del token en un encabezado (si el navegador lo deja leer). */
+function leerVenceDe(resp) {
+  const h = resp.headers.get('github-authentication-token-expiration');
+  const m = h && h.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (m) guardarVence(m[1]);
+}
 const EN_VISOR_CLAUDE = typeof window !== 'undefined' && typeof window.claude !== 'undefined'; // dentro de Claude no hay red
 const leerToken = () => { try { return localStorage.getItem(LLAVE_TOKEN) || ''; } catch (e) { return ''; } };
 const guardarToken = (t) => { try { t ? localStorage.setItem(LLAVE_TOKEN, t) : localStorage.removeItem(LLAVE_TOKEN); } catch (e) {} };
@@ -1125,6 +1156,8 @@ function aBase64(txt) { const b = new TextEncoder().encode(txt); let s = ''; for
 function deBase64(b64) { const s = atob(String(b64).replace(/\s/g, '')); const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return new TextDecoder().decode(b); }
 /** Para comparar dos calendarios sin contar la fecha de generación (DTSTAMP). */
 const sinSello = (t) => t.replace(/^DTSTAMP:.*$/gm, '').replace(/\r/g, '');
+/** Huella corta del calendario (sin DTSTAMP) para saber si cambió sin guardar el texto entero. */
+function huellaDe(t) { const s = sinSello(t); let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 33 + s.charCodeAt(i)) | 0; return s.length + ':' + (h >>> 0).toString(36); }
 /** Planes que se suben: la semana de HOY (no la que estés mirando) y, si se pidió, la siguiente. */
 function planesSync() {
   const lunes = lunesDe(new Date()), n = store.config.icsSemanas === 2 ? 2 : 1;
@@ -1140,11 +1173,22 @@ function errorGH(status) {
 }
 
 let syncTimer = null, syncEnCurso = false, syncPendiente = false;
-/** Programa una subida unos segundos después del último cambio (agrupa cambios seguidos). */
+/**
+ * Marca que hay cambios por subir. La subida se hace al salir de la app
+ * (ver "visibilitychange" abajo) o, de respaldo, 2 min después del último cambio.
+ * Así una sesión de uso es, casi siempre, una sola subida.
+ */
 function programarSync() {
   if (EN_VISOR_CLAUDE || !store || !store.config.gh.auto || !leerToken()) return;
+  marcarPendiente(true);
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(() => subirCalendario(false), 4000);
+  syncTimer = setTimeout(() => subirCalendario(false), ESPERA_SYNC);
+}
+/** Sube ya lo que esté pendiente (al salir de la app o al volver a abrirla). */
+function subirPendiente() {
+  if (!hayPendiente() || EN_VISOR_CLAUDE || !store || !store.config.gh.auto || !leerToken()) return;
+  clearTimeout(syncTimer);
+  subirCalendario(false);
 }
 /**
  * Sube el calendario a GitHub.
@@ -1155,31 +1199,52 @@ async function subirCalendario(manual) {
   const token = leerToken(), gh = store.config.gh;
   if (!token) { if (manual) toast('Primero pega tu token en Ajustes'); return; }
   if (syncEnCurso) { syncPendiente = true; return; }
-  syncEnCurso = true; pintarSync('subiendo');
+  syncEnCurso = true; pintarSync('subiendo'); clearTimeout(syncTimer);
   const url = 'https://api.github.com/repos/' + rutaURL(gh.owner) + '/' + rutaURL(gh.repo) + '/contents/' + rutaURL(gh.ruta);
   const headers = { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+  // sha y huella de la última subida buena: permiten saltarse la lectura (una sola petición al salir de la app)
+  const previo = leerEstadoSync() || {};
+  let sha = previo.sha, huella = previo.huella;
   try {
-    const texto = generarICS(planesSync(), store.config).texto;
-    // 1) Leer el archivo actual para obtener su "sha" (GitHub lo pide para reemplazarlo)
-    let sha;
-    const r1 = await fetch(url + '?ref=' + encodeURIComponent(gh.branch), { headers, cache: 'no-store' });
-    if (r1.ok) {
-      const actual = await r1.json(); sha = actual.sha;
-      if (actual.content && sinSello(deBase64(actual.content)) === sinSello(texto)) {
-        guardarEstadoSync({ t: Date.now(), ok: true, msg: 'Ya estaba al día' });
-        if (manual) toast('El calendario ya estaba al día');
-        return;
-      }
-    } else if (r1.status !== 404) throw { status: r1.status };
-    // 2) Escribir la versión nueva
-    const r2 = await fetch(url, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
-      body: JSON.stringify({ message: 'StreamPlanner: actualiza turnos ' + clave(new Date()), content: aBase64(texto), branch: gh.branch, sha }) });
+    const texto = generarICS(planesSync(), store.config).texto, nueva = huellaDe(texto);
+    if (!manual && huella === nueva) { // igual a lo último que se subió: no hace falta red
+      guardarEstadoSync(Object.assign({}, previo, { ok: true, msg: previo.ok ? previo.msg : 'Ya estaba al día' }));
+      marcarPendiente(false); return;
+    }
+    const poner = (s, keepalive) => fetch(url, { method: 'PUT', keepalive,
+      headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
+      body: JSON.stringify({ message: 'StreamPlanner: actualiza turnos ' + clave(new Date()), content: aBase64(texto), branch: gh.branch, sha: s }) });
+    let r2 = null;
+    if (!manual && sha) {
+      // keepalive deja terminar la subida aunque el iPhone cierre la app; si el navegador
+      // la rechaza, se intenta igual sin keepalive
+      try { r2 = await poner(sha, document.visibilityState === 'hidden'); }
+      catch (x) { r2 = await poner(sha, false); }
+    }
+    if (!r2 || r2.status === 409 || r2.status === 422) {
+      // Leer el archivo actual para obtener su "sha" (GitHub lo pide para reemplazarlo)
+      const r1 = await fetch(url + '?ref=' + encodeURIComponent(gh.branch), { headers, cache: 'no-store' });
+      leerVenceDe(r1); sha = undefined;
+      if (r1.ok) {
+        const actual = await r1.json(); sha = actual.sha;
+        if (actual.content && huellaDe(deBase64(actual.content)) === nueva) {
+          guardarEstadoSync({ t: Date.now(), ok: true, msg: 'Ya estaba al día', sha, huella: nueva });
+          marcarPendiente(false);
+          if (manual) toast('El calendario ya estaba al día');
+          return;
+        }
+      } else if (r1.status !== 404) throw { status: r1.status };
+      r2 = await poner(sha, false);
+    }
+    leerVenceDe(r2);
     if (!r2.ok) throw { status: r2.status };
-    guardarEstadoSync({ t: Date.now(), ok: true, msg: 'Subido' });
+    const res = await r2.json().catch(() => ({}));
+    guardarEstadoSync({ t: Date.now(), ok: true, msg: 'Subido', sha: res.content && res.content.sha, huella: nueva });
+    marcarPendiente(false);
     if (manual) toast('Calendario subido a GitHub');
   } catch (e) {
-    const msg = e && e.status ? errorGH(e.status) : 'Sin internet o GitHub no responde. Se reintenta con el próximo cambio.';
-    guardarEstadoSync({ t: Date.now(), ok: false, msg });
+    const msg = e && e.status ? errorGH(e.status) : 'Sin internet o GitHub no responde. Se reintenta al volver a abrir la app.';
+    guardarEstadoSync({ t: Date.now(), ok: false, msg, sha, huella });
     if (manual) toast(msg);
   } finally {
     syncEnCurso = false; pintarSync();
@@ -1204,12 +1269,19 @@ function pintarSync(estado) {
   else if (!e) { txt = 'Conectado · aún no se ha subido'; color = 'var(--tint)'; }
   else if (e.ok) { txt = (e.msg === 'Ya estaba al día' ? 'Al día' : 'Subido') + ' ' + haceCuanto(e.t) + (store.config.gh.auto ? ' · automático' : ' · manual'); color = '#34C759'; }
   else { txt = 'Error ' + haceCuanto(e.t) + ': ' + e.msg; color = 'var(--red)'; }
+  if (token && estado !== 'subiendo' && hayPendiente()) txt += ' · cambios por subir al salir de la app';
+  const dt = token ? diasToken() : null;
+  if (dt !== null && dt <= 14) { txt += dt < 0 ? ' · el token venció' : ' · el token vence en ' + dt + (dt === 1 ? ' día' : ' días'); color = 'var(--red)'; }
   $('syncTxt').textContent = txt; $('syncTxt2').textContent = txt;
   $('syncIcon').style.background = color;
   $('btnSyncNow').disabled = EN_VISOR_CLAUDE || estado === 'subiendo';
   $('btnSyncTest').disabled = EN_VISOR_CLAUDE || estado === 'subiendo';
   $('tokenEstado').textContent = token ? 'Guardado en este celular (…' + token.slice(-4) + ')' : 'Sin token';
   $('btnTokenDel').hidden = !token;
+  $('venceRow').hidden = !token;
+  if ($('ghVence') !== document.activeElement) $('ghVence').value = leerVence();
+  const links = enlacesGH(store.config.gh);
+  $('lnkWebcal').href = $('lnkWebcal2').href = links.webcal;
 }
 
 /* =====================================================================
@@ -1342,6 +1414,23 @@ function planesICS() {
   return Array.from({ length: n }, (_, k) => k === 0 ? plan : planificar(sumarDias(semana, 7 * k), store));
 }
 
+/* ---------- Avisos de la app (instalación y token) ---------- */
+const LLAVE_INSTALAR = 'streamplanner:sinaviso-instalar';
+/** Abierta en Safari del iPhone/iPad, no desde el ícono de la pantalla de inicio. */
+function enSafariIOS() {
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const instalada = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  return ios && !instalada && !EN_VISOR_CLAUDE;
+}
+function avisosApp() {
+  let html = '';
+  let oculto = false; try { oculto = localStorage.getItem(LLAVE_INSTALAR) === '1'; } catch (e) {}
+  if (enSafariIOS() && !oculto) html += '<div class="alert">📲 <b>Instálala en tu inicio:</b> toca Compartir → <b>Agregar a inicio</b> y ábrela desde ese ícono. Así el iPhone no borra tus datos si pasas días sin abrirla. <button class="linkbtn" id="noInstalar">Ocultar</button></div>';
+  const dt = leerToken() ? diasToken() : null;
+  if (dt !== null && dt <= 14) html += '<div class="alert red">🔑 ' + (dt < 0 ? 'El token de GitHub venció: el calendario ya no se actualiza.' : 'El token de GitHub vence en ' + dt + (dt === 1 ? ' día' : ' días') + '.') + ' Crea uno nuevo y pégalo en Ajustes → Conexión con GitHub.</div>';
+  return html;
+}
+
 /* ---------- Portada de inicio ---------- */
 /** 135 → "2 h 15 min" */
 function fmtDur(min) { min = Math.max(0, Math.round(min)); const h = Math.floor(min / 60), m = min % 60; return h ? h + '\u00a0h' + (m ? ' ' + m + '\u00a0min' : '') : m + '\u00a0min'; }
@@ -1413,7 +1502,7 @@ function renderInicio() {
   $('homeTiles').innerHTML =
     '<div class="tile"><div class="k">Horas reales</div><div class="v num">' + fmtH(Math.round(ph.horasReal * 10) / 10) + '<span style="font-size:15px;color:var(--label2);font-weight:500"> / ' + ph.meta + '\u00a0h</span></div><div class="meter tint"><i style="width:' + Math.min(100, ph.horasReal / ph.meta * 100) + '%"></i></div></div>' +
     '<div class="tile"><div class="k">Caja</div><div class="v num">' + fmtUSD(Math.round(ph.caja)) + '<span style="font-size:15px;color:var(--label2);font-weight:500"> / ' + fmtUSD(cfg.metaUSD) + '</span></div><div class="meter"><i style="width:' + Math.min(100, ph.caja / cfg.metaUSD * 100) + '%"></i></div></div>';
-  $('homeAlerts').innerHTML = ph.avisos.slice(0, 2).map(a => '<div class="alert ' + a.tipo + '">' + a.txt + '</div>').join('');
+  $('homeAlerts').innerHTML = avisosApp() + ph.avisos.slice(0, 2).map(a => '<div class="alert ' + a.tipo + '">' + a.txt + '</div>').join('');
 }
 
 /* ---------- Estadísticas ---------- */
@@ -1751,6 +1840,15 @@ $('btnTokenDel').onclick = () => confirmar('¿Quitar el token?', 'La app deja de
 $('btnSyncTest').onclick = () => subirCalendario(true);
 $('btnSyncNow').onclick = () => subirCalendario(true);
 document.querySelectorAll('[data-ghauto]').forEach(b => b.onclick = () => { store.config.gh.auto = b.dataset.ghauto === '1'; guardarStore(); renderAjustes(); });
+$('ghVence').addEventListener('change', e => { guardarVence(e.target.value); pintarSync(); renderInicio(); toast(e.target.value ? 'Fecha guardada: te aviso 2 semanas antes' : 'Fecha borrada'); });
+$('homeAlerts').addEventListener('click', e => {
+  if (e.target.id !== 'noInstalar') return;
+  try { localStorage.setItem(LLAVE_INSTALAR, '1'); } catch (x) {}
+  renderInicio();
+});
+// Subida al salir de la app; al volver, reintenta lo que haya quedado pendiente
+document.addEventListener('visibilitychange', () => { subirPendiente(); if (document.visibilityState === 'visible') pintarSync(); });
+window.addEventListener('pagehide', subirPendiente);
 // El estado "hace X min" se refresca solo
 setInterval(() => pintarSync(), 60000);
 
@@ -1774,8 +1872,12 @@ $('tab-inicio').addEventListener('click', e => {
 // La portada se actualiza sola (cuenta regresiva y estado del turno)
 setInterval(() => { if (!$('tab-inicio').hidden) renderInicio(); }, 30000);
 
+const quedoPendiente = hayPendiente() || ghMigrado;
 guardarStore(); // deja guardada la migración, si la hubo
+if (!quedoPendiente) marcarPendiente(false); // abrir la app no cuenta como cambio
 render();
+// Si quedó algo sin subir (la app se cerró de golpe, no había internet o el calendario cambió de repo), se sube ahora
+if (quedoPendiente) subirPendiente();
 </script>
 
 </body>
