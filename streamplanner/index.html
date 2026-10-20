@@ -209,6 +209,15 @@ pre.code{margin:0;padding:14px 16px;font:12px/1.5 var(--mono);color:var(--label2
 
 /* ---------- Estadísticas ---------- */
 .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.logros{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;padding:12px}
+.logro{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;padding:10px 6px;border-radius:12px;background:var(--fill)}
+.logro .ico{font-size:26px;line-height:1.2;filter:grayscale(1);opacity:.35}
+.logro b{font-size:13px;line-height:1.25}
+.logro small{font-size:11px;color:var(--label2)}
+.logro.ok{background:var(--green-soft)}
+.logro.ok .ico{filter:none;opacity:1}
+.urlmini{font:11px/1.4 var(--mono);word-break:break-all}
+.btn.mini{width:auto;flex:none;padding:8px 14px;font-size:15px}
 .tile{background:var(--card);border-radius:12px;padding:14px 16px}
 .tile .k{font-size:13px;color:var(--label2)}
 .tile .v{font-size:26px;font-weight:700;letter-spacing:-.4px;margin-top:4px}
@@ -670,6 +679,22 @@ ol.steps li+li{margin-top:6px}
       </div>
       <div class="section-f">Pon <b>la misma clave en todos tus equipos</b> (celular, PC, tablet): tus registros, horas y dinero se juntan solos al abrir y al salir de la app. En GitHub quedan <b>cifrados</b>: sin la clave nadie puede leerlos, ni siquiera tú. Anótala en un lugar seguro.</div>
 
+      <div class="section-h" style="margin-top:22px">Siri y Atajos</div>
+      <div class="group">
+        <div class="cell"><div class="grow"><div class="t">▶ Empecé turno</div><div class="s urlmini" id="urlEmpece">—</div></div><button class="btn plain mini" data-copiar="urlEmpece">Copiar</button></div>
+        <div class="cell"><div class="grow"><div class="t">⏹ Terminé turno</div><div class="s urlmini" id="urlTermine">—</div></div><button class="btn plain mini" data-copiar="urlTermine">Copiar</button></div>
+      </div>
+      <div class="group" style="margin-top:10px">
+        <ol class="steps">
+          <li>Abre la app <b>Atajos</b> del iPhone y toca <b>+</b>.</li>
+          <li><b>Agregar acción</b> → busca <b>Abrir URL</b> → pega el enlace de <b>Empecé turno</b>.</li>
+          <li>Arriba, ponle de nombre <b>Empecé turno</b> y toca <b>OK</b>.</li>
+          <li>Repite con el enlace de <b>Terminé turno</b> y el nombre <b>Terminé turno</b>.</li>
+          <li>Listo: di <b>"Oye Siri, empecé turno"</b>. También puedes poner los atajos en la pantalla de inicio o en el botón de acción.</li>
+        </ol>
+      </div>
+      <div class="section-f">Los atajos abren la app en Safari. Si usas la app desde el ícono de inicio, abre también tu enlace de configuración en Safari y pon tu clave: así Safari y la app comparten los datos.</div>
+
       <div class="section-h" style="margin-top:22px">Respaldo manual</div>
       <div class="stack">
         <div class="btn-row"><button class="btn plain" id="btnBackup">Copiar respaldo</button><button class="btn plain" id="btnRestore">Restaurar</button></div>
@@ -918,6 +943,7 @@ function guardarStore(opc) {
   if (opc.sinSello) tomarFoto(); else sellar();
   try { localStorage.setItem(LLAVE, JSON.stringify(store)); } catch (e) {}
   if (!opc.sinSync && typeof programarSync === 'function') programarSync(); // sube a GitHub si está conectado
+  if (typeof revisarLogros === 'function') setTimeout(revisarLogros, 0);
 }
 let foto = null; // contenido (sin sellos) de lo último guardado, para saber qué cambió
 const sinT = (o) => { if (!o || typeof o !== 'object') return JSON.stringify(o); const { t, ...resto } = o; return JSON.stringify(resto); };
@@ -1842,7 +1868,7 @@ function renderInicio() {
     '<div class="tile"><div class="k">Horas reales</div><div class="v num">' + fmtH(Math.round(ph.horasReal * 10) / 10) + '<span style="font-size:15px;color:var(--label2);font-weight:500"> / ' + ph.meta + '\u00a0h</span></div><div class="meter tint"><i style="width:' + Math.min(100, ph.horasReal / ph.meta * 100) + '%"></i></div></div>' +
     '<div class="tile"><div class="k">Caja</div><div class="v num">' + fmtUSD(Math.round(ph.caja)) + '<span style="font-size:15px;color:var(--label2);font-weight:500"> / ' + fmtUSD(cfg.metaUSD) + '</span></div><div class="meter"><i style="width:' + Math.min(100, ph.caja / cfg.metaUSD * 100) + '%"></i></div></div>';
   $('homeTiles').innerHTML += resumenMes(ahora, ph, lunesHoy);
-  $('homeAlerts').innerHTML = avisosApp() + proyeccionMeta(ph, lunesHoy) + consejoDelDia() + ph.avisos.slice(0, 2).map(a => '<div class="alert ' + a.tipo + '">' + a.txt + '</div>').join('');
+  $('homeAlerts').innerHTML = avisosApp() + proyeccionMeta(ph, lunesHoy) + rachaInicio() + consejoDelDia() + ph.avisos.slice(0, 2).map(a => '<div class="alert ' + a.tipo + '">' + a.txt + '</div>').join('');
 }
 
 /**
@@ -1946,6 +1972,65 @@ function consejoDelDia() {
   return '<div class="alert green">💡 ' + c[n % c.length] + '</div>';
 }
 
+/* ---------- Rachas y logros ---------- */
+/**
+ * Racha: días de trabajo seguidos cumpliendo las horas del plan. Los descansos
+ * (del plan o registrados) no la cortan; una falta o un día de trabajo pasado
+ * sin registrar sí. Hoy, mientras no esté registrado, no cuenta ni corta.
+ */
+function rachas(s) {
+  const keys = Object.keys(s.dias).filter(k => s.dias[k].real).sort();
+  if (!keys.length) return { actual: 0, mejor: 0 };
+  const hoy = clave(new Date()), planes = {};
+  let actual = 0, mejor = 0;
+  for (let f = deClave(keys[0]); clave(f) <= hoy; f = sumarDias(f, 1)) {
+    const k = clave(f), l = clave(lunesDe(f)), p = planes[l] || (planes[l] = planificar(lunesDe(f), s)), d = p.dias[(f.getDay() + 6) % 7];
+    if (d.real && !d.ausencia) {
+      if (d.horasReal + 0.05 >= d.horasPlan) { actual++; mejor = Math.max(mejor, actual); } else actual = 0;
+    } else if (d.ausencia === 'falta') actual = 0;
+    else if (d.ausencia === 'descanso' || d.horasPlan === 0) continue;
+    else if (k < hoy) actual = 0;
+  }
+  return { actual, mejor };
+}
+/** Logros desbloqueados a partir del historial (se calculan, no se guardan: valen en todos los equipos). */
+function logros(s) {
+  const cfg = s.config, r = estadisticas(s, 'todo', lunesDe(new Date())), ra = rachas(s);
+  const turnos = Object.values(s.dias).filter(d => d.real && !esAusencia(d.real)).length;
+  const porMes = {};
+  Object.entries(s.dias).forEach(([k, d]) => { porMes[k.slice(0, 7)] = (porMes[k.slice(0, 7)] || 0) + (Number(d.usd) || 0); });
+  const mesesMeta = Object.values(porMes).filter(v => v >= cfg.metaMes).length;
+  const semMeta = r.semanas.filter(w => w.cumpleUSD).length, semPerfecta = r.semanas.filter(w => w.cumpleHoras && !w.faltas).length;
+  const L = (id, ico, nombre, desc, valor, meta) => ({ id, ico, nombre, desc, ok: valor >= meta, valor: Math.min(valor, meta), meta });
+  return [
+    L('primer', '✍️', 'Primer turno', 'Registraste tu primer turno', turnos, 1),
+    L('racha5', '🔥', 'Racha de 5', '5 días seguidos cumpliendo el plan', ra.mejor, 5),
+    L('racha10', '🔥', 'Racha de 10', '10 días seguidos cumpliendo el plan', ra.mejor, 10),
+    L('racha20', '☄️', 'Racha de 20', '20 días seguidos cumpliendo el plan', ra.mejor, 20),
+    L('meta1', '💰', 'Meta semanal', 'Llegaste a ' + fmtUSD(cfg.metaUSD) + ' en una semana', semMeta, 1),
+    L('meta4', '💎', '4 semanas con meta', 'Cuatro semanas llegando a la meta de dinero', semMeta, 4),
+    L('perfecta', '⭐', 'Semana perfecta', 'Todas las horas de la semana y ninguna falta', semPerfecta, 1),
+    L('mes', '🏆', 'Meta del mes', 'Llegaste a ' + fmtUSD(cfg.metaMes) + ' en un mes', mesesMeta, 1),
+    L('turnos30', '🗓️', '30 turnos', 'Registraste 30 turnos', turnos, 30),
+    L('turnos100', '💯', '100 turnos', 'Registraste 100 turnos', turnos, 100)
+  ];
+}
+/** Racha en la portada (desde 2 días). */
+function rachaInicio() {
+  const ra = rachas(store);
+  if (ra.actual < 2) return '';
+  return '<div class="alert green">🔥 <b>' + ra.actual + ' días seguidos</b> cumpliendo el plan.' +
+    (ra.actual >= ra.mejor ? (ra.actual > 2 ? ' ¡Es tu mejor racha!' : '') : ' Tu récord: ' + ra.mejor + '.') + '</div>';
+}
+/** Avisa con un mensaje cuando se desbloquea un logro nuevo (la primera vez solo los marca como vistos). */
+const LLAVE_LOGROS = 'streamplanner:logros-vistos';
+function revisarLogros() {
+  let vistos = null; try { vistos = JSON.parse(localStorage.getItem(LLAVE_LOGROS) || 'null'); } catch (e) {}
+  const ok = logros(store).filter(l => l.ok), nuevos = vistos ? ok.filter(l => !vistos.includes(l.id)) : [];
+  try { localStorage.setItem(LLAVE_LOGROS, JSON.stringify(ok.map(l => l.id))); } catch (e) {}
+  if (nuevos.length) setTimeout(() => toast('🏅 Nuevo logro: ' + nuevos[0].ico + ' ' + nuevos[0].nombre), 2600); // después del mensaje de guardado
+}
+
 /* ---------- Estadísticas ---------- */
 function renderStats() {
   const fuente = verEjemplo ? storeEjemplo() : store;
@@ -1992,6 +2077,14 @@ function renderStats() {
     '</div></div><div class="section-f">' + CATEGORIAS.map(c => c.nombre + ': ' + c.desc.split(' · ')[0].toLowerCase()).join('. ') + '.</div></section>';
   html += htmlConsejos;
 
+  // Rachas y logros (de todo el historial)
+  const ra = rachas(fuente), lg = logros(fuente), nOk = lg.filter(l => l.ok).length;
+  html += '<section class="section"><div class="section-h">Logros · ' + nOk + ' de ' + lg.length + '</div><div class="group">' +
+    '<div class="tiles" style="padding:12px 12px 0">' + tile('Racha actual', '🔥 ' + ra.actual, ra.actual === 1 ? 'día cumpliendo el plan' : 'días cumpliendo el plan') + tile('Mejor racha', ra.mejor, ra.mejor === 1 ? 'día' : 'días') + '</div>' +
+    '<div class="logros">' + lg.map(l => '<div class="logro' + (l.ok ? ' ok' : '') + '" title="' + esc(l.desc) + '"><span class="ico">' + l.ico + '</span><b>' + l.nombre + '</b><small>' +
+      (l.ok ? '¡Logrado!' : l.meta > 1 ? l.valor + ' de ' + l.meta : 'Pendiente') + '</small></div>').join('') + '</div></div>' +
+    '<div class="section-f">La racha cuenta los días de trabajo seguidos en los que cumples las horas del plan. Los descansos no la cortan; una falta o un día sin registrar sí.</div></section>';
+
   // Promedio por día de la semana (columnas)
   const prom = r.dow.map(x => x.n ? x.usd / x.n : 0), maxP = Math.max(1, ...prom), mejor = prom.indexOf(Math.max(...prom));
   html += '<section class="section"><div class="section-h">Promedio facturado por día</div><div class="group">' +
@@ -2019,6 +2112,8 @@ function pintarBools() {
 function renderAjustes() {
   const cfg = store.config;
   pintarBools();
+  const base = location.origin + location.pathname;
+  $('urlEmpece').textContent = base + '#accion=empece'; $('urlTermine').textContent = base + '#accion=termine';
   const links = enlacesGH(cfg.gh);
   $('webcalTxt').textContent = links.raw;
   $('lnkWebcal').href = links.webcal;
@@ -2315,6 +2410,7 @@ $('respClave').addEventListener('change', e => {
   sincronizarTodo(true);
 });
 $('btnRespAhora').onclick = () => sincronizarTodo(true);
+document.querySelectorAll('[data-copiar]').forEach(b => b.onclick = () => copiarTexto($(b.dataset.copiar).textContent, 'Enlace copiado: pégalo en Atajos', null));
 // Cambiar de persona: este equipo pasa a usar los archivos de otro perfil
 $('ghPerfil').addEventListener('change', e => {
   const p = limpiarPerfil(e.target.value);
@@ -2346,7 +2442,7 @@ $('holaSi').onclick = () => {
 $('holaNo').onclick = cerrarHola;
 $('holaNombre').addEventListener('keydown', e => { if (e.key === 'Enter') $('holaSi').click(); });
 let yaSaludo = false; try { yaSaludo = localStorage.getItem(LLAVE_HOLA) === '1'; } catch (e) {}
-if (!store.config.nombre && !yaSaludo) setTimeout(() => { $('dlgHola').classList.add('open'); $('holaNombre').focus(); }, 400);
+if (!store.config.nombre && !yaSaludo) setTimeout(() => { if (accionAtajo) return; $('dlgHola').classList.add('open'); $('holaNombre').focus(); }, 400);
 
 // Sin internet: se puede ver y registrar; al volver la señal se sube lo pendiente
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -2433,8 +2529,27 @@ guardarStore(); // deja guardada la migración, si la hubo
 if (!quedoPendiente) marcarPendiente(false); // abrir la app no cuenta como cambio
 render();
 // Si quedó algo sin subir (la app se cerró de golpe, no había internet o el calendario cambió de repo), se sube ahora
+// Atajo de Siri: …#accion=empece | termine
+const accionAtajo = (location.hash.match(/accion=(empece|termine)/) || [])[1];
+if (accionAtajo) history.replaceState(null, '', location.pathname + location.search);
+async function ejecutarAtajo(accion) {
+  try { localStorage.setItem(LLAVE_HOLA, '1'); } catch (e) {} // no interrumpir con la bienvenida
+  $('dlgHola').classList.remove('open');
+  // Primero trae lo de los otros equipos (por si el turno se empezó en la app del inicio)
+  if (leerToken() && leerRClave() && navigator.onLine) { toast('Revisando tus otros equipos…'); await sincronizarDatos(false); }
+  if (accion === 'empece') {
+    const hoyReg = store.dias[clave(new Date())];
+    if (store.turno) toast('Ya tienes un turno empezado desde las ' + hora12(aMin(store.turno.inicio)));
+    else if (hoyReg && hoyReg.real) toast('Hoy ya está registrado');
+    else empezarTurno();
+  } else if (!store.turno) { toast('No hay un turno empezado: regístralo a mano'); irAHoy(); }
+  else terminarTurno();
+  sincronizarTodo(false);
+}
+
 // Al abrir: junta con los otros equipos y sube lo pendiente
-if (tokenDeEnlace) { marcarPendiente(true); sincronizarTodo(true); }
+if (accionAtajo) ejecutarAtajo(accionAtajo);
+else if (tokenDeEnlace) { marcarPendiente(true); sincronizarTodo(true); }
 else if (leerToken()) sincronizarTodo(false);
 </script>
 
