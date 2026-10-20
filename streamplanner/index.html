@@ -557,6 +557,13 @@ ol.steps li+li{margin-top:6px}
     <header class="large"><h1>Ajustes</h1><p>Metas, horarios y reglas a tu medida</p></header>
 
     <section class="section">
+      <div class="section-h">Tú</div>
+      <div class="group">
+        <div class="cell"><div class="grow"><div class="t">Tu nombre</div><div class="s">Para saludarte en el inicio</div></div><label class="field" style="width:170px"><input id="cfg-nombre" data-cfg="nombre" maxlength="30" autocomplete="given-name" placeholder="Opcional" style="text-align:right"></label></div>
+      </div>
+    </section>
+
+    <section class="section">
       <div class="section-h">Metas</div>
       <div class="group">
         <div class="cell"><div class="grow"><div class="t">Meta semanal</div><div class="s">Dinero para el Modo Libertad</div></div><label class="field"><span>$</span><input id="cfg-metaUSD" data-cfg="metaUSD" inputmode="decimal" autocomplete="off"></label></div>
@@ -719,6 +726,13 @@ ol.steps li+li{margin-top:6px}
     <div class="acts"><button id="dlgNo">Cancelar</button><button id="dlgYes">Borrar</button></div></div>
 </div>
 
+<!-- Bienvenida: la primera vez pregunta el nombre -->
+<div class="dialog" id="dlgHola" role="dialog" aria-modal="true" aria-labelledby="holaTitle">
+  <div class="box"><h3 id="holaTitle">¡Hola! 👋</h3><p>¿Cómo te llamas? Así te saludo cada vez que abras la app.</p>
+    <div style="padding:0 16px 16px"><label class="field wide" style="width:100%"><input id="holaNombre" maxlength="30" autocomplete="given-name" enterkeyhint="done" placeholder="Tu nombre" aria-label="Tu nombre" style="text-align:center"></label></div>
+    <div class="acts"><button id="holaNo">Ahora no</button><button id="holaSi" style="color:var(--tint)">Listo</button></div></div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Barra de pestañas -->
@@ -760,13 +774,14 @@ const CONFIG_BASE = {
   // Dónde vive el calendario en GitHub. Con esto se arman solos los enlaces.
   // Repo aparte: el token del celular solo puede tocar ese repo, no la página.
   gh: { owner: 'FelipeAnali', repo: 'streamplanner', branch: 'main', ruta: 'turnos.ics', auto: true },
+  nombre: '',            // cómo saludarla en el inicio (no va en el calendario público)
   icsNombre: 'Turnos StreamPlanner',
   icsSemanas: 2         // semanas en el calendario: esta y la próxima (las alarmas del lunes llegan desde el domingo)
 };
 /** Ubicación anterior del calendario (rama temporal de mensajito): se migra sola a la nueva. */
 const GH_VIEJO = { repo: 'mensajito', branch: 'claude/bold-fermat-ta8hnh' };
 let ghMigrado = false; // true si al cargar se movió el calendario a la nueva ubicación
-const CFG_TEXTO = ['icsNombre']; // ajustes que son texto, no número
+const CFG_TEXTO = ['icsNombre', 'nombre']; // ajustes que son texto, no número
 const NOMBRES_DIA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const CORTO_DIA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -1649,7 +1664,7 @@ function renderInicio() {
   const iHoy = (ahora.getDay() + 6) % 7, d = ph.dias[iHoy];
   const minAhora = ahora.getHours() * 60 + ahora.getMinutes();
   const hh = ahora.getHours();
-  $('homeHello').textContent = hh < 12 ? 'Buenos días' : hh < 19 ? 'Buenas tardes' : 'Buenas noches';
+  $('homeHello').textContent = (hh < 12 ? 'Buenos días' : hh < 19 ? 'Buenas tardes' : 'Buenas noches') + (cfg.nombre ? ', ' + cfg.nombre : '');
   $('homeDate').textContent = NOMBRES_DIA[iHoy] + ' ' + ahora.getDate() + ' de ' + MESES_L[ahora.getMonth()];
 
   // Busca el próximo turno pendiente (hoy en adelante, esta semana o la siguiente)
@@ -2202,6 +2217,20 @@ $('homeAlerts').addEventListener('click', e => {
   try { localStorage.setItem(LLAVE_INSTALAR, '1'); } catch (x) {}
   renderInicio();
 });
+// Bienvenida: pide el nombre una sola vez ("Ahora no" no vuelve a preguntar; se cambia en Ajustes)
+const LLAVE_HOLA = 'streamplanner:hola';
+function cerrarHola() { try { localStorage.setItem(LLAVE_HOLA, '1'); } catch (e) {} $('dlgHola').classList.remove('open'); }
+$('holaSi').onclick = () => {
+  const n = $('holaNombre').value.trim().replace(/\s+/g, ' ');
+  if (!n) { $('holaNombre').focus(); return; }
+  store.config.nombre = n.charAt(0).toUpperCase() + n.slice(1);
+  guardarStore(); cerrarHola(); render(); toast('¡Mucho gusto, ' + store.config.nombre + '!');
+};
+$('holaNo').onclick = cerrarHola;
+$('holaNombre').addEventListener('keydown', e => { if (e.key === 'Enter') $('holaSi').click(); });
+let yaSaludo = false; try { yaSaludo = localStorage.getItem(LLAVE_HOLA) === '1'; } catch (e) {}
+if (!store.config.nombre && !yaSaludo) setTimeout(() => { $('dlgHola').classList.add('open'); $('holaNombre').focus(); }, 400);
+
 // Sin internet: se puede ver y registrar; al volver la señal se sube lo pendiente
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
 window.addEventListener('offline', () => { pintarSync(); renderInicio(); });
