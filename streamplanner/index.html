@@ -304,6 +304,8 @@ pre.code{margin:0;padding:14px 16px;font:12px/1.5 var(--mono);color:var(--label2
 .hero .prog{height:4px;border-radius:2px;background:rgba(255,255,255,.14);margin-top:16px;overflow:hidden}
 .hero .prog i{display:block;height:100%;background:var(--live);border-radius:2px}
 .btn.light{width:auto;background:var(--hero-ink);color:#000;padding:11px 18px;font-size:15px;border-radius:999px}
+.btn.ghost{width:auto;background:rgba(255,255,255,.12);color:var(--hero-ink);padding:11px 16px;font-size:15px;border-radius:999px}
+.hero .acts2{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
 .strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;padding:12px 10px}
 .sd{display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:none;padding:4px 0;border-radius:10px;cursor:pointer;min-width:0}
 .sd span{font-size:11px;font-weight:600;color:var(--label2)}
@@ -558,6 +560,7 @@ ol.steps li+li{margin-top:6px}
       <div class="section-h">Metas</div>
       <div class="group">
         <div class="cell"><div class="grow"><div class="t">Meta semanal</div><div class="s">Dinero para el Modo Libertad</div></div><label class="field"><span>$</span><input id="cfg-metaUSD" data-cfg="metaUSD" inputmode="decimal" autocomplete="off"></label></div>
+        <div class="cell"><div class="grow"><div class="t">Meta mensual</div><div class="s">Lo que quieres facturar en el mes</div></div><label class="field"><span>$</span><input id="cfg-metaMes" data-cfg="metaMes" inputmode="decimal" autocomplete="off"></label></div>
         <div class="cell"><div class="grow"><div class="t">Horas si cumples la meta</div><div class="s">Ruta A</div></div><label class="field"><input id="cfg-horasCumple" data-cfg="horasCumple" inputmode="decimal" autocomplete="off"><span>h</span></label></div>
         <div class="cell"><div class="grow"><div class="t">Horas si no la cumples</div><div class="s">Ruta B · evita el descuento</div></div><label class="field"><input id="cfg-horasNoCumple" data-cfg="horasNoCumple" inputmode="decimal" autocomplete="off"><span>h</span></label></div>
         <div class="cell"><div class="grow"><div class="t">Recomendado por día</div><div class="s">Si un día se pasa, sale alerta</div></div><label class="field"><input id="cfg-maxDia" data-cfg="maxDia" inputmode="decimal" autocomplete="off"><span>h</span></label></div>
@@ -735,6 +738,7 @@ ol.steps li+li{margin-top:6px}
    ===================================================================== */
 const CONFIG_BASE = {
   metaUSD: 600,          // meta semanal en dólares
+  metaMes: 2400,         // meta mensual en dólares
   horasCumple: 35,       // horas de la semana si se cumple la meta (Ruta A)
   horasNoCumple: 42,     // horas si no se cumple (Ruta B, evita el descuento)
   maxDia: 9,             // límite RECOMENDADO por día: si se pasa, la app avisa
@@ -852,7 +856,9 @@ function normalizar(s) {
     ghMigrado = true;
   }
   const esObj = (o) => o && typeof o === 'object' && !Array.isArray(o);
-  return { v: 2, config: cfg, dias: esObj(s.dias) ? s.dias : {}, opciones: esObj(s.opciones) ? s.opciones : {} };
+  // Turno en curso (botón "Empecé"): { key: 'AAAA-MM-DD', inicio: 'HH:MM' }
+  const turno = esObj(s.turno) && /^\d{4}-\d{2}-\d{2}$/.test(s.turno.key) && /^\d{2}:\d{2}$/.test(s.turno.inicio) ? { key: s.turno.key, inicio: s.turno.inicio } : null;
+  return { v: 2, config: cfg, dias: esObj(s.dias) ? s.dias : {}, opciones: esObj(s.opciones) ? s.opciones : {}, turno };
 }
 function cargarStore() {
   let s = null;
@@ -1257,6 +1263,7 @@ async function subirCalendario(manual) {
   if (EN_VISOR_CLAUDE) { if (manual) toast('Dentro de Claude no hay conexión: abre la app desde tu GitHub Pages'); return; }
   const token = leerToken(), gh = store.config.gh;
   if (!token) { if (manual) toast('Primero pega tu token en Ajustes'); return; }
+  if (!navigator.onLine) { marcarPendiente(true); pintarSync(); if (manual) toast('Sin internet: se sube solo cuando vuelva la conexión'); return; }
   if (syncEnCurso) { syncPendiente = true; return; }
   syncEnCurso = true; pintarSync('subiendo'); clearTimeout(syncTimer);
   const url = 'https://api.github.com/repos/' + rutaURL(gh.owner) + '/' + rutaURL(gh.repo) + '/contents/' + rutaURL(gh.ruta);
@@ -1324,6 +1331,7 @@ function pintarSync(estado) {
   const token = leerToken(), e = leerEstadoSync();
   let txt, color;
   if (EN_VISOR_CLAUDE) { txt = 'Dentro de Claude no hay conexión. Abre la app desde tu GitHub Pages.'; color = 'var(--label3)'; }
+  else if (token && !navigator.onLine) { txt = 'Sin internet · ' + (hayPendiente() ? 'los cambios se suben solos al volver la conexión' : 'todo estaba subido'); color = 'var(--orange, #FF9500)'; }
   else if (estado === 'subiendo') { txt = 'Subiendo…'; color = 'var(--tint)'; }
   else if (!token) { txt = 'Sin conectar: falta el token'; color = 'var(--label3)'; }
   else if (!e) { txt = 'Conectado · aún no se ha subido'; color = 'var(--tint)'; }
@@ -1360,7 +1368,7 @@ const guardarRClave = (c) => { try { c ? localStorage.setItem(LLAVE_RCLAVE, c) :
 const leerResp = () => { try { return JSON.parse(localStorage.getItem(LLAVE_RESP) || 'null'); } catch (e) { return null; } };
 const guardarResp = (r) => { try { localStorage.setItem(LLAVE_RESP, JSON.stringify(r)); } catch (e) {} };
 const rutaResp = (gh) => gh.ruta.replace(/[^/]*$/, '') + 'respaldo.json';
-const datosResp = () => JSON.stringify({ v: store.v, config: store.config, dias: store.dias, opciones: store.opciones });
+const datosResp = () => JSON.stringify({ v: store.v, config: store.config, dias: store.dias, opciones: store.opciones, turno: store.turno });
 const bytesA64 = (u8) => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
 const deB64Bytes = (t) => Uint8Array.from(atob(t), c => c.charCodeAt(0));
 const fechaLarga = (iso) => { const f = new Date(iso); return isNaN(f) ? 'fecha desconocida' : f.getDate() + ' ' + MESES[f.getMonth()] + ' ' + f.getFullYear() + ', ' + hora12(f.getHours() * 60 + f.getMinutes()); };
@@ -1413,6 +1421,7 @@ async function respaldar(manual) {
   const secreto = leerRClave();
   if (!secreto) { if (manual) toast('Primero escribe una clave de respaldo'); return; }
   if (!leerToken()) { if (manual) toast('Primero pega el token en Conexión con GitHub'); return; }
+  if (!navigator.onLine) { if (manual) toast('Sin internet: el respaldo se hace cuando vuelva la conexión'); return; }
   if (respEnCurso) return;
   const previo = leerResp(), texto = datosResp(), huella = huellaDe(texto);
   if (previo && previo.ok && previo.huella === huella) { if (manual) toast('El respaldo ya estaba al día'); return; }
@@ -1621,6 +1630,7 @@ function enSafariIOS() {
 }
 function avisosApp() {
   let html = '';
+  if (!navigator.onLine && !EN_VISOR_CLAUDE) html += '<div class="alert">📴 <b>Sin internet.</b> Puedes ver y registrar normal: todo queda guardado en el celular y se sube solo cuando vuelva la conexión.</div>';
   let oculto = false; try { oculto = localStorage.getItem(LLAVE_INSTALAR) === '1'; } catch (e) {}
   if (enSafariIOS() && !oculto) html += '<div class="alert">📲 <b>Instálala en tu inicio:</b> toca Compartir → <b>Agregar a inicio</b> y ábrela desde ese ícono. Así el iPhone no borra tus datos si pasas días sin abrirla. <button class="linkbtn" id="noInstalar">Ocultar</button></div>';
   const dt = leerToken() ? diasToken() : null;
@@ -1680,7 +1690,20 @@ function renderInicio() {
     chip = 'Turno terminado'; grande = hora12(d.inicio) + ' – ' + hora12(d.fin);
     meta = 'Anota cómo te fue para llevar tus horas reales.';
   }
-  if (!d.real) boton = '<button class="btn light" data-go="hoy">' + (d.descanso ? 'Registrar igual' : 'Registrar hoy') + '</button>';
+  // Turno abierto con "Empecé": manda sobre lo demás. Si pasaron más de 16 h, se le olvidó tocar "Terminé".
+  const t = store.turno;
+  if (t) {
+    const fT = deClave(t.key), ini = aMin(t.inicio), lleva = Math.round((ahora - fT) / 60000) - ini, olvido = lleva > 16 * 60;
+    chip = olvido ? 'Turno sin terminar' : 'En vivo ahora'; clase = olvido ? '' : 'live'; barra = null;
+    grande = 'Desde ' + hora12(ini);
+    meta = olvido ? 'Empezaste el ' + NOMBRES_DIA[(fT.getDay() + 6) % 7].toLowerCase() + ' ' + fT.getDate() + ' y no tocaste Terminé. Pon la hora de fin a mano.'
+      : 'Toca Terminé al salir: la app calcula tus horas y te pregunta lo facturado.';
+    pieK = olvido ? '' : 'Llevas'; pieV = olvido ? '' : fmtDur(lleva);
+    boton = '<div class="acts2">' + (olvido ? '<button class="btn light" data-go="finmanual">Poner hora de fin</button>' : '<button class="btn light" data-go="termine">⏹ Terminé</button>') +
+      '<button class="btn ghost" data-go="cancelarturno">Cancelar</button></div>';
+  } else if (!d.real) {
+    boton = '<div class="acts2"><button class="btn light" data-go="empece">▶ Empecé</button><button class="btn ghost" data-go="hoy">' + (d.descanso ? 'Registrar igual' : 'A mano') + '</button></div>';
+  }
   $('homeHero').innerHTML = '<span class="chip ' + clase + '"><i></i>' + chip + '</span>' +
     '<div class="range">' + grande + '</div><div class="meta">' + esc(meta) + '</div>' +
     (barra !== null ? '<div class="prog"><i style="width:' + Math.round(barra * 100) + '%"></i></div>' : '') +
@@ -1699,20 +1722,24 @@ function renderInicio() {
   $('homeTiles').innerHTML =
     '<div class="tile"><div class="k">Horas reales</div><div class="v num">' + fmtH(Math.round(ph.horasReal * 10) / 10) + '<span style="font-size:15px;color:var(--label2);font-weight:500"> / ' + ph.meta + '\u00a0h</span></div><div class="meter tint"><i style="width:' + Math.min(100, ph.horasReal / ph.meta * 100) + '%"></i></div></div>' +
     '<div class="tile"><div class="k">Caja</div><div class="v num">' + fmtUSD(Math.round(ph.caja)) + '<span style="font-size:15px;color:var(--label2);font-weight:500"> / ' + fmtUSD(cfg.metaUSD) + '</span></div><div class="meter"><i style="width:' + Math.min(100, ph.caja / cfg.metaUSD * 100) + '%"></i></div></div>';
-  $('homeAlerts').innerHTML = avisosApp() + proyeccionMeta(ph, lunesHoy) + ph.avisos.slice(0, 2).map(a => '<div class="alert ' + a.tipo + '">' + a.txt + '</div>').join('');
+  $('homeTiles').innerHTML += resumenMes(ahora, ph, lunesHoy);
+  $('homeAlerts').innerHTML = avisosApp() + proyeccionMeta(ph, lunesHoy) + consejoDelDia() + ph.avisos.slice(0, 2).map(a => '<div class="alert ' + a.tipo + '">' + a.txt + '</div>').join('');
 }
 
 /**
  * Proyección: con lo que factura por hora, ¿qué día llega a la meta en dólares?
  * El ritmo sale de esta semana; si aún no hay registros, de las últimas 4 semanas.
  */
+function ritmoActual(ph, lunesHoy) {
+  const conUsd = ph.dias.filter(x => x.real && !x.ausencia && x.horasReal > 0 && Number(x.reg.usd) > 0);
+  const hSem = conUsd.reduce((t, x) => t + x.horasReal, 0);
+  if (hSem) return { ritmo: conUsd.reduce((t, x) => t + Number(x.reg.usd), 0) / hSem, fuente: 'esta semana' };
+  return { ritmo: estadisticas(store, '4s', lunesHoy).porHora, fuente: 'las últimas semanas' };
+}
 function proyeccionMeta(ph, lunesHoy) {
   const cfg = store.config;
   if (ph.cumple) return '';
-  const conUsd = ph.dias.filter(x => x.real && !x.ausencia && x.horasReal > 0 && Number(x.reg.usd) > 0);
-  const hSem = conUsd.reduce((t, x) => t + x.horasReal, 0);
-  let ritmo = hSem ? conUsd.reduce((t, x) => t + Number(x.reg.usd), 0) / hSem : 0, fuente = 'esta semana';
-  if (!ritmo) { ritmo = estadisticas(store, '4s', lunesHoy).porHora; fuente = 'las últimas semanas'; }
+  const { ritmo, fuente } = ritmoActual(ph, lunesHoy);
   if (!ritmo) return '';
   const falta = cfg.metaUSD - ph.caja, hoy = clave(new Date());
   let acum = 0;
@@ -1728,6 +1755,76 @@ function proyeccionMeta(ph, lunesHoy) {
   }
   return '<div class="alert">📉 <b>Con el plan no alcanzas la meta.</b> A tu ritmo de ' + fmtUSD(Math.round(ritmo * 100) / 100) + '/h (' + fuente + ') terminarías la semana cerca de ' +
     fmtUSD(Math.round(ph.caja + acum)) + ', te faltarían ' + fmtUSD(Math.round(falta - acum)) + '.</div>';
+}
+
+/** Meta mensual: lo facturado en el mes y, a su ritmo, cuánto cerraría con las horas planeadas que quedan. */
+function resumenMes(ahora, ph, lunesHoy) {
+  const cfg = store.config, y = ahora.getFullYear(), m = ahora.getMonth(), pref = y + '-' + String(m + 1).padStart(2, '0');
+  let usd = 0;
+  Object.entries(store.dias).forEach(([k, d]) => { if (k.startsWith(pref)) usd += Number(d.usd) || 0; });
+  const fin = new Date(y, m + 1, 0), semanas = {};
+  let horas = 0;
+  for (let f = new Date(y, m, ahora.getDate()); f <= fin; f = sumarDias(f, 1)) {
+    const l = clave(lunesDe(f)), p = semanas[l] || (semanas[l] = planificar(lunesDe(f), store)), d = p.dias[(f.getDay() + 6) % 7];
+    if (!d.real && !d.descanso) horas += d.horas;
+  }
+  const { ritmo } = ritmoActual(ph, lunesHoy), proy = usd + horas * ritmo, quedan = fin.getDate() - ahora.getDate() + 1;
+  let txt;
+  if (usd >= cfg.metaMes) txt = '🎉 Meta del mes cumplida';
+  else if (ritmo) txt = 'A tu ritmo cierras el mes cerca de ' + fmtUSD(Math.round(proy)) + (proy >= cfg.metaMes ? ' ✓' : ' · faltarían ' + fmtUSD(Math.round(cfg.metaMes - proy)));
+  else txt = 'Faltan ' + fmtUSD(Math.round(cfg.metaMes - usd)) + ' en ' + quedan + (quedan === 1 ? ' día' : ' días');
+  return '<div class="tile" style="grid-column:1/-1"><div class="k">' + MESES_L[m].charAt(0).toUpperCase() + MESES_L[m].slice(1) + '</div>' +
+    '<div class="v num">' + fmtUSD(Math.round(usd)) + '<span style="font-size:15px;color:var(--label2);font-weight:500"> / ' + fmtUSD(cfg.metaMes) + '</span></div>' +
+    '<div class="meter"><i style="width:' + Math.min(100, usd / cfg.metaMes * 100) + '%"></i></div><div class="d">' + txt + '</div></div>';
+}
+
+/**
+ * Consejos a partir del historial (días con horas reales y dinero).
+ * Solo se dicen diferencias claras (≥ 10 %) con suficientes días detrás.
+ */
+function consejos(s) {
+  const regs = Object.entries(s.dias).map(([k, d]) => ({ k, f: deClave(k), h: horasReales(d.real), usd: Number(d.usd) || 0, ini: d.real ? aMin(d.real.inicio) : null }))
+    .filter(x => x.h > 0 && x.usd > 0);
+  const MIN = 6;
+  if (regs.length < MIN) return { faltan: MIN - regs.length, lista: [] };
+  const ph = (xs) => xs.reduce((t, x) => t + x.usd, 0) / xs.reduce((t, x) => t + x.h, 0);
+  const pct = (a, b) => Math.round((a / b - 1) * 100), porH = (v) => fmtUSD(Math.round(v * 100) / 100) + '/h';
+  const general = ph(regs), out = [];
+  // 1. Franja con mejor $/h
+  const cats = CATEGORIAS.map(c => ({ c, xs: regs.filter(x => categoria(x.ini).id === c.id) })).filter(g => g.xs.length >= 3).map(g => Object.assign(g, { v: ph(g.xs) })).sort((a, b) => b.v - a.v);
+  if (cats.length >= 2) {
+    const a = cats[0], b = cats[cats.length - 1], p = pct(a.v, b.v);
+    if (p >= 10) out.push({ peso: p, txt: 'En la <b>' + a.c.nombre.toLowerCase() + '</b> facturas un <b>' + p + '% más por hora</b> que en la ' + b.c.nombre.toLowerCase() + ' (' + porH(a.v) + ' frente a ' + porH(b.v) + '). Si vas a meter horas extra, mejor en esa franja.' });
+  }
+  // 2. Mejor y peor día de la semana
+  const dows = [0, 1, 2, 3, 4, 5, 6].map(i => ({ i, xs: regs.filter(x => (x.f.getDay() + 6) % 7 === i) })).filter(g => g.xs.length >= 2).map(g => Object.assign(g, { v: ph(g.xs) })).sort((a, b) => b.v - a.v);
+  if (dows.length >= 2) {
+    const a = dows[0], b = dows[dows.length - 1], pa = pct(a.v, general), pb = pct(b.v, general);
+    if (pa >= 10) out.push({ peso: pa, txt: 'Tu mejor día es el <b>' + NOMBRES_DIA[a.i].toLowerCase() + '</b>: ' + porH(a.v) + ', un ' + pa + '% más que tu promedio (' + porH(general) + ').' });
+    if (pb <= -15) out.push({ peso: -pb, txt: 'El <b>' + NOMBRES_DIA[b.i].toLowerCase() + '</b> es tu día más flojo (' + porH(b.v) + '). Buen candidato para descansar cuando puedas elegir.' });
+  }
+  // 3. Jornadas largas: ¿rinden o cansan?
+  const tope = s.config.maxDia + 0.01, largas = regs.filter(x => x.h > tope), normales = regs.filter(x => x.h <= tope);
+  if (largas.length >= 2 && normales.length >= 3) {
+    const p = pct(ph(largas), ph(normales));
+    if (p <= -10) out.push({ peso: -p, txt: 'En jornadas de más de ' + s.config.maxDia + ' h facturas un <b>' + -p + '% menos por hora</b>: el cansancio se nota. Rinden más los turnos normales.' });
+    else if (p >= 10) out.push({ peso: p, txt: 'En jornadas largas facturas un ' + p + '% más por hora: cuando necesites horas extra, alargar el turno te funciona.' });
+  }
+  // 4. Tendencia: últimas 4 semanas frente a las 4 anteriores
+  const l = lunesDe(new Date()), d4 = clave(sumarDias(l, -28)), d8 = clave(sumarDias(l, -56));
+  const rec = regs.filter(x => x.k >= d4), ant = regs.filter(x => x.k >= d8 && x.k < d4);
+  if (rec.length >= 3 && ant.length >= 3) {
+    const p = pct(ph(rec), ph(ant));
+    if (p >= 8) out.push({ peso: p, txt: '📈 Tu $/h <b>subió un ' + p + '%</b> en las últimas 4 semanas (' + porH(ph(rec)) + ').' });
+    else if (p <= -8) out.push({ peso: -p, txt: '📉 Tu $/h <b>bajó un ' + -p + '%</b> en las últimas 4 semanas (' + porH(ph(rec)) + '). Revisa qué cambió: franja, días u horas.' });
+  }
+  return { faltan: 0, lista: out.sort((a, b) => b.peso - a.peso).map(o => o.txt) };
+}
+/** Un consejo para la portada; cambia cada día. */
+function consejoDelDia() {
+  const c = consejos(store).lista; if (!c.length) return '';
+  const hoy = new Date(), n = Math.floor((hoy - new Date(hoy.getFullYear(), 0, 1)) / 86400000);
+  return '<div class="alert green">💡 ' + c[n % c.length] + '</div>';
 }
 
 /* ---------- Estadísticas ---------- */
@@ -1746,6 +1843,13 @@ function renderStats() {
       '<div class="stack" style="max-width:280px;margin:0 auto"><button class="btn" data-goto="registro">Ir a Registro</button><button class="btn plain" id="showDemo">Ver con datos de ejemplo</button></div></div></div>';
     return;
   }
+
+  // Consejos según el historial completo (no depende del periodo elegido)
+  const cs = consejos(fuente);
+  const htmlConsejos = '<section class="section"><div class="section-h">Consejos según tu historial</div><div class="group">' +
+    (cs.lista.length ? cs.lista.map(c => '<div class="cell"><div class="grow"><div class="t" style="font-weight:400;line-height:1.4">💡 ' + c + '</div></div></div>').join('')
+      : '<div class="cell"><div class="grow"><div class="s" style="margin:0">' + (cs.faltan ? 'Registra ' + cs.faltan + (cs.faltan === 1 ? ' día más' : ' días más') + ' con horas y dinero para ver consejos.' : 'Por ahora no hay diferencias claras entre franjas ni días. Sigue registrando.') + '</div></div></div>') +
+    '</div></section>';
 
   // Tarjetas principales
   const cumplidas = r.semanas.filter(w => w.cumpleHoras).length, metaOK = r.semanas.filter(w => w.cumpleUSD).length;
@@ -1767,6 +1871,7 @@ function renderStats() {
       '<div class="track"><i style="width:' + (c.usd / maxCat * 100) + '%"></i></div>' +
       '<div class="sub num">' + c.n + ' días · ' + fmtH(Math.round(c.horas * 10) / 10) + '\u00a0h · ' + (c.horas ? fmtUSD(Math.round(c.usd / c.horas * 100) / 100) + '/h' : 'sin horas') + '</div></div>').join('') +
     '</div></div><div class="section-f">' + CATEGORIAS.map(c => c.nombre + ': ' + c.desc.split(' · ')[0].toLowerCase()).join('. ') + '.</div></section>';
+  html += htmlConsejos;
 
   // Promedio por día de la semana (columnas)
   const prom = r.dow.map(x => x.n ? x.usd / x.n : 0), maxP = Math.max(1, ...prom), mejor = prom.indexOf(Math.max(...prom));
@@ -1879,9 +1984,11 @@ function abrirReal(i) {
   $('realNota').value = (d.real && d.real.nota) || '';
   $('realTitle').textContent = CORTO_DIA[d.i] + ' ' + d.fecha.getDate() + ' ' + MESES[d.fecha.getMonth()];
   const r = d.real || {};
-  $('realStart').value = r.inicio || '';
+  // Turno abierto con "Empecé" en este día: trae la hora de inicio para completar a mano
+  const abiertoAqui = !d.real && store.turno && store.turno.key === d.key;
+  $('realStart').value = r.inicio || (abiertoAqui ? store.turno.inicio : '');
   $('realEnd').value = r.fin || '';
-  $('realPause').value = r.pausa ?? (d.real ? 0 : '');
+  $('realPause').value = r.pausa ?? (d.real ? 0 : abiertoAqui && d.conPausa ? store.config.pausaMin : '');
   $('realUSD').value = d.reg.usd ?? '';
   $('realDelete').hidden = !d.real && d.reg.usd === undefined;
   ponerEstado(d.real ? (d.real.estado || 'trabajo') : 'trabajo');
@@ -1972,6 +2079,7 @@ $('realSave').onclick = () => {
     const usd = leerNum($('realUSD').value);
     if (usd !== null && usd >= 0) reg.usd = usd; else delete reg.usd;
   }
+  if (store.turno && store.turno.key === d.key && (reg.real || estadoReal !== 'trabajo')) store.turno = null; // el turno abierto quedó registrado
   limpiarDia(d.key); guardarStore(); cerrarHojas(); render();
   if (estadoReal !== 'trabajo') { toast(estadoReal === 'falta' ? 'Falta registrada; el plan se ajustó' : 'Descanso registrado'); return; }
   if (reg.real && horasReales(reg.real) > store.config.maxDia + 0.01) { toast('Guardado · jornada larga de ' + fmtH(Math.round(horasReales(reg.real) * 100) / 100) + '\u00a0h'); return; }
@@ -1980,7 +2088,9 @@ $('realSave').onclick = () => {
 $('realDelete').onclick = () => {
   const k = plan.dias[abierto].key;
   confirmar('¿Borrar el registro?', 'Se quitan las horas reales y el dinero de este día.', 'Borrar', () => {
-    if (store.dias[k]) { delete store.dias[k].real; delete store.dias[k].usd; } limpiarDia(k); guardarStore(); cerrarHojas(); render(); toast('Registro borrado');
+    if (store.dias[k]) { delete store.dias[k].real; delete store.dias[k].usd; }
+    if (store.turno && store.turno.key === k) store.turno = null;
+    limpiarDia(k); guardarStore(); cerrarHojas(); render(); toast('Registro borrado');
   });
 };
 
@@ -2010,7 +2120,7 @@ $('tab-ajustes').addEventListener('change', e => {
     }
     else {
       // Rangos permitidos por ajuste: [mínimo, máximo, mensaje]
-      const RANGOS = { metaUSD: [1, 100000, 'La meta debe ser mayor a $0'], horasCumple: [1, 112, 'Escribe horas entre 1 y 112'],
+      const RANGOS = { metaUSD: [1, 100000, 'La meta debe ser mayor a $0'], metaMes: [1, 1000000, 'La meta mensual debe ser mayor a $0'], horasCumple: [1, 112, 'Escribe horas entre 1 y 112'],
         horasNoCumple: [1, 112, 'Escribe horas entre 1 y 112'], maxDia: [1, 24, 'El recomendado va de 1 a 24 h'], maxPermitido: [1, 24, 'El máximo permitido va de 1 a 24 h'],
         pausaMin: [0, 120, 'La pausa va de 0 a 120 min'], pausaDesde: [0, 24, 'Escribe horas entre 0 y 24'], descansoMin: [0, 16, 'El descanso mínimo va de 0 a 16 h (0 = sin alerta)'] };
       const n = leerNum(inp.value), [mn, mx, msg] = RANGOS[k] || [0, 1e9, 'Escribe un número válido'];
@@ -2092,11 +2202,41 @@ $('homeAlerts').addEventListener('click', e => {
   try { localStorage.setItem(LLAVE_INSTALAR, '1'); } catch (x) {}
   renderInicio();
 });
+// Sin internet: se puede ver y registrar; al volver la señal se sube lo pendiente
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
+window.addEventListener('offline', () => { pintarSync(); renderInicio(); });
+window.addEventListener('online', () => { pintarSync(); renderInicio(); subirPendiente(); respaldar(false); });
 // Subida al salir de la app; al volver, reintenta lo que haya quedado pendiente
 document.addEventListener('visibilitychange', () => { subirPendiente(); if (document.visibilityState === 'visible') pintarSync(); });
 window.addEventListener('pagehide', subirPendiente);
 // El estado "hace X min" se refresca solo
 setInterval(() => pintarSync(), 60000);
+
+// Botones "Empecé" / "Terminé" (opcionales: el registro a mano sigue igual)
+function horaAhora() { const a = new Date(); return aHM(a.getHours() * 60 + a.getMinutes()); }
+function empezarTurno() {
+  store.turno = { key: clave(new Date()), inicio: horaAhora() };
+  guardarStore(); render();
+  toast('Turno iniciado a las ' + hora12(aMin(store.turno.inicio)) + '. Toca Terminé al salir');
+}
+/** Abre la hoja de registro de una fecha (cambia a su semana si hace falta). */
+function abrirRegistroDe(k) {
+  const f = deClave(k);
+  semana = lunesDe(f); render(); irA('registro');
+  abrirReal((f.getDay() + 6) % 7);
+}
+function terminarTurno() {
+  const t = store.turno; if (!t) return;
+  const real = { inicio: t.inicio, fin: horaAhora(), pausa: 0 };
+  // La pausa del plan solo cuenta si el turno fue lo bastante largo
+  const cfg = store.config;
+  if (cfg.pausaMin > 0 && horasReales(real) >= cfg.pausaDesde) real.pausa = cfg.pausaMin;
+  if (horasReales(real) === 0) { store.turno = null; guardarStore(); render(); toast('El turno duró menos de un minuto: no se guardó'); return; }
+  dia(t.key).real = real; store.turno = null;
+  guardarStore(); abrirRegistroDe(t.key);
+  toast('Turno guardado: ' + fmtH(Math.round(horasReales(real) * 100) / 100) + ' h. Escribe lo que facturaste');
+  setTimeout(() => $('realUSD').focus(), 350);
+}
 
 // Portada: accesos rápidos y tira de la semana
 function irAHoy() {
@@ -2107,7 +2247,11 @@ $('tab-inicio').addEventListener('click', e => {
   const g = e.target.closest('[data-go]');
   if (g) {
     const v = g.dataset.go;
-    if (v === 'hoy') irAHoy();
+    if (v === 'empece') empezarTurno();
+    else if (v === 'termine') terminarTurno();
+    else if (v === 'finmanual') abrirRegistroDe(store.turno.key);
+    else if (v === 'cancelarturno') confirmar('¿Cancelar el turno?', 'Se borra la hora de inicio y no se guarda nada de este turno.', 'Cancelar turno', () => { store.turno = null; guardarStore(); render(); });
+    else if (v === 'hoy') irAHoy();
     else if (v === 'calendario') { semana = lunesDe(new Date()); render(); irA('semana'); $('calSec').scrollIntoView(); }
     else { semana = lunesDe(new Date()); render(); irA(v); }
     return;
