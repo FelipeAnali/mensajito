@@ -614,6 +614,7 @@ ol.steps li+li{margin-top:6px}
     <section class="section" id="subSec">
       <div class="section-h">Conexión con GitHub</div>
       <div class="group">
+        <div class="cell"><div class="grow"><div class="t">Persona (perfil)</div><div class="s" id="perfilTxt">Principal</div></div><label class="field" style="width:150px"><input id="ghPerfil" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="principal" style="text-align:right" aria-label="Perfil"></label></div>
         <div class="cell"><div class="grow"><div class="t">Usuario</div></div><label class="field" style="width:190px"><input id="gh-owner" data-path="gh.owner" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" style="text-align:right"></label></div>
         <div class="cell"><div class="grow"><div class="t">Repositorio</div></div><label class="field" style="width:190px"><input id="gh-repo" data-path="gh.repo" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" style="text-align:right"></label></div>
         <div class="cell"><div class="grow"><div class="t">Rama</div></div><label class="field" style="width:190px"><input id="gh-branch" data-path="gh.branch" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" style="text-align:right"></label></div>
@@ -647,6 +648,7 @@ ol.steps li+li{margin-top:6px}
           <li>Toca <b>Generate token</b>, cópialo y pégalo arriba en Token. Anota la fecha de vencimiento en <b>El token vence</b>.</li>
         </ol>
       </div>
+      <div class="section-f"><b>Otra persona:</b> crea un token aparte para ella (así le puedes quitar el acceso sin afectar a nadie más) y ponle su propio perfil, por ejemplo <b>sofi</b>. Cada perfil tiene su calendario, sus datos y su clave.</div>
       <div class="section-h" style="margin-top:22px">Suscribirse en el iPhone (una sola vez)</div>
       <div class="group">
         <ol class="steps">
@@ -659,15 +661,14 @@ ol.steps li+li{margin-top:6px}
     </section>
 
     <section class="section">
-      <div class="section-h">Respaldo automático en GitHub</div>
+      <div class="section-h">Sincronizar entre tus equipos</div>
       <div class="group">
-        <div class="cell"><div class="grow"><div class="t">Clave del respaldo</div><div class="s" id="respEstado">Sin clave: no se respalda</div></div><label class="field" style="width:170px"><input id="respClave" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="mín. 8 caracteres" aria-label="Clave del respaldo"></label></div>
+        <div class="cell"><div class="grow"><div class="t">Clave</div><div class="s" id="respEstado">Sin clave: los datos quedan solo en este equipo</div></div><label class="field" style="width:170px"><input id="respClave" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="mín. 8 caracteres" aria-label="Clave del respaldo"></label></div>
       </div>
-      <div class="btn-row" style="margin-top:10px">
-        <button class="btn plain" id="btnRespAhora">Respaldar ahora</button>
-        <button class="btn plain" id="btnRespRecuperar">Recuperar</button>
+      <div class="stack" style="margin-top:10px">
+        <button class="btn plain" id="btnRespAhora">Sincronizar ahora</button>
       </div>
-      <div class="section-f">Tus registros, horas y dinero se guardan <b>cifrados</b> en GitHub (como mucho cada 3 h, si cambiaron). Sin la clave nadie puede leerlos, ni siquiera tú: anótala en un lugar seguro. En un celular nuevo: escribe la misma clave y toca <b>Recuperar</b>.</div>
+      <div class="section-f">Pon <b>la misma clave en todos tus equipos</b> (celular, PC, tablet): tus registros, horas y dinero se juntan solos al abrir y al salir de la app. En GitHub quedan <b>cifrados</b>: sin la clave nadie puede leerlos, ni siquiera tú. Anótala en un lugar seguro.</div>
 
       <div class="section-h" style="margin-top:22px">Respaldo manual</div>
       <div class="stack">
@@ -848,7 +849,7 @@ function categoria(min) { if (min === null || min === undefined) return CATEGORI
    }
    ===================================================================== */
 const LLAVE = 'streamplanner:v2';
-function storeVacio() { return { v: 2, config: copia(CONFIG_BASE), dias: {}, opciones: {} }; }
+function storeVacio() { return { v: 2, config: copia(CONFIG_BASE), dias: {}, opciones: {}, turno: null, borrados: {}, configT: {}, opcionesT: {}, turnoT: 0, sellado: true }; }
 /** Completa ajustes faltantes (por si un respaldo viene incompleto). */
 function normalizar(s) {
   const base = storeVacio();
@@ -873,12 +874,24 @@ function normalizar(s) {
   const esObj = (o) => o && typeof o === 'object' && !Array.isArray(o);
   // Turno en curso (botón "Empecé"): { key: 'AAAA-MM-DD', inicio: 'HH:MM' }
   const turno = esObj(s.turno) && /^\d{4}-\d{2}-\d{2}$/.test(s.turno.key) && /^\d{2}:\d{2}$/.test(s.turno.inicio) ? { key: s.turno.key, inicio: s.turno.inicio } : null;
-  return { v: 2, config: cfg, dias: esObj(s.dias) ? s.dias : {}, opciones: esObj(s.opciones) ? s.opciones : {}, turno };
+  // Sellos de tiempo para juntar los datos de varios equipos (gana el cambio más reciente)
+  const sellos = (o) => esObj(o) ? Object.fromEntries(Object.entries(o).filter(([, v]) => typeof v === 'number' && isFinite(v))) : {};
+  return { v: 2, config: cfg, dias: esObj(s.dias) ? s.dias : {}, opciones: esObj(s.opciones) ? s.opciones : {}, turno,
+    borrados: sellos(s.borrados), configT: sellos(s.configT), opcionesT: sellos(s.opcionesT), turnoT: Number(s.turnoT) || 0, sellado: !!s.sellado };
 }
 function cargarStore() {
-  let s = null;
-  try { const raw = localStorage.getItem(LLAVE); if (raw) s = JSON.parse(raw); } catch (e) {}
+  let s = null, habia = false;
+  try { const raw = localStorage.getItem(LLAVE); if (raw) { s = JSON.parse(raw); habia = true; } } catch (e) {}
   s = normalizar(s);
+  // Datos de antes de la sincronización: sello mínimo (1) para que le ganen a un
+  // respaldo viejo sin sellos, pero pierdan contra cualquier cambio real posterior
+  if (habia && !s.sellado) {
+    Object.values(s.dias).forEach(d => { if (d && typeof d === 'object' && !d.t) d.t = 1; });
+    Object.keys(s.config).forEach(k => { if (k !== 'gh' && !s.configT[k]) s.configT[k] = 1; });
+    Object.keys(s.opciones).forEach(k => { if (!s.opcionesT[k]) s.opcionesT[k] = 1; });
+    if (!s.turnoT) s.turnoT = 1;
+  }
+  s.sellado = true;
   // Migración de la versión 1 (una llave por semana con caja y horas)
   try {
     for (let i = 0; i < localStorage.length; i++) {
@@ -894,9 +907,37 @@ function cargarStore() {
   } catch (e) {}
   return s;
 }
-function guardarStore() {
+/**
+ * Guarda en el navegador. Antes sella con la hora lo que cambió desde la última
+ * vez (días, ajustes, opciones, turno), para poder juntar los datos de varios equipos.
+ * opc.sinSello: los datos vienen de otro equipo (ya traen sus sellos).
+ * opc.sinSync: no programar subida (ya se está sincronizando).
+ */
+function guardarStore(opc) {
+  opc = opc || {};
+  if (opc.sinSello) tomarFoto(); else sellar();
   try { localStorage.setItem(LLAVE, JSON.stringify(store)); } catch (e) {}
-  if (typeof programarSync === 'function') programarSync(); // sube el calendario a GitHub si está conectado
+  if (!opc.sinSync && typeof programarSync === 'function') programarSync(); // sube a GitHub si está conectado
+}
+let foto = null; // contenido (sin sellos) de lo último guardado, para saber qué cambió
+const sinT = (o) => { if (!o || typeof o !== 'object') return JSON.stringify(o); const { t, ...resto } = o; return JSON.stringify(resto); };
+function tomarFoto() {
+  foto = { dias: {}, config: {}, opciones: {}, turno: JSON.stringify(store.turno || null) };
+  Object.entries(store.dias).forEach(([k, d]) => { foto.dias[k] = sinT(d); });
+  Object.entries(store.config).forEach(([k, v]) => { if (k !== 'gh') foto.config[k] = JSON.stringify(v); });
+  Object.entries(store.opciones).forEach(([k, v]) => { foto.opciones[k] = JSON.stringify(v); });
+}
+function sellar() {
+  if (!foto) { tomarFoto(); return; }
+  const ahora = Date.now();
+  Object.entries(store.dias).forEach(([k, d]) => { if (foto.dias[k] !== sinT(d)) { d.t = ahora; delete store.borrados[k]; } });
+  Object.keys(foto.dias).forEach(k => { if (!store.dias[k]) store.borrados[k] = ahora; });
+  Object.entries(store.config).forEach(([k, v]) => { if (k !== 'gh' && foto.config[k] !== JSON.stringify(v)) store.configT[k] = ahora; });
+  new Set([...Object.keys(store.opciones), ...Object.keys(foto.opciones)]).forEach(k => {
+    if (foto.opciones[k] !== JSON.stringify(store.opciones[k])) store.opcionesT[k] = ahora;
+  });
+  if (foto.turno !== JSON.stringify(store.turno || null)) store.turnoT = ahora;
+  tomarFoto();
 }
 /** Devuelve (y crea si hace falta) el registro de una fecha. */
 function dia(k) { return (store.dias[k] = store.dias[k] || {}); }
@@ -1164,7 +1205,7 @@ function generarICS(planes, cfg) {
   let n = 0;
   const ev = (f, a, b, titulo, desc, tipo) => {
     n++;
-    L.push('BEGIN:VEVENT', 'UID:sp-' + clave(f).replace(/-/g, '') + '-' + tipo + '@streamplanner', 'DTSTAMP:' + ahora,
+    L.push('BEGIN:VEVENT', 'UID:sp-' + clave(f).replace(/-/g, '') + '-' + tipo + '@' + (perfilDe(cfg.gh) ? perfilDe(cfg.gh) + '.' : '') + 'streamplanner', 'DTSTAMP:' + ahora,
       'DTSTART;TZID=America/Bogota:' + icsFecha(f, a), 'DTEND;TZID=America/Bogota:' + icsFecha(f, b),
       'SUMMARY:' + icsTexto(titulo), 'DESCRIPTION:' + icsTexto(desc),
       'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsTexto(titulo), 'TRIGGER:-PT0M', 'END:VALARM', 'END:VEVENT');
@@ -1231,6 +1272,17 @@ function enlacesGH(gh) {
   return { raw, webcal: raw.replace(/^https:\/\//, 'webcal://'),
     editar: 'https://github.com/' + rutaURL(gh.owner) + '/' + rutaURL(gh.repo) + '/edit/' + rutaURL(gh.branch) + '/' + rutaURL(gh.ruta) };
 }
+/**
+ * Perfil = carpeta de cada persona en el repo (personas/<perfil>/turnos.ics y su
+ * respaldo.json al lado). Sin perfil = la persona principal, con los archivos en la raíz.
+ */
+const perfilDe = (gh) => { const m = String(gh.ruta).match(/^personas\/([^/]+)\//); return m ? m[1] : ''; };
+const limpiarPerfil = (v) => String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30);
+function ponerPerfil(p) {
+  const gh = store.config.gh, antes = gh.ruta;
+  gh.ruta = p && p !== 'principal' ? 'personas/' + p + '/turnos.ics' : 'turnos.ics';
+  if (gh.ruta !== antes) { guardarEstadoSync(null); guardarDS(null); } // otros archivos: el estado anterior ya no sirve
+}
 /** Texto UTF-8 ↔ base64 (la API de GitHub manda y recibe el contenido así). */
 function aBase64(txt) { const b = new TextEncoder().encode(txt); let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); }
 function deBase64(b64) { const s = atob(String(b64).replace(/\s/g, '')); const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return new TextDecoder().decode(b); }
@@ -1262,13 +1314,13 @@ function programarSync() {
   if (EN_VISOR_CLAUDE || !store || !store.config.gh.auto || !leerToken()) return;
   marcarPendiente(true);
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(() => subirCalendario(false), ESPERA_SYNC);
+  syncTimer = setTimeout(() => sincronizarTodo(false), ESPERA_SYNC);
 }
 /** Sube ya lo que esté pendiente (al salir de la app o al volver a abrirla). */
 function subirPendiente() {
   if (!hayPendiente() || EN_VISOR_CLAUDE || !store || !store.config.gh.auto || !leerToken()) return;
   clearTimeout(syncTimer);
-  subirCalendario(false);
+  sincronizarTodo(false);
 }
 /**
  * Sube el calendario a GitHub.
@@ -1330,7 +1382,6 @@ async function subirCalendario(manual) {
   } finally {
     syncEnCurso = false; pintarSync();
     if (syncPendiente) { syncPendiente = false; programarSync(); }
-    else respaldar(false); // se limita solo: con cambios y como mucho cada 3 h
   }
 }
 /** "hace 3 min" */
@@ -1369,42 +1420,96 @@ function pintarSync(estado) {
 }
 
 /* =====================================================================
-   7c. RESPALDO CIFRADO EN GITHUB
-   Ajustes, registros y dinero se cifran en el celular con AES-GCM; la
-   llave sale de la clave con PBKDF2 (600 000 vueltas). En el repo público
-   solo queda texto ilegible (respaldo.json, junto al calendario).
+   7c. SINCRONIZAR ENTRE EQUIPOS (datos cifrados en GitHub)
+   Cada persona tiene su archivo de datos junto a su calendario
+   (respaldo.json). Va cifrado con AES-GCM; la llave sale de su clave con
+   PBKDF2 (600 000 vueltas): en el repo público solo hay texto ilegible.
+   Al sincronizar, cada equipo baja el archivo, lo junta con lo suyo (gana
+   el cambio más reciente de cada día, ajuste u opción; los borrados
+   también viajan) y sube el resultado si cambió.
    ===================================================================== */
 const LLAVE_RCLAVE = 'streamplanner:respclave';
-const LLAVE_RESP = 'streamplanner:resp';   // {t, ok, msg, huella, sha, vinculado} del último respaldo
-const RESP_CADA = 3 * 3600000;             // como mucho un respaldo automático cada 3 h
+const LLAVE_DSYNC = 'streamplanner:datosync';  // {t, ok, msg} de la última sincronización de datos
 const RESP_VUELTAS = 600000;
+const BORRADOS_DIAS = 180;                       // los borrados se recuerdan 6 meses
 const leerRClave = () => { try { return localStorage.getItem(LLAVE_RCLAVE) || ''; } catch (e) { return ''; } };
 const guardarRClave = (c) => { try { c ? localStorage.setItem(LLAVE_RCLAVE, c) : localStorage.removeItem(LLAVE_RCLAVE); } catch (e) {} };
-const leerResp = () => { try { return JSON.parse(localStorage.getItem(LLAVE_RESP) || 'null'); } catch (e) { return null; } };
-const guardarResp = (r) => { try { localStorage.setItem(LLAVE_RESP, JSON.stringify(r)); } catch (e) {} };
+const leerDS = () => { try { return JSON.parse(localStorage.getItem(LLAVE_DSYNC) || 'null'); } catch (e) { return null; } };
+const guardarDS = (r) => { try { r ? localStorage.setItem(LLAVE_DSYNC, JSON.stringify(r)) : localStorage.removeItem(LLAVE_DSYNC); } catch (e) {} };
 const rutaResp = (gh) => gh.ruta.replace(/[^/]*$/, '') + 'respaldo.json';
-const datosResp = () => JSON.stringify({ v: store.v, config: store.config, dias: store.dias, opciones: store.opciones, turno: store.turno });
 const bytesA64 = (u8) => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
 const deB64Bytes = (t) => Uint8Array.from(atob(t), c => c.charCodeAt(0));
-const fechaLarga = (iso) => { const f = new Date(iso); return isNaN(f) ? 'fecha desconocida' : f.getDate() + ' ' + MESES[f.getMonth()] + ' ' + f.getFullYear() + ', ' + hora12(f.getHours() * 60 + f.getMinutes()); };
 
-async function llaveDe(clave, sal, vueltas) {
-  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(clave), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: sal, iterations: vueltas, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+/** Lo que viaja entre equipos: todo menos la conexión con GitHub (es de cada equipo). */
+function datosSync(s) {
+  const { gh, ...config } = s.config;
+  return { v: s.v, config, configT: s.configT, dias: s.dias, borrados: s.borrados, opciones: s.opciones, opcionesT: s.opcionesT, turno: s.turno, turnoT: s.turnoT };
 }
-async function cifrar(texto, clave) {
-  const sal = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
-  const datos = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await llaveDe(clave, sal, RESP_VUELTAS), new TextEncoder().encode(texto)));
-  return JSON.stringify({ app: 'StreamPlanner', v: 1, cifrado: 'AES-GCM', kdf: 'PBKDF2-SHA256', vueltas: RESP_VUELTAS,
-    sal: bytesA64(sal), iv: bytesA64(iv), fecha: new Date().toISOString(), datos: bytesA64(datos) }, null, 1);
+/** JSON con las llaves ordenadas: dos datos iguales dan el mismo texto. */
+function estable(v) {
+  if (Array.isArray(v)) return '[' + v.map(estable).join(',') + ']';
+  if (v && typeof v === 'object') return '{' + Object.keys(v).filter(k => v[k] !== undefined).sort().map(k => JSON.stringify(k) + ':' + estable(v[k])).join(',') + '}';
+  return JSON.stringify(v === undefined ? null : v);
+}
+const firma = (s) => estable(datosSync(s));
+
+/**
+ * Junta los datos de este equipo (loc) con los de GitHub (rem).
+ * Gana el sello más reciente; si empatan, gana GitHub (así todos los equipos terminan iguales).
+ */
+function fusionar(loc, rem) {
+  const r = storeVacio(), viejo = Date.now() - BORRADOS_DIAS * 86400000;
+  // Días (y borrados)
+  new Set([...Object.keys(loc.dias), ...Object.keys(rem.dias), ...Object.keys(loc.borrados), ...Object.keys(rem.borrados)]).forEach(k => {
+    const tl = loc.dias[k] ? (loc.dias[k].t || 0) : -1, tr = rem.dias[k] ? (rem.dias[k].t || 0) : -1;
+    const reg = tr >= tl ? rem.dias[k] : loc.dias[k], treg = Math.max(tl, tr);
+    const tb = Math.max(loc.borrados[k] ?? -1, rem.borrados[k] ?? -1);
+    if (reg && treg >= tb) r.dias[k] = copia(reg);
+    else if (tb >= viejo) r.borrados[k] = tb;
+  });
+  // Ajustes, uno por uno (la conexión con GitHub se queda la de este equipo)
+  r.config = copia(loc.config);
+  new Set([...Object.keys(loc.config), ...Object.keys(rem.config)]).forEach(k => {
+    if (k === 'gh') return;
+    const tl = loc.configT[k] || 0, tr = rem.configT[k] || 0;
+    if (tr >= tl && rem.config[k] !== undefined) r.config[k] = copia(rem.config[k]);
+    r.configT[k] = Math.max(tl, tr);
+  });
+  // Opción de fin de semana, por semana
+  new Set([...Object.keys(loc.opciones), ...Object.keys(rem.opciones), ...Object.keys(loc.opcionesT), ...Object.keys(rem.opcionesT)]).forEach(k => {
+    const tl = loc.opcionesT[k] || 0, tr = rem.opcionesT[k] || 0, v = tr >= tl ? rem.opciones[k] : loc.opciones[k];
+    if (v !== undefined) r.opciones[k] = v;
+    r.opcionesT[k] = Math.max(tl, tr);
+  });
+  // Turno en curso
+  r.turno = (rem.turnoT || 0) >= (loc.turnoT || 0) ? rem.turno : loc.turno;
+  r.turnoT = Math.max(loc.turnoT || 0, rem.turnoT || 0);
+  return r;
+}
+
+/* La llave tarda en calcularse (a propósito): se guarda en memoria mientras la app está abierta */
+let llaveCache = null;
+async function llavePara(secreto, salB64, vueltas) {
+  if (llaveCache && llaveCache.secreto === secreto && llaveCache.sal === salB64 && llaveCache.vueltas === vueltas) return llaveCache.llave;
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(secreto), 'PBKDF2', false, ['deriveKey']);
+  const llave = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: deB64Bytes(salB64), iterations: vueltas, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  llaveCache = { secreto, sal: salB64, vueltas, llave };
+  return llave;
+}
+/** salB64: la sal del archivo actual (se reutiliza para no recalcular la llave); el iv siempre es nuevo. */
+async function cifrar(texto, secreto, salB64) {
+  const sal = salB64 || bytesA64(crypto.getRandomValues(new Uint8Array(16))), iv = crypto.getRandomValues(new Uint8Array(12));
+  const datos = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await llavePara(secreto, sal, RESP_VUELTAS), new TextEncoder().encode(texto)));
+  return JSON.stringify({ app: 'StreamPlanner', v: 2, cifrado: 'AES-GCM', kdf: 'PBKDF2-SHA256', vueltas: RESP_VUELTAS,
+    sal, iv: bytesA64(iv), fecha: new Date().toISOString(), datos: bytesA64(datos) }, null, 1);
 }
 /** Falla (lanza) si la clave no es la correcta. */
-async function descifrar(obj, clave) {
-  const plano = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: deB64Bytes(obj.iv) }, await llaveDe(clave, deB64Bytes(obj.sal), obj.vueltas), deB64Bytes(obj.datos));
+async function descifrar(obj, secreto) {
+  const plano = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: deB64Bytes(obj.iv) }, await llavePara(secreto, obj.sal, obj.vueltas), deB64Bytes(obj.datos));
   return new TextDecoder().decode(plano);
 }
 
-/** Lee o escribe un archivo del repo. El repo es público: leer funciona aun sin token. */
+/** Lee o escribe un archivo del repo. */
 function urlArchivo(ruta) { const gh = store.config.gh; return 'https://api.github.com/repos/' + rutaURL(gh.owner) + '/' + rutaURL(gh.repo) + '/contents/' + rutaURL(ruta); }
 function cabeceras() {
   const h = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }, t = leerToken();
@@ -1426,81 +1531,80 @@ async function ghEscribir(ruta, texto, sha, mensaje) {
   return j.content && j.content.sha;
 }
 
-let respEnCurso = false;
-/**
- * Sube el respaldo cifrado.
- * @param {boolean|'forzar'} manual  true = botón; 'forzar' = reemplazar uno ajeno ya confirmado.
- */
-async function respaldar(manual) {
+let datosEnCurso = false;
+/** Baja, junta y sube los datos de esta persona. Nunca sube si la clave no abre el archivo de GitHub. */
+async function sincronizarDatos(manual) {
   if (EN_VISOR_CLAUDE) { if (manual) toast('Dentro de Claude no hay conexión'); return; }
   const secreto = leerRClave();
-  if (!secreto) { if (manual) toast('Primero escribe una clave de respaldo'); return; }
+  if (!secreto) { if (manual) toast('Primero escribe la clave para sincronizar'); return; }
   if (!leerToken()) { if (manual) toast('Primero pega el token en Conexión con GitHub'); return; }
-  if (!navigator.onLine) { if (manual) toast('Sin internet: el respaldo se hace cuando vuelva la conexión'); return; }
-  if (respEnCurso) return;
-  const previo = leerResp(), texto = datosResp(), huella = huellaDe(texto);
-  if (previo && previo.ok && previo.huella === huella) { if (manual) toast('El respaldo ya estaba al día'); return; }
-  if (!manual && (!Object.keys(store.dias).length || (previo && previo.ok && Date.now() - previo.t < RESP_CADA))) return;
-  respEnCurso = true; pintarResp('Respaldando…');
+  if (!navigator.onLine) { if (manual) toast('Sin internet: se sincroniza cuando vuelva la conexión'); return; }
+  if (datosEnCurso) return;
+  datosEnCurso = true; pintarResp('Sincronizando…');
+  const ruta = rutaResp(store.config.gh);
   try {
-    const ruta = rutaResp(store.config.gh), remoto = await ghLeer(ruta);
-    // Este celular nunca ha respaldado ni recuperado: no pisar sin preguntar un respaldo que ya existe
-    if (remoto && !(previo && previo.vinculado) && manual !== 'forzar') {
-      respEnCurso = false; pintarResp();
-      if (!manual) return;
-      let fecha = ''; try { fecha = fechaLarga(JSON.parse(remoto.texto).fecha); } catch (e) {}
-      confirmar('¿Reemplazar el respaldo de GitHub?', 'Ya hay un respaldo' + (fecha ? ' del ' + fecha : '') + '. Si sigues, se cambia por los datos de este celular. Para traerlo aquí, toca Recuperar.',
-        'Reemplazar', () => respaldar('forzar'));
+    for (let intento = 0; intento < 3; intento++) {
+      const remoto = await ghLeer(ruta);
+      let rem = null, sal;
+      if (remoto) {
+        let obj; try { obj = JSON.parse(remoto.texto); } catch (e) { throw { msg: 'El archivo de datos en GitHub está dañado' }; }
+        try { rem = normalizar(JSON.parse(await descifrar(obj, secreto))); sal = obj.sal; }
+        catch (e) { throw { msg: 'La clave no coincide con la de tus otros equipos. Escríbela de nuevo en Ajustes.', clave: true }; }
+      }
+      const fus = rem ? fusionar(store, rem) : store;
+      // 1) Traer a este equipo lo que cambió en los otros
+      if (firma(fus) !== firma(store)) {
+        store = fus; guardarStore({ sinSello: true, sinSync: true }); render();
+        if (!$('tab-ajustes').hidden) renderAjustes();
+        if (store.config.nombre && $('dlgHola').classList.contains('open')) cerrarHola(); // el nombre llegó de otro equipo
+      }
+      // 2) Subir si GitHub no tiene lo mismo
+      if (rem && firma(rem) === firma(store)) { guardarDS({ t: Date.now(), ok: true, msg: 'Al día' }); if (manual) toast('Todo al día en tus equipos'); return; }
+      try {
+        await ghEscribir(ruta, await cifrar(JSON.stringify(datosSync(store)), secreto, sal), remoto ? remoto.sha : undefined, 'StreamPlanner: sincroniza datos ' + clave(new Date()));
+      } catch (e) {
+        if (e && (e.status === 409 || e.status === 422)) continue; // otro equipo subió justo ahora: se repite con lo nuevo
+        throw e;
+      }
+      guardarDS({ t: Date.now(), ok: true, msg: 'Sincronizado' });
+      if (manual) toast('Datos sincronizados');
       return;
     }
-    const sha = await ghEscribir(ruta, await cifrar(texto, secreto), remoto ? remoto.sha : undefined, 'StreamPlanner: respaldo cifrado ' + clave(new Date()));
-    guardarResp({ t: Date.now(), ok: true, msg: 'Respaldado', huella, sha, vinculado: true });
-    if (manual) toast('Respaldo cifrado guardado en GitHub');
+    throw { msg: 'Otro equipo está sincronizando al mismo tiempo; se reintenta luego' };
   } catch (e) {
-    const msg = e && e.status ? errorGH(e.status) : 'Sin internet o GitHub no responde';
-    guardarResp(Object.assign({}, previo, { t: Date.now(), ok: false, msg }));
-    if (manual) toast(msg);
+    const msg = e && e.msg ? e.msg : e && e.status ? errorGH(e.status) : 'Sin internet o GitHub no responde';
+    guardarDS({ t: Date.now(), ok: false, msg });
+    if (manual || (e && e.clave)) toast(msg);
   } finally {
-    respEnCurso = false; pintarResp();
+    datosEnCurso = false; pintarResp();
   }
 }
 
-/** Trae el respaldo de GitHub, lo descifra con la clave y reemplaza los datos de este celular. */
-async function recuperar() {
-  if (EN_VISOR_CLAUDE) { toast('Dentro de Claude no hay conexión'); return; }
-  const secreto = leerRClave();
-  if (!secreto) { toast('Escribe la clave del respaldo'); return; }
-  pintarResp('Buscando respaldo…');
-  try {
-    const remoto = await ghLeer(rutaResp(store.config.gh));
-    if (!remoto) { toast('Todavía no hay respaldo en GitHub'); return; }
-    const obj = JSON.parse(remoto.texto);
-    let s; try { s = JSON.parse(await descifrar(obj, secreto)); } catch (e) { toast('Clave incorrecta'); return; }
-    confirmar('¿Recuperar el respaldo?', 'Es del ' + fechaLarga(obj.fecha) + '. Se reemplazan los ajustes y registros de este celular.', 'Recuperar', () => {
-      const gh = store.config.gh;
-      store = normalizar(s); store.config.gh = gh; // la conexión se queda como está en este celular
-      guardarResp({ t: Date.now(), ok: true, msg: 'Recuperado', huella: huellaDe(datosResp()), sha: remoto.sha, vinculado: true });
-      guardarStore(); render(); renderAjustes(); toast('Respaldo recuperado');
-    });
-  } catch (e) {
-    toast(e && e.status ? errorGH(e.status) : 'Sin internet o GitHub no responde');
-  } finally {
-    pintarResp();
-  }
+/** Primero junta los datos (si hay clave) y luego sube el calendario ya con todo. */
+let ultimaSync = 0;
+async function sincronizarTodo(manual) {
+  ultimaSync = Date.now();
+  await sincronizarDatos(manual);
+  await subirCalendario(manual);
+}
+/** Al volver a la app: trae lo de los otros equipos (como mucho cada 30 s). */
+function traerCambios() {
+  if (Date.now() - ultimaSync < 30000 || EN_VISOR_CLAUDE || !leerToken() || !navigator.onLine) return;
+  sincronizarTodo(false);
 }
 
 function pintarResp(estado) {
   if (typeof document === 'undefined' || !document.getElementById('respEstado')) return;
-  if (!estado && respEnCurso) return;
-  const secreto = leerRClave(), r = leerResp();
+  if (!estado && datosEnCurso) return;
+  const secreto = leerRClave(), r = leerDS();
   let t;
   if (estado) t = estado;
-  else if (!secreto) t = 'Sin clave: no se respalda';
+  else if (!secreto) t = 'Sin clave: los datos quedan solo en este equipo';
   else if (!leerToken()) t = 'Clave guardada · falta el token de GitHub';
-  else if (!r) t = 'Clave guardada · aún no hay respaldo';
+  else if (!r) t = 'Clave guardada · aún no se ha sincronizado';
   else t = r.ok ? r.msg + ' ' + haceCuanto(r.t) + ' · cifrado' : 'Error ' + haceCuanto(r.t) + ': ' + r.msg;
   $('respEstado').textContent = t;
-  $('respClave').placeholder = secreto ?'Guardada · escribe para cambiar' : 'mín. 8 caracteres';
+  $('respClave').placeholder = secreto ? 'Guardada · escribe para cambiar' : 'mín. 8 caracteres';
 }
 
 /* =====================================================================
@@ -1919,6 +2023,9 @@ function renderAjustes() {
   $('webcalTxt').textContent = links.raw;
   $('lnkWebcal').href = links.webcal;
   $('tokRepo').textContent = cfg.gh.repo;
+  const pf = perfilDe(cfg.gh);
+  if ($('ghPerfil') !== document.activeElement) $('ghPerfil').value = pf;
+  $('perfilTxt').textContent = pf ? 'Archivos en personas/' + pf : 'Principal (archivos en la raíz)';
   ['owner', 'repo', 'branch', 'ruta'].forEach(k => { const el = $('gh-' + k); if (el !== document.activeElement) el.value = cfg.gh[k]; });
   document.querySelectorAll('[data-ghauto]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.ghauto === '1') === !!cfg.gh.auto)));
   pintarSync();
@@ -2179,10 +2286,10 @@ $('btnBackup').onclick = () => { const t = JSON.stringify(store); $('restoreText
 $('btnRestore').onclick = () => {
   let s; try { s = JSON.parse($('restoreText').value); } catch (e) { toast('El texto no es un respaldo válido'); return; }
   if (!s || typeof s.dias !== 'object' || Array.isArray(s.dias) || s.dias === null) { toast('El texto no es un respaldo válido'); return; }
-  confirmar('¿Restaurar respaldo?', 'Se reemplazan tus ajustes y registros actuales por los del respaldo.', 'Restaurar', () => { store = normalizar(s); guardarStore(); render(); renderAjustes(); toast('Respaldo restaurado'); });
+  confirmar('¿Restaurar respaldo?', 'Se reemplazan tus ajustes y registros actuales por los del respaldo.', 'Restaurar', () => { const gh = store.config.gh; store = normalizar(s); store.config.gh = gh; guardarStore(); render(); renderAjustes(); toast('Respaldo restaurado'); });
 };
-$('btnResetCfg').onclick = () => confirmar('¿Volver a los ajustes de fábrica?', 'Metas, horarios y reglas vuelven a los valores originales. Tus registros no se tocan.', 'Restablecer', () => { store.config = copia(CONFIG_BASE); guardarStore(); render(); renderAjustes(); toast('Ajustes restablecidos'); });
-$('btnWipe').onclick = () => confirmar('¿Borrar todo?', 'Se eliminan ajustes, planes y registros de este navegador. No se puede deshacer.', 'Borrar todo', () => { store = storeVacio(); guardarStore(); render(); renderAjustes(); toast('Datos borrados'); });
+$('btnResetCfg').onclick = () => confirmar('¿Volver a los ajustes de fábrica?', 'Metas, horarios y reglas vuelven a los valores originales. Tus registros no se tocan.', 'Restablecer', () => { store.config = Object.assign(copia(CONFIG_BASE), { gh: store.config.gh }); guardarStore(); render(); renderAjustes(); toast('Ajustes restablecidos'); });
+$('btnWipe').onclick = () => confirmar('¿Borrar todo?', 'Se eliminan ajustes, planes y registros de este equipo. Si sincronizas con otros equipos, vuelven desde allá al sincronizar.', 'Borrar todo', () => { const gh = store.config.gh; store = storeVacio(); store.config.gh = gh; guardarStore({ sinSello: true }); render(); renderAjustes(); toast('Datos borrados'); });
 $('dlgNo').onclick = cerrarDialogo;
 $('dlgYes').onclick = () => { const a = accionDialogo; cerrarDialogo(); if (a) a(); };
 
@@ -2204,11 +2311,21 @@ $('respClave').addEventListener('change', e => {
   const c = e.target.value; e.target.value = '';
   if (!c) return;
   if (c.length < 8) { toast('La clave debe tener al menos 8 caracteres'); return; }
-  guardarRClave(c); pintarResp(); toast('Clave guardada en este celular');
-  respaldar(false);
+  guardarRClave(c); llaveCache = null; pintarResp(); toast('Clave guardada en este equipo');
+  sincronizarTodo(true);
 });
-$('btnRespAhora').onclick = () => respaldar(true);
-$('btnRespRecuperar').onclick = () => recuperar();
+$('btnRespAhora').onclick = () => sincronizarTodo(true);
+// Cambiar de persona: este equipo pasa a usar los archivos de otro perfil
+$('ghPerfil').addEventListener('change', e => {
+  const p = limpiarPerfil(e.target.value);
+  if (p === perfilDe(store.config.gh) || (p === 'principal' && !perfilDe(store.config.gh))) { renderAjustes(); return; }
+  const nombreP = p && p !== 'principal' ? '«' + p + '»' : 'la persona principal';
+  confirmar('¿Cambiar de persona?', 'Este equipo usará el calendario y los datos de ' + nombreP + '. Si los datos de este equipo son de otra persona, primero toca Borrar todo para no mezclarlos. Luego escribe la clave de esa persona.', 'Cambiar', () => {
+    ponerPerfil(p); guardarRClave(''); llaveCache = null;
+    guardarStore({ sinSync: true }); render(); renderAjustes(); toast('Listo: ahora escribe la clave de ' + nombreP);
+  });
+  renderAjustes();
+});
 $('btnSyncNow').onclick = () => subirCalendario(true);
 document.querySelectorAll('[data-ghauto]').forEach(b => b.onclick = () => { store.config.gh.auto = b.dataset.ghauto === '1'; guardarStore(); renderAjustes(); });
 $('ghVence').addEventListener('change', e => { guardarVence(e.target.value); pintarSync(); renderInicio(); toast(e.target.value ? 'Fecha guardada: te aviso 2 semanas antes' : 'Fecha borrada'); });
@@ -2234,9 +2351,10 @@ if (!store.config.nombre && !yaSaludo) setTimeout(() => { $('dlgHola').classList
 // Sin internet: se puede ver y registrar; al volver la señal se sube lo pendiente
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
 window.addEventListener('offline', () => { pintarSync(); renderInicio(); });
-window.addEventListener('online', () => { pintarSync(); renderInicio(); subirPendiente(); respaldar(false); });
+window.addEventListener('online', () => { pintarSync(); renderInicio(); sincronizarTodo(false); });
 // Subida al salir de la app; al volver, reintenta lo que haya quedado pendiente
-document.addEventListener('visibilitychange', () => { subirPendiente(); if (document.visibilityState === 'visible') pintarSync(); });
+// Al salir se sube lo pendiente; al volver se traen los cambios de los otros equipos
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { pintarSync(); traerCambios(); } else subirPendiente(); });
 window.addEventListener('pagehide', subirPendiente);
 // El estado "hace X min" se refresca solo
 setInterval(() => pintarSync(), 60000);
@@ -2305,7 +2423,8 @@ let tokenDeEnlace = false;
   // Tolera comillas, espacios o "< >" pegados al token: toma solo la parte con forma de token
   const m = hash.match(/(github_pat_|ghp_)[A-Za-z0-9_]{20,}/), mv = hash.match(/vence=(\d{4}-\d{2}-\d{2})/);
   if (!m) { toast(/TU_TOKEN/i.test(hash) ? 'Cambia TU_TOKEN por el token de GitHub' : 'El enlace no trae un token: debe empezar por github_pat_'); return; }
-  const t = m[0], v = mv ? mv[1] : '';
+  const t = m[0], v = mv ? mv[1] : '', mp = hash.match(/perfil=([^&\s]+)/);
+  if (mp) ponerPerfil(limpiarPerfil(mp[1]));
   guardarToken(t); tokenDeEnlace = true;
   if (/^\d{4}-\d{2}-\d{2}$/.test(v)) guardarVence(v);
 })();
@@ -2314,8 +2433,9 @@ guardarStore(); // deja guardada la migración, si la hubo
 if (!quedoPendiente) marcarPendiente(false); // abrir la app no cuenta como cambio
 render();
 // Si quedó algo sin subir (la app se cerró de golpe, no había internet o el calendario cambió de repo), se sube ahora
-if (tokenDeEnlace) { marcarPendiente(true); subirCalendario(true); }
-else if (quedoPendiente) subirPendiente();
+// Al abrir: junta con los otros equipos y sube lo pendiente
+if (tokenDeEnlace) { marcarPendiente(true); sincronizarTodo(true); }
+else if (leerToken()) sincronizarTodo(false);
 </script>
 
 </body>
