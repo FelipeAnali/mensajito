@@ -497,6 +497,8 @@ ol.steps li+li{margin-top:6px}
         <div class="cell"><div class="grow"><div class="t">Eventos</div><div class="s" id="icsInfo">—</div></div><b class="num" id="icsCount">0</b></div>
         <div class="cell"><div class="grow"><div class="t">Incluir</div></div>
           <div class="seg mini" role="group" aria-label="Semanas a incluir"><button data-icsw="1" aria-pressed="true">Esta</button><button data-icsw="2" aria-pressed="false">+ Próxima</button></div></div>
+        <div class="cell"><div class="grow"><div class="t">Recordar registrar</div><div class="s">Aviso 15 min después de cada turno</div></div>
+          <div class="seg mini" role="group" aria-label="Recordatorio para registrar"><button data-bool="recordarRegistro" data-v="1" aria-pressed="true">Sí</button><button data-bool="recordarRegistro" data-v="0" aria-pressed="false">No</button></div></div>
       </div>
       <div class="stack" style="margin-top:10px">
         <a class="btn" id="lnkWebcal2" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M12 12v6M9 15h6"/></svg>Suscribirme en este iPhone</a>
@@ -560,6 +562,7 @@ ol.steps li+li{margin-top:6px}
         <div class="cell"><div class="grow"><div class="t">Horas si no la cumples</div><div class="s">Ruta B · evita el descuento</div></div><label class="field"><input id="cfg-horasNoCumple" data-cfg="horasNoCumple" inputmode="decimal" autocomplete="off"><span>h</span></label></div>
         <div class="cell"><div class="grow"><div class="t">Recomendado por día</div><div class="s">Si un día se pasa, sale alerta</div></div><label class="field"><input id="cfg-maxDia" data-cfg="maxDia" inputmode="decimal" autocomplete="off"><span>h</span></label></div>
         <div class="cell"><div class="grow"><div class="t">Máximo permitido por día</div><div class="s">Tope de una jornada larga</div></div><label class="field"><input id="cfg-maxPermitido" data-cfg="maxPermitido" inputmode="decimal" autocomplete="off"><span>h</span></label></div>
+        <div class="cell"><div class="grow"><div class="t">Descanso mínimo entre turnos</div><div class="s">Del fin del turno al despertador; si es menos, sale alerta</div></div><label class="field"><input id="cfg-descansoMin" data-cfg="descansoMin" inputmode="decimal" autocomplete="off"><span>h</span></label></div>
       </div>
     </section>
 
@@ -592,8 +595,10 @@ ol.steps li+li{margin-top:6px}
       <div class="section-h">Días rojos (quincena)</div>
       <div class="group">
         <div class="cell"><label class="field wide"><input id="cfg-diasRojos" data-cfg="diasRojos" inputmode="numeric" autocomplete="off" placeholder="1, 2, 14, 15, 16, 30, 31" aria-label="Días rojos del mes"></label></div>
+        <div class="cell"><div class="grow"><div class="t">Festivos de Colombia</div><div class="s">¿Cuentan como día rojo?</div></div>
+          <div class="seg mini" role="group" aria-label="Festivos como día rojo"><button data-bool="festivosRojos" data-v="1" aria-pressed="false">Sí</button><button data-bool="festivosRojos" data-v="0" aria-pressed="true">No</button></div></div>
       </div>
-      <div class="section-f">Días del mes separados por coma. En estos días no se descansa; si cae lunes, el descanso pasa al miércoles o al jueves.</div>
+      <div class="section-f">Días del mes separados por coma. En estos días no se descansa; si cae lunes, el descanso pasa al miércoles o al jueves. Los festivos siempre se marcan en el plan; con <b>Sí</b> también siguen las reglas de día rojo.</div>
     </section>
 
     <section class="section" id="subSec">
@@ -644,7 +649,17 @@ ol.steps li+li{margin-top:6px}
     </section>
 
     <section class="section">
-      <div class="section-h">Respaldo</div>
+      <div class="section-h">Respaldo automático en GitHub</div>
+      <div class="group">
+        <div class="cell"><div class="grow"><div class="t">Clave del respaldo</div><div class="s" id="respEstado">Sin clave: no se respalda</div></div><label class="field" style="width:170px"><input id="respClave" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="mín. 8 caracteres" aria-label="Clave del respaldo"></label></div>
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn plain" id="btnRespAhora">Respaldar ahora</button>
+        <button class="btn plain" id="btnRespRecuperar">Recuperar</button>
+      </div>
+      <div class="section-f">Tus registros, horas y dinero se guardan <b>cifrados</b> en GitHub (como mucho cada 3 h, si cambiaron). Sin la clave nadie puede leerlos, ni siquiera tú: anótala en un lugar seguro. En un celular nuevo: escribe la misma clave y toca <b>Recuperar</b>.</div>
+
+      <div class="section-h" style="margin-top:22px">Respaldo manual</div>
       <div class="stack">
         <div class="btn-row"><button class="btn plain" id="btnBackup">Copiar respaldo</button><button class="btn plain" id="btnRestore">Restaurar</button></div>
         <textarea class="code" id="restoreText" placeholder="Pega aquí un respaldo y toca Restaurar" aria-label="Texto de respaldo"></textarea>
@@ -734,6 +749,9 @@ const CONFIG_BASE = {
   pausaMin: 15,          // minutos de pausa activa
   pausaDesde: 4,         // la pausa solo aplica a turnos de 4 h o más
   diasRojos: [1, 2, 14, 15, 16, 30, 31],
+  festivosRojos: false,  // si los festivos de Colombia cuentan como día rojo
+  descansoMin: 8,        // horas mínimas entre el fin de un turno y el despertador del siguiente
+  recordarRegistro: true, // evento "Registra tu día" al final de cada turno
   // Calendario suscrito en GitHub (lo que funciona en iPhone sin pasar por Mi Fitness)
   // Dónde vive el calendario en GitHub. Con esto se arman solos los enlaces.
   // Repo aparte: el token del celular solo puede tocar ese repo, no la página.
@@ -875,6 +893,30 @@ function limpiarDia(k) {
    caja → ediciones manuales y días ya registrados → rebalanceo →
    horarios, pausas y logística.
    ===================================================================== */
+/* Festivos de Colombia: fijos, Ley Emiliani (se pasan al lunes) y los que dependen de la Pascua */
+const FESTIVOS_CACHE = {};
+function festivosDe(y) {
+  if (FESTIVOS_CACHE[y]) return FESTIVOS_CACHE[y];
+  // Domingo de Pascua (algoritmo gregoriano anónimo)
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),
+    g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,
+    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
+    mes = Math.floor((h + l - 7 * m + 114) / 31), dia = ((h + l - 7 * m + 114) % 31) + 1;
+  const pascua = new Date(y, mes - 1, dia);
+  const alLunes = (f) => sumarDias(f, (8 - f.getDay()) % 7); // el mismo día si ya es lunes
+  const mapa = {};
+  const pon = (f, nombre) => { mapa[clave(f)] = nombre; };
+  [[0, 1, 'Año Nuevo'], [4, 1, 'Día del Trabajo'], [6, 20, 'Independencia'], [7, 7, 'Batalla de Boyacá'],
+   [11, 8, 'Inmaculada Concepción'], [11, 25, 'Navidad']].forEach(([mm, dd, n]) => pon(new Date(y, mm, dd), n));
+  [[0, 6, 'Reyes Magos'], [2, 19, 'San José'], [5, 29, 'San Pedro y San Pablo'], [7, 15, 'Asunción de la Virgen'],
+   [9, 12, 'Día de la Raza'], [10, 1, 'Todos los Santos'], [10, 11, 'Independencia de Cartagena']].forEach(([mm, dd, n]) => pon(alLunes(new Date(y, mm, dd)), n));
+  pon(sumarDias(pascua, -3), 'Jueves Santo'); pon(sumarDias(pascua, -2), 'Viernes Santo');
+  pon(sumarDias(pascua, 43), 'Ascensión del Señor'); pon(sumarDias(pascua, 64), 'Corpus Christi'); pon(sumarDias(pascua, 71), 'Sagrado Corazón');
+  return (FESTIVOS_CACHE[y] = mapa);
+}
+/** Nombre del festivo de esa fecha, o '' si no es festivo. */
+function festivo(f) { return festivosDe(f.getFullYear())[clave(f)] || ''; }
+
 function planificar(lunes, s) {
   const cfg = s.config, avisos = [];
   const rojosMes = cfg.diasRojos || [];
@@ -883,8 +925,8 @@ function planificar(lunes, s) {
   // 4.1 Días con su plan base
   const dias = [];
   for (let i = 0; i < 7; i++) {
-    const fecha = sumarDias(lunes, i), key = clave(fecha), reg = s.dias[key] || {};
-    dias.push({ i, fecha, key, reg, rojo: rojosMes.includes(fecha.getDate()),
+    const fecha = sumarDias(lunes, i), key = clave(fecha), reg = s.dias[key] || {}, fest = festivo(fecha);
+    dias.push({ i, fecha, key, reg, festivo: fest, rojo: rojosMes.includes(fecha.getDate()) || (!!cfg.festivosRojos && !!fest),
       horas: i < 5 ? Math.min(cfg.maxPermitido, Number(cfg.base[i]) || 0) : 0, franja: cfg.franjaDia[i] || 'am', notas: [], fijo: false });
   }
 
@@ -983,9 +1025,23 @@ function planificar(lunes, s) {
     if (d.larga) avisos.push({ tipo: 'orange', txt: '<b>Jornada larga el ' + NOMBRES_DIA[d.i].toLowerCase() + ':</b> ' +
       (d.real ? 'trabajaste ' : 'quedó de ') + fmtH(Math.round(d.horas * 100) / 100) + '\u00a0h, más de las ' + cfg.maxDia + '\u00a0h recomendadas.' });
   });
+  // Poco descanso: del fin de un turno al despertador del siguiente día de trabajo
+  const finReal = (d) => { if (!d.real || d.ausencia) return d.fin; const a = aMin(d.real.inicio), b = aMin(d.real.fin); return b > a ? b : b + 1440; };
+  for (let i = 1; i < 7; i++) {
+    const prev = dias[i - 1], cur = dias[i];
+    if (prev.descanso || cur.descanso || cur.real || (prev.ausencia)) continue;
+    const libre = 1440 + cur.despertador - finReal(prev);
+    if (cfg.descansoMin > 0 && libre < cfg.descansoMin * 60)
+      avisos.push({ tipo: 'orange', txt: '<b>Poco descanso:</b> del fin del ' + NOMBRES_DIA[prev.i].toLowerCase() + ' (' + hora12(finReal(prev)) + ') al despertador del ' +
+        NOMBRES_DIA[cur.i].toLowerCase() + ' (' + hora12(cur.despertador) + ') hay solo ' + fmtDur(Math.max(0, libre)) + '.' });
+  }
+
   const horasReal = dias.reduce((t, d) => t + (d.horasReal || 0), 0);
   const rojos = dias.filter(d => d.rojo);
   if (rojos.length) avisos.unshift({ tipo: 'red', txt: '<b>Días rojos</b> (' + rojos.map(d => CORTO_DIA[d.i] + ' ' + d.fecha.getDate()).join(', ') + '): no se descansa.' });
+  const fests = dias.filter(d => d.festivo);
+  if (fests.length) avisos.push({ tipo: '', txt: '🇨🇴 <b>Festivo' + (fests.length > 1 ? 's' : '') + ':</b> ' + fests.map(d => NOMBRES_DIA[d.i] + ' ' + d.fecha.getDate() + ' (' + d.festivo + ')').join(', ') +
+    (cfg.festivosRojos ? ', cuenta' + (fests.length > 1 ? 'n' : '') + ' como día rojo.' : '.') });
   if (cumple) avisos.unshift({ tipo: 'green', txt: '<b>Modo Libertad activado.</b> Llegaste a ' + fmtUSD(caja) + '; la meta baja a ' + cfg.horasCumple + ' h.' });
   if (cumple && preferida === 'opt1' && domRojo) avisos.push({ tipo: 'orange', txt: 'El domingo es día rojo, así que se aplica la Opción 2.' });
 
@@ -1104,6 +1160,9 @@ function generarICS(planes, cfg) {
       ev(d.fecha, p + cfg.pausaMin, d.fin, '💻 Continuación Trabajo', et, 'regreso');
     }
     ev(d.fecha, d.fin, d.fin + 5, '🏁 Fin de Turno', 'Acumulado de la semana: ' + fmtH(d.acumulado) + '\u00a0h', 'fin');
+    // Recordatorio: sin el registro la app no sabe si se cumpli\u00f3 la meta (desaparece al registrar el d\u00eda)
+    if (cfg.recordarRegistro !== false)
+      ev(d.fecha, d.fin + 15, d.fin + 20, '\ud83d\udcdd Registra tu d\u00eda', 'Anota en StreamPlanner tus horas reales y lo que facturaste hoy', 'registrar');
   }));
   L.push('END:VCALENDAR');
   return { texto: L.map(icsDoblar).join('\r\n') + '\r\n', eventos: n };
@@ -1249,6 +1308,7 @@ async function subirCalendario(manual) {
   } finally {
     syncEnCurso = false; pintarSync();
     if (syncPendiente) { syncPendiente = false; programarSync(); }
+    else respaldar(false); // se limita solo: con cambios y como mucho cada 3 h
   }
 }
 /** "hace 3 min" */
@@ -1282,6 +1342,141 @@ function pintarSync(estado) {
   if ($('ghVence') !== document.activeElement) $('ghVence').value = leerVence();
   const links = enlacesGH(store.config.gh);
   $('lnkWebcal').href = $('lnkWebcal2').href = links.webcal;
+  pintarResp();
+}
+
+/* =====================================================================
+   7c. RESPALDO CIFRADO EN GITHUB
+   Ajustes, registros y dinero se cifran en el celular con AES-GCM; la
+   llave sale de la clave con PBKDF2 (600 000 vueltas). En el repo público
+   solo queda texto ilegible (respaldo.json, junto al calendario).
+   ===================================================================== */
+const LLAVE_RCLAVE = 'streamplanner:respclave';
+const LLAVE_RESP = 'streamplanner:resp';   // {t, ok, msg, huella, sha, vinculado} del último respaldo
+const RESP_CADA = 3 * 3600000;             // como mucho un respaldo automático cada 3 h
+const RESP_VUELTAS = 600000;
+const leerRClave = () => { try { return localStorage.getItem(LLAVE_RCLAVE) || ''; } catch (e) { return ''; } };
+const guardarRClave = (c) => { try { c ? localStorage.setItem(LLAVE_RCLAVE, c) : localStorage.removeItem(LLAVE_RCLAVE); } catch (e) {} };
+const leerResp = () => { try { return JSON.parse(localStorage.getItem(LLAVE_RESP) || 'null'); } catch (e) { return null; } };
+const guardarResp = (r) => { try { localStorage.setItem(LLAVE_RESP, JSON.stringify(r)); } catch (e) {} };
+const rutaResp = (gh) => gh.ruta.replace(/[^/]*$/, '') + 'respaldo.json';
+const datosResp = () => JSON.stringify({ v: store.v, config: store.config, dias: store.dias, opciones: store.opciones });
+const bytesA64 = (u8) => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+const deB64Bytes = (t) => Uint8Array.from(atob(t), c => c.charCodeAt(0));
+const fechaLarga = (iso) => { const f = new Date(iso); return isNaN(f) ? 'fecha desconocida' : f.getDate() + ' ' + MESES[f.getMonth()] + ' ' + f.getFullYear() + ', ' + hora12(f.getHours() * 60 + f.getMinutes()); };
+
+async function llaveDe(clave, sal, vueltas) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(clave), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: sal, iterations: vueltas, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function cifrar(texto, clave) {
+  const sal = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const datos = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await llaveDe(clave, sal, RESP_VUELTAS), new TextEncoder().encode(texto)));
+  return JSON.stringify({ app: 'StreamPlanner', v: 1, cifrado: 'AES-GCM', kdf: 'PBKDF2-SHA256', vueltas: RESP_VUELTAS,
+    sal: bytesA64(sal), iv: bytesA64(iv), fecha: new Date().toISOString(), datos: bytesA64(datos) }, null, 1);
+}
+/** Falla (lanza) si la clave no es la correcta. */
+async function descifrar(obj, clave) {
+  const plano = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: deB64Bytes(obj.iv) }, await llaveDe(clave, deB64Bytes(obj.sal), obj.vueltas), deB64Bytes(obj.datos));
+  return new TextDecoder().decode(plano);
+}
+
+/** Lee o escribe un archivo del repo. El repo es público: leer funciona aun sin token. */
+function urlArchivo(ruta) { const gh = store.config.gh; return 'https://api.github.com/repos/' + rutaURL(gh.owner) + '/' + rutaURL(gh.repo) + '/contents/' + rutaURL(ruta); }
+function cabeceras() {
+  const h = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }, t = leerToken();
+  if (t) h.Authorization = 'Bearer ' + t;
+  return h;
+}
+async function ghLeer(ruta) {
+  const r = await fetch(urlArchivo(ruta) + '?ref=' + encodeURIComponent(store.config.gh.branch), { headers: cabeceras(), cache: 'no-store' });
+  if (r.status === 404) return null;
+  if (!r.ok) throw { status: r.status };
+  const j = await r.json();
+  return { sha: j.sha, texto: deBase64(j.content || '') };
+}
+async function ghEscribir(ruta, texto, sha, mensaje) {
+  const r = await fetch(urlArchivo(ruta), { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, cabeceras()),
+    body: JSON.stringify({ message: mensaje, content: aBase64(texto), branch: store.config.gh.branch, sha }) });
+  if (!r.ok) throw { status: r.status };
+  const j = await r.json().catch(() => ({}));
+  return j.content && j.content.sha;
+}
+
+let respEnCurso = false;
+/**
+ * Sube el respaldo cifrado.
+ * @param {boolean|'forzar'} manual  true = botón; 'forzar' = reemplazar uno ajeno ya confirmado.
+ */
+async function respaldar(manual) {
+  if (EN_VISOR_CLAUDE) { if (manual) toast('Dentro de Claude no hay conexión'); return; }
+  const secreto = leerRClave();
+  if (!secreto) { if (manual) toast('Primero escribe una clave de respaldo'); return; }
+  if (!leerToken()) { if (manual) toast('Primero pega el token en Conexión con GitHub'); return; }
+  if (respEnCurso) return;
+  const previo = leerResp(), texto = datosResp(), huella = huellaDe(texto);
+  if (previo && previo.ok && previo.huella === huella) { if (manual) toast('El respaldo ya estaba al día'); return; }
+  if (!manual && (!Object.keys(store.dias).length || (previo && previo.ok && Date.now() - previo.t < RESP_CADA))) return;
+  respEnCurso = true; pintarResp('Respaldando…');
+  try {
+    const ruta = rutaResp(store.config.gh), remoto = await ghLeer(ruta);
+    // Este celular nunca ha respaldado ni recuperado: no pisar sin preguntar un respaldo que ya existe
+    if (remoto && !(previo && previo.vinculado) && manual !== 'forzar') {
+      respEnCurso = false; pintarResp();
+      if (!manual) return;
+      let fecha = ''; try { fecha = fechaLarga(JSON.parse(remoto.texto).fecha); } catch (e) {}
+      confirmar('¿Reemplazar el respaldo de GitHub?', 'Ya hay un respaldo' + (fecha ? ' del ' + fecha : '') + '. Si sigues, se cambia por los datos de este celular. Para traerlo aquí, toca Recuperar.',
+        'Reemplazar', () => respaldar('forzar'));
+      return;
+    }
+    const sha = await ghEscribir(ruta, await cifrar(texto, secreto), remoto ? remoto.sha : undefined, 'StreamPlanner: respaldo cifrado ' + clave(new Date()));
+    guardarResp({ t: Date.now(), ok: true, msg: 'Respaldado', huella, sha, vinculado: true });
+    if (manual) toast('Respaldo cifrado guardado en GitHub');
+  } catch (e) {
+    const msg = e && e.status ? errorGH(e.status) : 'Sin internet o GitHub no responde';
+    guardarResp(Object.assign({}, previo, { t: Date.now(), ok: false, msg }));
+    if (manual) toast(msg);
+  } finally {
+    respEnCurso = false; pintarResp();
+  }
+}
+
+/** Trae el respaldo de GitHub, lo descifra con la clave y reemplaza los datos de este celular. */
+async function recuperar() {
+  if (EN_VISOR_CLAUDE) { toast('Dentro de Claude no hay conexión'); return; }
+  const secreto = leerRClave();
+  if (!secreto) { toast('Escribe la clave del respaldo'); return; }
+  pintarResp('Buscando respaldo…');
+  try {
+    const remoto = await ghLeer(rutaResp(store.config.gh));
+    if (!remoto) { toast('Todavía no hay respaldo en GitHub'); return; }
+    const obj = JSON.parse(remoto.texto);
+    let s; try { s = JSON.parse(await descifrar(obj, secreto)); } catch (e) { toast('Clave incorrecta'); return; }
+    confirmar('¿Recuperar el respaldo?', 'Es del ' + fechaLarga(obj.fecha) + '. Se reemplazan los ajustes y registros de este celular.', 'Recuperar', () => {
+      const gh = store.config.gh;
+      store = normalizar(s); store.config.gh = gh; // la conexión se queda como está en este celular
+      guardarResp({ t: Date.now(), ok: true, msg: 'Recuperado', huella: huellaDe(datosResp()), sha: remoto.sha, vinculado: true });
+      guardarStore(); render(); renderAjustes(); toast('Respaldo recuperado');
+    });
+  } catch (e) {
+    toast(e && e.status ? errorGH(e.status) : 'Sin internet o GitHub no responde');
+  } finally {
+    pintarResp();
+  }
+}
+
+function pintarResp(estado) {
+  if (typeof document === 'undefined' || !document.getElementById('respEstado')) return;
+  if (!estado && respEnCurso) return;
+  const secreto = leerRClave(), r = leerResp();
+  let t;
+  if (estado) t = estado;
+  else if (!secreto) t = 'Sin clave: no se respalda';
+  else if (!leerToken()) t = 'Clave guardada · falta el token de GitHub';
+  else if (!r) t = 'Clave guardada · aún no hay respaldo';
+  else t = r.ok ? r.msg + ' ' + haceCuanto(r.t) + ' · cifrado' : 'Error ' + haceCuanto(r.t) + ': ' + r.msg;
+  $('respEstado').textContent = t;
+  $('respClave').placeholder = secreto ?'Guardada · escribe para cambiar' : 'mín. 8 caracteres';
 }
 
 /* =====================================================================
@@ -1332,6 +1527,7 @@ function renderSemana(cfg) {
   $('dayList').innerHTML = p.dias.map(d => {
     const tags = [];
     if (d.rojo) tags.push('<span class="tag red">Rojo</span>');
+    if (d.festivo) tags.push('<span class="tag tint">Festivo</span>');
     if (d.ausencia) tags.push(d.ausencia === 'falta' ? '<span class="tag red">Faltó</span>' : '<span class="tag gray">Descansó</span>');
     else if (d.real) tags.push('<span class="tag green">Hecho</span>');
     else if (!d.descanso) tags.push('<span class="tag ' + (d.franja === 'am' ? 'gray' : 'tint') + '">' + esc(cfg.turnos[d.franja].nombre) + '</span>');
@@ -1341,7 +1537,7 @@ function renderSemana(cfg) {
       : d.real ? ['Real ' + hora12(aMin(d.real.inicio)) + ' – ' + hora12(aMin(d.real.fin))] : [franjaTxt(d)];
     return '<button class="cell tap' + (d.rojo ? ' isred' : '') + (d.descanso && !d.real ? ' rest' : '') + (d.key === hoyKey ? ' istoday' : '') + '" data-plan="' + d.i + '">' +
       '<div class="date"><span>' + CORTO_DIA[d.i] + '</span><b class="num">' + d.fecha.getDate() + '</b></div>' +
-      '<div class="grow"><div class="t">' + NOMBRES_DIA[d.i] + tags.join('') + '</div><div class="s">' + esc(sub.concat(d.notas).join(' · ')) + '</div></div>' +
+      '<div class="grow"><div class="t">' + NOMBRES_DIA[d.i] + tags.join('') + '</div><div class="s">' + esc(sub.concat(d.festivo ? [d.festivo] : [], d.notas).join(' · ')) + '</div></div>' +
       '<div class="hrs"><b class="num">' + (d.descanso ? '—' : fmtH(d.horas) + '\u00a0h') + '</b><span class="num">Σ ' + fmtH(d.acumulado) + '</span></div>' +
       '<svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l6 6-6 6"/></svg></button>';
   }).join('');
@@ -1367,6 +1563,7 @@ function renderSemana(cfg) {
   $('icsCount').textContent = ics.eventos;
   $('icsInfo').textContent = pendientes.length + ' días pendientes · aviso al inicio de cada evento';
   document.querySelectorAll('[data-icsw]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.icsw) === (cfg.icsSemanas || 1))));
+  pintarBools();
   $('lnkEdit').href = enlacesGH(cfg.gh).editar;
   pintarSync();
   // Despertadores para la app Reloj (solo días que no han pasado)
@@ -1502,7 +1699,35 @@ function renderInicio() {
   $('homeTiles').innerHTML =
     '<div class="tile"><div class="k">Horas reales</div><div class="v num">' + fmtH(Math.round(ph.horasReal * 10) / 10) + '<span style="font-size:15px;color:var(--label2);font-weight:500"> / ' + ph.meta + '\u00a0h</span></div><div class="meter tint"><i style="width:' + Math.min(100, ph.horasReal / ph.meta * 100) + '%"></i></div></div>' +
     '<div class="tile"><div class="k">Caja</div><div class="v num">' + fmtUSD(Math.round(ph.caja)) + '<span style="font-size:15px;color:var(--label2);font-weight:500"> / ' + fmtUSD(cfg.metaUSD) + '</span></div><div class="meter"><i style="width:' + Math.min(100, ph.caja / cfg.metaUSD * 100) + '%"></i></div></div>';
-  $('homeAlerts').innerHTML = avisosApp() + ph.avisos.slice(0, 2).map(a => '<div class="alert ' + a.tipo + '">' + a.txt + '</div>').join('');
+  $('homeAlerts').innerHTML = avisosApp() + proyeccionMeta(ph, lunesHoy) + ph.avisos.slice(0, 2).map(a => '<div class="alert ' + a.tipo + '">' + a.txt + '</div>').join('');
+}
+
+/**
+ * Proyección: con lo que factura por hora, ¿qué día llega a la meta en dólares?
+ * El ritmo sale de esta semana; si aún no hay registros, de las últimas 4 semanas.
+ */
+function proyeccionMeta(ph, lunesHoy) {
+  const cfg = store.config;
+  if (ph.cumple) return '';
+  const conUsd = ph.dias.filter(x => x.real && !x.ausencia && x.horasReal > 0 && Number(x.reg.usd) > 0);
+  const hSem = conUsd.reduce((t, x) => t + x.horasReal, 0);
+  let ritmo = hSem ? conUsd.reduce((t, x) => t + Number(x.reg.usd), 0) / hSem : 0, fuente = 'esta semana';
+  if (!ritmo) { ritmo = estadisticas(store, '4s', lunesHoy).porHora; fuente = 'las últimas semanas'; }
+  if (!ritmo) return '';
+  const falta = cfg.metaUSD - ph.caja, hoy = clave(new Date());
+  let acum = 0;
+  for (const x of ph.dias) {
+    if (x.real || x.descanso || x.key < hoy) continue;
+    acum += x.horas * ritmo;
+    if (acum >= falta) {
+      const cuando = x.key === hoy ? 'hoy' : 'el ' + NOMBRES_DIA[x.i].toLowerCase() + ' ' + x.fecha.getDate();
+      return '<div class="alert green">📈 <b>Llegas a la meta ' + cuando + '.</b> Vas ' + fmtUSD(Math.round(ph.caja)) + ' de ' + fmtUSD(cfg.metaUSD) +
+        '; a tu ritmo de ' + fmtUSD(Math.round(ritmo * 100) / 100) + '/h (' + fuente + ') te faltan unas ' + fmtH(Math.ceil(falta / ritmo * 2) / 2) +
+        ' h. Al cumplirla la semana baja a ' + cfg.horasCumple + ' h.</div>';
+    }
+  }
+  return '<div class="alert">📉 <b>Con el plan no alcanzas la meta.</b> A tu ritmo de ' + fmtUSD(Math.round(ritmo * 100) / 100) + '/h (' + fuente + ') terminarías la semana cerca de ' +
+    fmtUSD(Math.round(ph.caja + acum)) + ', te faltarían ' + fmtUSD(Math.round(falta - acum)) + '.</div>';
 }
 
 /* ---------- Estadísticas ---------- */
@@ -1563,8 +1788,13 @@ function renderStats() {
 function tile(k, v, d) { return '<div class="tile"><div class="k">' + k + '</div><div class="v num">' + v + '</div><div class="d">' + d + '</div></div>'; }
 
 /* ---------- Ajustes ---------- */
+/** Marca el botón activo de cada interruptor Sí/No. */
+function pintarBools() {
+  document.querySelectorAll('[data-bool]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.v === '1') === !!store.config[b.dataset.bool])));
+}
 function renderAjustes() {
   const cfg = store.config;
+  pintarBools();
   const links = enlacesGH(cfg.gh);
   $('webcalTxt').textContent = links.raw;
   $('lnkWebcal').href = links.webcal;
@@ -1782,7 +2012,7 @@ $('tab-ajustes').addEventListener('change', e => {
       // Rangos permitidos por ajuste: [mínimo, máximo, mensaje]
       const RANGOS = { metaUSD: [1, 100000, 'La meta debe ser mayor a $0'], horasCumple: [1, 112, 'Escribe horas entre 1 y 112'],
         horasNoCumple: [1, 112, 'Escribe horas entre 1 y 112'], maxDia: [1, 24, 'El recomendado va de 1 a 24 h'], maxPermitido: [1, 24, 'El máximo permitido va de 1 a 24 h'],
-        pausaMin: [0, 120, 'La pausa va de 0 a 120 min'], pausaDesde: [0, 24, 'Escribe horas entre 0 y 24'] };
+        pausaMin: [0, 120, 'La pausa va de 0 a 120 min'], pausaDesde: [0, 24, 'Escribe horas entre 0 y 24'], descansoMin: [0, 16, 'El descanso mínimo va de 0 a 16 h (0 = sin alerta)'] };
       const n = leerNum(inp.value), [mn, mx, msg] = RANGOS[k] || [0, 1e9, 'Escribe un número válido'];
       if (n === null || n < mn || n > mx) { toast(msg); renderAjustes(); return; }
       if (k === 'maxDia' && n > cfg.maxPermitido) { toast('El recomendado no puede pasar del máximo permitido (' + cfg.maxPermitido + '\u00a0h)'); renderAjustes(); return; }
@@ -1803,6 +2033,12 @@ $('tab-ajustes').addEventListener('change', e => {
     }
   }
   guardarStore(); render(); renderAjustes(); toast('Ajuste guardado');
+});
+// Interruptores Sí/No de ajustes (data-bool="clave")
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-bool]'); if (!b) return;
+  store.config[b.dataset.bool] = b.dataset.v === '1';
+  guardarStore(); render(); renderAjustes();
 });
 $('tab-ajustes').addEventListener('click', e => {
   const b = e.target.closest('[data-franja]'); if (!b) return;
@@ -1838,6 +2074,16 @@ $('ghToken').addEventListener('change', e => {
 });
 $('btnTokenDel').onclick = () => confirmar('¿Quitar el token?', 'La app deja de subir cambios desde este celular. El token sigue existiendo en GitHub hasta que lo borres allá.', 'Quitar', () => { guardarToken(''); guardarEstadoSync(null); pintarSync(); toast('Token quitado'); });
 $('btnSyncTest').onclick = () => subirCalendario(true);
+// Respaldo cifrado
+$('respClave').addEventListener('change', e => {
+  const c = e.target.value; e.target.value = '';
+  if (!c) return;
+  if (c.length < 8) { toast('La clave debe tener al menos 8 caracteres'); return; }
+  guardarRClave(c); pintarResp(); toast('Clave guardada en este celular');
+  respaldar(false);
+});
+$('btnRespAhora').onclick = () => respaldar(true);
+$('btnRespRecuperar').onclick = () => recuperar();
 $('btnSyncNow').onclick = () => subirCalendario(true);
 document.querySelectorAll('[data-ghauto]').forEach(b => b.onclick = () => { store.config.gh.auto = b.dataset.ghauto === '1'; guardarStore(); renderAjustes(); });
 $('ghVence').addEventListener('change', e => { guardarVence(e.target.value); pintarSync(); renderInicio(); toast(e.target.value ? 'Fecha guardada: te aviso 2 semanas antes' : 'Fecha borrada'); });
