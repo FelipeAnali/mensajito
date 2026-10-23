@@ -770,8 +770,253 @@ function AdaptadorServidor(url){
     limpiarRechazo(){ publicar({ rechazo: '' }); }
   };
 }
-/* Adaptador ACTIVO: servidor si hay dirección; si no, local. No se toca nada más. */
-const Adaptador = urlServidor() ? AdaptadorServidor(urlServidor()) : AdaptadorLocal;
+/* ---------- Adaptador GITHUB: el repositorio hace de base de datos (para la prueba real) ----------
+   Todo el objeto db vive en UN archivo JSON dentro de una rama aparte del repositorio
+   (por defecto "datos-formatos", así cada registro no vuelve a publicar la página).
+   Cada celular o computador necesita un token de GitHub con permiso SOLO sobre ese
+   repositorio (Contents: Read and write). El maestro lo pone una vez en Sistema y desde
+   ahí muestra un QR "Conectar otro celular" para pasarlo a los demás equipos.
+
+   Cómo guarda sin pisar a otros: los cambios entran a una COLA en el celular. Al enviar,
+   se baja la versión más nueva del archivo, se le aplican las operaciones de la cola
+   (crear / actualizar / borrar, registro por registro) y se sube con el "sha" que se
+   leyó. Si otro celular guardó en el medio, GitHub responde 409 y se repite con la
+   versión nueva. Sin señal, la cola espera y se reintenta sola.
+   Cada 30 s (con la app a la vista) revisa si alguien más guardó y trae los datos nuevos.
+   Fotos y firmas se suben como archivos aparte a la misma rama.
+
+   OJO: el repositorio es público, así que el archivo de datos también se puede leer.
+   Sirve para la prueba con datos de ejemplo; para datos reales se usa el servidor. */
+const CLAVE_GITHUB = 'cnv_github';
+/* Repositorio por defecto: el mismo donde está publicada la página (usuario.github.io/repo/...). */
+function repoPorDefecto(){
+  try{
+    const m = location.hostname.match(/^([^.]+)\.github\.io$/i);
+    const seg = location.pathname.split('/').filter(Boolean)[0];
+    if (m && seg) return m[1] + '/' + seg;
+  }catch(e){}
+  return '';
+}
+const GITHUB_DEF = { repo: repoPorDefecto(), rama: 'datos-formatos', ruta: 'formatos/db.json', token: '' };
+/* Enlace "#conectar=…" (el QR que muestra el maestro): guarda la conexión en este celular y se borra de la dirección. */
+(function(){
+  try{
+    const m = location.hash.match(/^#conectar=(.+)$/);
+    if (!m) return;
+    const c = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
+    if (c && c.repo && c.token) escribirLocal(CLAVE_GITHUB, Object.assign({}, GITHUB_DEF, c));
+    history.replaceState(null, '', location.pathname + location.search);
+  }catch(e){}
+})();
+function configGitHub(){ const c = leerLocal(CLAVE_GITHUB, null); return c && c.repo && c.token ? Object.assign({}, GITHUB_DEF, c) : null; }
+/* Enlace para conectar otro celular con la misma configuración (lleva el token: no imprimirlo). */
+function enlaceConectar(c){
+  const datos = { repo: c.repo, rama: c.rama, ruta: c.ruta, token: c.token };
+  return location.origin + location.pathname + '#conectar=' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(datos)))));
+}
+/* Texto ⇄ base64 respetando tildes y eñes (UTF-8). */
+function aBase64(texto){
+  const bytes = new TextEncoder().encode(texto);
+  let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+function deBase64(b64){
+  const s = atob(String(b64).replace(/\s/g, ''));
+  const bytes = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+/* Aplica operaciones (las de calcularOperaciones) sobre unos datos. Repetir una operación
+   no la duplica: "crear" no agrega si ya existe el mismo id. */
+function aplicarOperaciones(db, operaciones){
+  operaciones.forEach(op => {
+    if (op.coleccion === 'config'){ db.config = op.dato; return; }
+    const clave = CLAVES_COLECCION[op.coleccion];
+    if (!clave) return;
+    const lista = db[op.coleccion] = db[op.coleccion] || [];
+    const i = lista.findIndex(x => x[clave] === op.id);
+    if (op.tipo === 'borrar'){ if (i >= 0) lista.splice(i, 1); }
+    else if (i >= 0) lista[i] = op.dato;
+    else if (op.coleccion === 'auditoria') lista.unshift(op.dato);   // la más nueva primero
+    else lista.push(op.dato);
+  });
+  if (db.auditoria && db.auditoria.length > 2000) db.auditoria = db.auditoria.slice(0, 2000);
+  return db;
+}
+function AdaptadorGitHub(conf){
+  const api = 'https://api.github.com/repos/' + conf.repo;
+  const K = { cache:'cnv_gh_cache', cola:'cnv_gh_cola' };
+  const leerCola = () => leerLocal(K.cola, []) || [];
+  let shaArchivo = null;    // sha del db.json que se leyó por última vez (para no pisar)
+  let commitVisto = null;   // último commit de la rama que ya tenemos
+  let estado = { enLinea: true, pendientes: leerCola().length, enviando: false, rechazo: '' };
+  const oyentes = new Set();
+  const oyentesDatos = new Set();
+  const publicar = cambios => { estado = Object.assign({}, estado, cambios); oyentes.forEach(f => f(estado)); };
+  let reintento = null;
+
+  async function pedir(ruta, opciones){
+    opciones = opciones || {};
+    const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const limite = setTimeout(() => ctl && ctl.abort(), 20000);
+    let r;
+    try{
+      r = await fetch(ruta.startsWith('http') ? ruta : api + ruta, {
+        method: opciones.method || 'GET',
+        cache: 'no-store',   // siempre la versión más nueva (si no, el sha puede venir viejo)
+        headers: Object.assign({ Accept: opciones.accept || 'application/vnd.github+json', Authorization: 'Bearer ' + conf.token }, opciones.body ? { 'Content-Type':'application/json' } : {}),
+        body: opciones.body ? JSON.stringify(opciones.body) : undefined,
+        signal: ctl ? ctl.signal : undefined
+      });
+    }catch(e){ const err = new Error('Sin conexión con GitHub.'); err.red = true; throw err; }
+    finally{ clearTimeout(limite); }
+    if (opciones.accept && opciones.accept.includes('raw') && r.ok) return r.text();
+    let j = null; try{ j = await r.json(); }catch(e){}
+    if (!r.ok){
+      const err = new Error(r.status === 401 ? 'El token de GitHub no sirve o venció.' : r.status === 403 ? 'El token no tiene permiso para escribir en ' + conf.repo + ' (o se pasó el límite de GitHub).' : (j && j.message) || ('GitHub respondió ' + r.status));
+      err.estado = r.status; throw err;
+    }
+    return j || {};
+  }
+  /* Crea la rama de datos (copiando la principal) si todavía no existe. */
+  async function asegurarRama(){
+    try{ await pedir('/git/ref/heads/' + conf.rama); return; }
+    catch(e){ if (e.estado !== 404) throw e; }
+    const repo = await pedir('');
+    const base = await pedir('/git/ref/heads/' + repo.default_branch);
+    try{ await pedir('/git/refs', { method:'POST', body:{ ref:'refs/heads/' + conf.rama, sha: base.object.sha } }); }
+    catch(e){ if (e.estado !== 422) throw e; }   // 422 = otro celular la creó en el mismo momento
+  }
+  async function commitDeRama(){
+    try{ const j = await pedir('/git/ref/heads/' + conf.rama); return j.object && j.object.sha; }
+    catch(e){ if (e.estado === 404) return null; throw e; }
+  }
+  /* Baja el archivo de datos: { db, sha } (db null si todavía no existe). */
+  async function bajar(){
+    let j;
+    try{ j = await pedir('/contents/' + conf.ruta + '?ref=' + encodeURIComponent(conf.rama)); }
+    catch(e){ if (e.estado === 404){ await asegurarRama(); return { db: null, sha: null }; } throw e; }
+    // Más de 1 MB: la API no trae el contenido y hay que pedirlo como blob.
+    const texto = j.content && j.encoding === 'base64' ? deBase64(j.content) : await pedir('/git/blobs/' + j.sha, { accept:'application/vnd.github.raw+json' });
+    return { db: JSON.parse(texto), sha: j.sha };
+  }
+  async function subir(db, sha, mensaje){
+    const j = await pedir('/contents/' + conf.ruta, { method:'PUT', body: Object.assign({ message: mensaje, content: aBase64(JSON.stringify(db)), branch: conf.rama }, sha ? { sha } : {}) });
+    shaArchivo = j.content && j.content.sha; commitVisto = j.commit && j.commit.sha;
+  }
+  /* Envía TODA la cola en un solo guardado. Si otro guardó en el medio (409/422), se repite. */
+  async function enviarCola(){
+    if (estado.enviando) return;
+    const lotes = leerCola();
+    if (!lotes.length) return;
+    publicar({ enviando: true });
+    for (let intento = 0; intento < 6; intento++){
+      try{
+        const { db: remoto, sha } = await bajar();
+        let db = remoto;
+        lotes.forEach(l => { if (l.reemplazo) db = clonar(l.reemplazo); else if (db) aplicarOperaciones(db, l.operaciones); });
+        if (!db){ publicar({ enviando: false }); return; }   // nada que guardar todavía (sin datos base)
+        const n = lotes.reduce((s, l) => s + (l.reemplazo ? 1 : l.operaciones.length), 0);
+        await subir(db, sha, 'Formatos: ' + n + (n === 1 ? ' cambio' : ' cambios') + (lotes[0].autor ? ' · ' + lotes[0].autor : ''));
+        const enviados = new Set(lotes.map(l => l.lote));
+        const resto = leerCola().filter(l => !enviados.has(l.lote));   // lo que llegó mientras se enviaba
+        escribirLocal(K.cola, resto);
+        if (!resto.length) escribirLocal(K.cache, db);
+        publicar({ enLinea: true, enviando: false, pendientes: resto.length });
+        if (resto.length) enviarCola();
+        return;
+      }catch(e){
+        if (e.estado === 409 || e.estado === 422){ await new Promise(r => setTimeout(r, 400 + Math.random() * 1200)); continue; }
+        if (e.red){ publicar({ enLinea: false, enviando: false }); programarReintento(); return; }
+        publicar({ enviando: false, rechazo: e.message }); programarReintento(); return;
+      }
+    }
+    publicar({ enviando: false }); programarReintento();
+  }
+  function programarReintento(){ clearTimeout(reintento); reintento = setTimeout(enviarCola, 20000); }
+  /* ¿Alguien más guardó? Solo se mira el último commit de la rama (es liviano). */
+  async function revisarCambios(){
+    if (estado.enviando || leerCola().length || !oyentesDatos.size) return;
+    try{
+      const c = await commitDeRama();
+      if (!c || c === commitVisto) return;
+      const { db, sha } = await bajar();
+      if (estado.enviando || leerCola().length) return;   // mientras tanto hubo un cambio local
+      commitVisto = c; shaArchivo = sha;
+      if (db && sha){ escribirLocal(K.cache, db); oyentesDatos.forEach(f => f(clonar(db))); }
+      publicar({ enLinea: true });
+    }catch(e){ if (e.red) publicar({ enLinea: false }); }
+  }
+  if (typeof window !== 'undefined'){
+    window.addEventListener('online', () => { enviarCola(); revisarCambios(); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible'){ enviarCola(); revisarCambios(); } });
+    setInterval(() => { if (document.visibilityState === 'visible') revisarCambios(); }, 30000);
+  }
+
+  return {
+    nombre: 'Repositorio GitHub ' + conf.repo + ' (rama ' + conf.rama + ')',
+    tipo: 'github',
+    conf,
+    requiereSesion: false,
+    async probar(){
+      const j = await pedir('');
+      if (j.permissions && !j.permissions.push) throw new Error('El token puede leer ' + conf.repo + ' pero no escribir. Dale permiso "Contents: Read and write".');
+      return j;
+    },
+    async cargar(){
+      try{
+        const c = await commitDeRama();
+        const { db, sha } = await bajar();
+        commitVisto = c; shaArchivo = sha;
+        if (db) escribirLocal(K.cache, db);
+        publicar({ enLinea: true });
+        enviarCola();
+        // Si hay cambios de este celular sin enviar, se muestran encima de lo que bajó.
+        const cola = leerCola();
+        if (db && cola.length){ let d = clonar(db); cola.forEach(l => { d = l.reemplazo ? clonar(l.reemplazo) : aplicarOperaciones(d, l.operaciones); }); return d; }
+        return db;
+      }catch(e){
+        if (!e.red) throw e;   // token malo, sin permiso, repositorio que no existe…: se muestra el motivo
+        publicar({ enLinea: false });
+        programarReintento();
+        const cache = leerLocal(K.cache, null);
+        if (!cache) throw new Error('Sin conexión y sin datos guardados en este celular. Conectate a internet y recargá.');
+        return cache;
+      }
+    },
+    async guardar(db, operaciones){
+      escribirLocal(K.cache, db);
+      const cola = leerCola();
+      let autor = ''; try{ const u = db.usuarios.find(x => x.id === localStorage.getItem('cnv_sesion')); autor = u ? u.nombre : ''; }catch(e){}
+      // Sin operaciones = reemplazar todo (datos de demostración, respaldo, migración).
+      if (!operaciones || !operaciones.length) cola.push({ lote: uid(), autor, reemplazo: db });
+      else cola.push({ lote: uid(), autor, operaciones });
+      if (!escribirLocal(K.cola, cola)) return false;
+      publicar({ pendientes: cola.length });
+      enviarCola();
+      return true;
+    },
+    ahora(){ return new Date(); },
+    /* Fotos y firmas: se suben como archivo a la rama de datos; queda la dirección pública. */
+    async subirArchivo(dataURL){
+      try{
+        const m = String(dataURL).match(/^data:([^;]+);base64,(.+)$/);
+        if (!m) return dataURL;
+        const ext = (m[1].split('/')[1] || 'bin').replace('jpeg', 'jpg').replace(/[^a-z0-9]/gi, '');
+        const ruta = conf.ruta.replace(/[^/]+$/, '') + 'archivos/' + diaKey(new Date()) + '_' + uid() + '.' + ext;
+        await pedir('/contents/' + ruta, { method:'PUT', body:{ message:'Formatos: archivo adjunto', content: m[2], branch: conf.rama } });
+        return 'https://raw.githubusercontent.com/' + conf.repo + '/' + conf.rama + '/' + ruta;
+      }catch(e){ return dataURL; }   // sin señal: viaja dentro del registro
+    },
+    alCambiarEstado(fn){ oyentes.add(fn); fn(estado); return () => oyentes.delete(fn); },
+    /* Avisa cuando otro equipo guardó datos nuevos. */
+    alRecibirDatos(fn){ oyentesDatos.add(fn); return () => oyentesDatos.delete(fn); },
+    limpiarRechazo(){ publicar({ rechazo: '' }); }
+  };
+}
+
+/* Adaptador ACTIVO: servidor si hay dirección; si no, GitHub si este navegador tiene
+   token; si no, local. No se toca nada más. */
+const Adaptador = urlServidor() ? AdaptadorServidor(urlServidor()) : configGitHub() ? AdaptadorGitHub(configGitHub()) : AdaptadorLocal;
 
 /* ---------------------------------------------------------------------
    ESQUEMA Y MIGRACIONES
@@ -1785,7 +2030,7 @@ function Login({ db, entrar, equipoPendiente }){
       <div className="sello">Supertiendas Cañaveral</div>
       <div>
         <h1>Los formatos de papel, ahora en el celular.</h1>
-        <p>Maqueta funcional de la plataforma de formatos digitales. Hoy guarda todo en este navegador; está construida para conectarse a un servidor más adelante sin cambiar las pantallas.</p>
+        <p>Maqueta funcional de la plataforma de formatos digitales. ${Adaptador.tipo === 'github' ? 'Conectada al repositorio: lo que registres lo ven todos los equipos conectados.' : 'Hoy guarda todo en este navegador; está construida para conectarse a un servidor más adelante sin cambiar las pantallas.'}</p>
       </div>
       ${MODO_DEMO && html`<p className="chico" style=${{ color:'#BFDDB0' }}>Versión de demostración · datos de ejemplo de SC PUNTO 14</p>`}
       <svg className="cana" viewBox="0 0 100 300" aria-hidden="true"><g fill="none" stroke="#7DD105" strokeWidth="6" strokeLinecap="round"><path d="M50 300 L50 10"/><path d="M42 80 L58 80 M42 160 L58 160 M42 240 L58 240"/><path d="M50 60 C70 40 90 40 98 30"/><path d="M50 140 C30 120 10 118 2 108"/><path d="M50 210 C72 196 88 196 98 186"/></g></svg>
@@ -3216,6 +3461,48 @@ function Auditoria({ db }){
       <tbody>${db.auditoria.slice(0, 200).map(a => html`<tr key=${a.id}><td style=${{ whiteSpace:'nowrap' }}>${fmtFecha(a.fecha)}</td><td>${a.usuario}</td><td>${a.accion}</td></tr>`)}</tbody></table></div>
   </div>`;
 }
+/* Base de datos en GitHub (Sistema): token de este navegador y QR para conectar otros celulares.
+   La configuración se guarda en este navegador, no en los datos (decide DE DÓNDE salen los datos). */
+function ConexionGitHub(){
+  const actual = configGitHub();
+  const [f, setF] = useState(() => Object.assign({}, GITHUB_DEF, leerLocal(CLAVE_GITHUB, null) || {}));
+  const [prueba, setPrueba] = useState(null);
+  const [probando, setProbando] = useState(false);
+  const [verQR, setVerQR] = useState(false);
+  const cambiar = (k, v) => { setF(Object.assign({}, f, { [k]: v.trim() })); setPrueba(null); };
+  const limpio = () => ({ repo: f.repo.replace(/^https?:\/\/github\.com\//i, '').replace(/\/+$/, ''), rama: f.rama || GITHUB_DEF.rama, ruta: f.ruta || GITHUB_DEF.ruta, token: f.token });
+  const conectado = Adaptador.tipo === 'github';
+  return html`<div className="panel pila">
+    <h3 style=${{ fontSize: 16 }}>Base de datos en GitHub (prueba real)</h3>
+    <p className="muted chico">Todos los celulares y computadores conectados guardan en el mismo repositorio, así lo que se registra escaneando un QR aparece en Resultados de todos. ${conectado ? html`<b>Conectado a ${Adaptador.conf.repo}.</b>` : 'Hoy este navegador no está conectado.'}</p>
+    ${!conectado && html`<${React.Fragment}>
+      <label className="campo"><span>Repositorio (usuario/repositorio)</span><input value=${f.repo} placeholder="FelipeAnali/mensajito" onChange=${e => cambiar('repo', e.target.value)} /></label>
+      <label className="campo"><span>Token de GitHub (fine-grained, solo ese repositorio, Contents: Read and write)</span><input type="password" autoComplete="off" value=${f.token} placeholder="github_pat_…" onChange=${e => cambiar('token', e.target.value)} /></label>
+      <details><summary className="chico">Opciones avanzadas</summary>
+        <label className="campo"><span>Rama donde se guardan los datos</span><input value=${f.rama} onChange=${e => cambiar('rama', e.target.value)} /></label>
+        <label className="campo"><span>Archivo de datos</span><input value=${f.ruta} onChange=${e => cambiar('ruta', e.target.value)} /></label>
+      </details>
+      <div className="fila">
+        <button className="btn chico" disabled=${!f.repo || !f.token || probando} onClick=${async () => { setProbando(true); try{ const j = await AdaptadorGitHub(limpio()).probar(); setPrueba({ ok: true, texto: 'Conecta con ' + j.full_name + (j.private ? '' : ' (público)') + ' y puede escribir.' }); }catch(e){ setPrueba({ ok: false, texto: e.message }); } setProbando(false); }}>${probando ? 'Probando…' : 'Probar conexión'}</button>
+        <button className="btn chico pri" disabled=${!prueba || !prueba.ok || !!urlServidor()} title=${urlServidor() ? 'Primero volvé a modo local en Conexión a servidor' : !prueba || !prueba.ok ? 'Primero probá la conexión' : ''} onClick=${() => { if (!confirm('Este navegador va a usar los datos del repositorio. Si el repositorio todavía no tiene datos, se suben los de demostración. ¿Continuar?')) return; escribirLocal(CLAVE_GITHUB, limpio()); try{ localStorage.removeItem('cnv_sesion'); }catch(e){} location.reload(); }}>Conectar</button>
+      </div>
+      ${prueba && html`<p className=${prueba.ok ? 'rango-ok' : 'alerta-caja'}>${prueba.texto}</p>`}
+    <//>`}
+    ${conectado && html`<div className="fila">
+      <button className="btn chico pri" onClick=${() => setVerQR(true)}>Conectar otro celular</button>
+      <button className="btn chico" onClick=${() => { if (!confirm('Este navegador deja de usar el repositorio y vuelve a sus datos locales. ¿Continuar?')) return; escribirLocal(CLAVE_GITHUB, null); escribirLocal('cnv_gh_cache', null); try{ localStorage.removeItem('cnv_sesion'); }catch(e){} location.reload(); }}>Desconectar este navegador</button>
+    </div>`}
+    ${verQR && actual && html`<${Modal} titulo="Conectar otro celular" onCerrar=${() => setVerQR(false)}>
+      <p className="chico">Con la cámara del celular escaneá este código <b>una sola vez</b>: queda conectado al repositorio. Después ya puede escanear los QR de los equipos.</p>
+      <div style=${{ maxWidth: 260, margin:'12px auto', background:'#fff', padding: 8, borderRadius: 12 }}><${QR} texto=${enlaceConectar(actual)} tam=${4} /></div>
+      <p className="chico"><span className="tag aviso">Importante</span> Este código lleva el token: mostralo solo en pantalla, no lo imprimas ni lo pegues en los equipos.</p>
+      <div className="fila">
+        <button className="btn chico" onClick=${async () => { try{ await navigator.clipboard.writeText(enlaceConectar(actual)); alert('Enlace copiado.'); }catch(e){ prompt('Copiá el enlace:', enlaceConectar(actual)); } }}>Copiar enlace</button>
+        <button className="btn chico" onClick=${() => setVerQR(false)}>Cerrar</button>
+      </div>
+    <//>`}
+  </div>`;
+}
 /* Sistema (solo maestro): almacenamiento y respaldo, dirección de los QR,
    cómo abre el operario los registros y dirección del servidor futuro. */
 function Sistema({ db, commit, avisar, reiniciar, importar }){
@@ -3232,7 +3519,7 @@ function Sistema({ db, commit, avisar, reiniciar, importar }){
       <div className="panel pila">
         <h3 style=${{ fontSize: 16 }}>Almacenamiento</h3>
         <p><b>${Adaptador.nombre}</b></p>
-        <p className="muted chico">${tam} KB usados · ${db.respuestas.length} registros · ${db.activos.length} equipos · ${db.formularios.length} formularios. En modo local cada navegador tiene sus propios datos: lo que registra un celular no lo ve otro computador hasta conectar el servidor.</p>
+        <p className="muted chico">${tam} KB usados · ${db.respuestas.length} registros · ${db.activos.length} equipos · ${db.formularios.length} formularios. ${Adaptador.tipo === 'github' ? 'Todos los equipos conectados al repositorio comparten estos datos.' : 'En modo local cada navegador tiene sus propios datos: lo que registra un celular no lo ve otro computador hasta conectar GitHub (abajo) o el servidor.'}</p>
         <div className="fila">
           <button className="btn pri" onClick=${async () => { const r = await guardarArchivo('respaldo_formatos_' + diaKey(new Date()) + '.json', JSON.stringify(db)); if (r === 'error') avisar('No se pudo descargar.', 'error'); }}>Descargar respaldo</button>
           <button className="btn" onClick=${() => fileRef.current.click()}>Cargar respaldo</button>
@@ -3252,6 +3539,7 @@ function Sistema({ db, commit, avisar, reiniciar, importar }){
         <label className="check"><input type="checkbox" checked=${!!db.config.codigoManual} onChange=${e => commit(d => { d.config.codigoManual = e.target.checked; }, (e.target.checked ? 'Permitió' : 'Quitó') + ' escribir el código del equipo a mano.')} /> Permitir escribir el código si el QR está dañado</label>
         ${MODO_DEMO && html`<label className="check"><input type="checkbox" checked=${db.config.simulador !== false} onChange=${e => commit(d => { d.config.simulador = e.target.checked; }, (e.target.checked ? 'Activó' : 'Desactivó') + ' el simulador de escaneo.')} /> Mostrar simulador de escaneo (solo para demostraciones)</label>`}
       </div>
+      <${ConexionGitHub} />
       <div className="panel pila">
         <h3 style=${{ fontSize: 16 }}>Conexión a servidor</h3>
         <p className="muted chico">Hoy: <b>${Adaptador.nombre}</b>${URL_SERVIDOR_FIJA ? ' (fijada en la instalación)' : ''}. Con una dirección, la app usa el servidor: entrada con usuario y contraseña, y los cambios se envían solos (si no hay señal, quedan en cola en el celular).</p>
@@ -3307,9 +3595,12 @@ function App(){
     const versionOriginal = guardados ? guardados.esquema : null;
     const { db: d, aviso } = migrar(guardados);
     if (d){ if (d.esquema !== versionOriginal) Adaptador.guardar(d, []); reemplazarDb(d); if (aviso) avisar(aviso, 'error'); return; }
-    if (MODO_DEMO && Adaptador.tipo === 'local'){ const nuevo = sembrar(); Adaptador.guardar(nuevo, []); reemplazarDb(nuevo); return; }
+    // En GitHub, el primer equipo que se conecta sube los datos de demostración para todos.
+    if (MODO_DEMO && Adaptador.tipo !== 'servidor'){ const nuevo = sembrar(); Adaptador.guardar(nuevo, []); reemplazarDb(nuevo); return; }
     setErrorCarga(aviso || (Adaptador.tipo === 'servidor' ? 'Sin conexión y sin datos guardados en este celular. Conectate a internet y recargá.' : 'No hay datos para mostrar.'));
   }).catch(e => { if (e && e.sesion) setConSesion(false); else setErrorCarga(e && e.message ? e.message : 'No se pudieron cargar los datos.'); }); }, [conSesion]);
+  /* GitHub: cuando otro celular o computador guarda, llegan los datos nuevos solos. */
+  useEffect(() => Adaptador.alRecibirDatos ? Adaptador.alRecibirDatos(d => { const m = migrar(d); if (m.db) reemplazarDb(m.db); }) : undefined, []);
   const avisar = useCallback((msg, tipo) => { setAviso({ msg, tipo }); clearTimeout(timer.current); timer.current = setTimeout(() => setAviso(null), 4200); }, []);
   /* ÚNICA forma de modificar datos: copia, aplica el cambio, deja auditoría, muestra y guarda.
      Se arma sobre dbRef (y no dentro de setDb) para que el guardado sea un efecto que ocurre
