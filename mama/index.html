@@ -442,6 +442,126 @@
     to{transform:translate(var(--x,0),-260px) scale(1.3);opacity:0}
   }
 
+  /* ---------- EFECTOS: fuegos artificiales, chispas ---------- */
+  .fx{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    z-index:4;
+    pointer-events:none;
+  }
+  .flash{
+    position:absolute;inset:0;
+    z-index:4;
+    pointer-events:none;
+    background:radial-gradient(circle at var(--fx,50%) var(--fy,50%), rgba(255,247,214,.95), rgba(255,220,150,.4) 30%, transparent 65%);
+    animation:flash .9s ease-out forwards;
+  }
+  @keyframes flash{from{opacity:1}to{opacity:0}}
+  .scene.night{transition:background-color 1.2s ease}
+  .scene .sky{
+    position:absolute;inset:0;
+    z-index:0;
+    pointer-events:none;
+    background:
+      radial-gradient(60% 40% at 50% 20%, rgba(233,180,76,.25), transparent 70%),
+      linear-gradient(180deg, #2a1d3a, #4a2a4a 55%, #6b3a50);
+    opacity:0;
+    transition:opacity 1.4s ease;
+  }
+  .scene.party .sky{opacity:1}
+  .scene.party .big-title{color:#ffd3de;text-shadow:0 0 30px rgba(231,111,138,.6)}
+  .scene.party .big-title span{color:#fff}
+  .scene.party #s3 .sub{color:rgba(255,255,255,.85)}
+  .scene.party .hug-count{color:rgba(255,255,255,.85)}
+  .scene.reading .fx{z-index:1} /* en la carta, los efectos van detrás del papel */
+  .tap-hint{
+    margin-top:14px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:#ffd3de;
+    animation:breathe 2.4s ease-in-out infinite;
+  }
+
+  .mic{
+    margin-top:14px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 18px;
+    border-radius:999px;
+    border:2px solid var(--rose);
+    background:rgba(255,255,255,.7);
+    color:var(--rose-deep);
+    font:inherit;
+    font-weight:700;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .mic.on{background:var(--rose);color:#fff;animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(231,111,138,.5)}50%{box-shadow:0 0 0 10px rgba(231,111,138,0)}}
+  .mic:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+  .mic-msg{font-size:12.5px;color:var(--body);margin-top:8px;min-height:1.2em}
+  .candle.wind .flame{animation:wind .12s ease-in-out infinite alternate}
+  @keyframes wind{from{transform:skewX(-18deg) scale(.9,1)}to{transform:skewX(-30deg) scale(.8,.9)}}
+
+  /* ---------- GLOBOS ---------- */
+  .balloons{
+    position:absolute;inset:0;
+    z-index:3;
+    pointer-events:none;
+  }
+  .balloon{
+    position:absolute;
+    bottom:-110px;
+    width:56px;height:68px;
+    border:0;padding:0;
+    border-radius:50% 50% 47% 47% / 55% 55% 45% 45%;
+    background:radial-gradient(circle at 32% 28%, rgba(255,255,255,.75) 0 6px, transparent 7px), var(--c);
+    box-shadow:inset -8px -10px 0 rgba(0,0,0,.08);
+    cursor:pointer;
+    pointer-events:auto;
+    animation:up var(--dur,9s) linear var(--delay,0s) infinite, sway 2.6s ease-in-out infinite alternate;
+  }
+  .balloon::before{
+    content:"";
+    position:absolute;
+    left:50%;bottom:-6px;
+    width:10px;height:8px;
+    margin-left:-5px;
+    background:var(--c);
+    clip-path:polygon(50% 0, 100% 100%, 0 100%);
+  }
+  .balloon::after{
+    content:"";
+    position:absolute;
+    left:50%;top:100%;
+    width:1.5px;height:60px;
+    margin-left:-.75px;
+    background:rgba(255,255,255,.55);
+  }
+  @keyframes up{to{bottom:calc(100% + 120px)}}
+  @keyframes sway{from{margin-left:-14px}to{margin-left:14px}}
+  .word{
+    position:absolute;
+    z-index:5;
+    pointer-events:none;
+    font-family:"Caveat",cursive;
+    font-weight:700;
+    font-size:30px;
+    color:#fff;
+    text-shadow:0 2px 12px rgba(231,111,138,.9);
+    white-space:nowrap;
+    transform:translate(-50%,-50%);
+    animation:word 1.9s ease-out forwards;
+  }
+  @keyframes word{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+    20%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}
+    100%{opacity:0;transform:translate(-50%,-130%) scale(1)}
+  }
+
   [hidden]{display:none !important}
 
   @media (prefers-reduced-motion: reduce){
@@ -461,6 +581,9 @@
   <main class="frame">
     <div class="topbar" id="para"></div>
     <div class="scene" id="scene">
+      <div class="sky" aria-hidden="true"></div>
+      <div class="balloons" id="balloons"></div>
+      <canvas class="fx" id="fx" aria-hidden="true"></canvas>
       <div class="stage" id="stage">
 
         <!-- 1. Regalo -->
@@ -484,6 +607,8 @@
             <div class="candles" id="candles"></div>
           </div>
           <div class="hint" id="velasHint"></div>
+          <button class="mic" id="mic" type="button">🎤 O sóplalas de verdad</button>
+          <div class="mic-msg" id="micMsg" role="status"></div>
         </section>
 
         <!-- 3. Celebración -->
@@ -491,6 +616,7 @@
           <h1 class="big-title" id="celebra"></h1>
           <p class="sub" id="celebraTexto"></p>
           <button class="btn" id="leer">Leer tu carta 💌</button>
+          <div class="tap-hint">revienta los globos · toca el cielo ✨</div>
         </section>
 
         <!-- 4. Carta -->
@@ -530,12 +656,15 @@
     celebraNombre: "Mamá!",
     celebraTexto: "Que este año te traiga todo lo que le has dado a los demás… multiplicado.",
 
+    // Palabras que salen al reventar cada globo
+    globos: ["Te amo", "Gracias", "Mi reina", "La mejor", "Mi mami", "Eres luz", "Mi hogar"],
+
     // Cada elemento es una página de la carta
     paginas: [
       "Hoy celebramos a la persona que me enseñó a caminar, a levantarme y a seguir. Gracias por cada desvelo, cada consejo y cada abrazo que llegó justo cuando más lo necesitaba.",
       "Todo lo bueno que hay en mí tiene un poquito de ti: tu fuerza, tu risa y esa manera tuya de hacer que cualquier lugar se sienta como casa.",
-      "Hoy te deseo salud, paz y muchísimos motivos para sonreír. Que la vida te devuelva todo el amor que siempre has dado sin pedir nada a cambio.",
-      "Gracias por ser mi mamá. Te quiero con todo mi corazón, hoy y siempre."
+      "Hoy te deseo salud, paz y muchísimos motivos para sonreír. Que la vida me permita devolverte todo y más del amor que siempre has dado sin pedir nada a cambio.",
+      "Gracias por ser mi mami. Te amo con todo mi corazón, hoy y siempre."
     ],
     saludo: "Mamá:",
     despedida: "Con todo mi amor,"
@@ -547,6 +676,8 @@
   const scene = $("scene");
   const azar = (a, b) => a + Math.random() * (b - a);
   const COLORES = ["#e76f8a", "#e9b44c", "#8ccfb7", "#b9a3e3", "#f7a072"];
+  const FUEGOS = ["#ff6b8b", "#ffd166", "#7ef0c5", "#c9a7ff", "#ffa36c", "#ffffff", "#6ec8ff"];
+  const vibrar = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch(e){} };
 
   $("para").textContent = CONFIG.para;
   $("pastelTitulo").textContent = CONFIG.pastelTitulo;
@@ -559,9 +690,168 @@
   nombre.textContent = CONFIG.celebraNombre;
   h1.appendChild(nombre);
 
+  let etapa = 1;
   function ir(desde, hasta){
     $(desde).hidden = true;
     $(hasta).hidden = false;
+  }
+
+  // ===================================================================
+  //  Motor de partículas (fuegos artificiales, chispas, corazones)
+  // ===================================================================
+  const fx = $("fx");
+  const ctx = fx.getContext("2d");
+  let W = 0, H = 0;
+  function medir(){
+    const r = scene.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    fx.width = Math.round(W * dpr);
+    fx.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  medir();
+  if ("ResizeObserver" in window) new ResizeObserver(medir).observe(scene);
+  else window.addEventListener("resize", medir);
+
+  const parts = [];
+  const cohetes = [];
+  let corriendo = false;
+
+  function arrancar(){
+    if (!corriendo){ corriendo = true; requestAnimationFrame(cuadro); }
+  }
+
+  function chispas(x, y, n, opts = {}){
+    if (reduce) return;
+    const colores = opts.colores || FUEGOS;
+    const vel = opts.vel || 4;
+    for (let i = 0; i < n; i++){
+      const a = opts.anillo ? (i / n) * Math.PI * 2 : azar(0, Math.PI * 2);
+      const s = opts.anillo ? vel : azar(vel * .3, vel);
+      parts.push({
+        x, y,
+        vx: Math.cos(a) * s,
+        vy: Math.sin(a) * s,
+        vida: 1,
+        decae: azar(.010, .02) * (opts.lento ? .6 : 1),
+        color: colores[Math.floor(Math.random() * colores.length)],
+        r: azar(1.4, 3) * (opts.grande ? 1.6 : 1),
+        g: opts.g ?? .05,
+        roce: opts.roce ?? .975,
+        forma: opts.forma || "punto",
+        brillo: Math.random() < .5
+      });
+    }
+    arrancar();
+  }
+
+  function cohete(x, yObjetivo, color){
+    if (reduce) return;
+    cohetes.push({
+      x, y: H + 10,
+      vx: azar(-.6, .6),
+      vy: -Math.sqrt(2 * .13 * (H + 10 - yObjetivo)) * azar(.98, 1.04),
+      color: color || FUEGOS[Math.floor(Math.random() * FUEGOS.length)]
+    });
+    arrancar();
+  }
+
+  function explotar(c){
+    const tipo = Math.random();
+    if (tipo < .2){
+      chispas(c.x, c.y, 26, {forma:"corazon", colores:["#ff6b8b", "#ff9fb4", "#ffd3de"], vel:3.6, grande:true, lento:true});
+    } else if (tipo < .45){
+      chispas(c.x, c.y, 70, {anillo:true, vel:azar(3.5, 5), colores:[c.color, "#fff"]});
+      chispas(c.x, c.y, 30, {vel:2, colores:[c.color]});
+    } else {
+      chispas(c.x, c.y, 90, {vel:azar(4, 6), colores:[c.color, c.color, "#fff", FUEGOS[Math.floor(Math.random() * FUEGOS.length)]]});
+    }
+    vibrar(15);
+  }
+
+  function corazon(x, y, r){
+    ctx.beginPath();
+    ctx.moveTo(x, y + r * .35);
+    ctx.bezierCurveTo(x, y, x - r, y - r * .1, x - r, y + r * .35);
+    ctx.bezierCurveTo(x - r, y + r * .8, x, y + r * 1.05, x, y + r * 1.3);
+    ctx.bezierCurveTo(x, y + r * 1.05, x + r, y + r * .8, x + r, y + r * .35);
+    ctx.bezierCurveTo(x + r, y - r * .1, x, y, x, y + r * .35);
+    ctx.fill();
+  }
+
+  function cuadro(){
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = "lighter";
+
+    for (let i = cohetes.length - 1; i >= 0; i--){
+      const c = cohetes[i];
+      c.x += c.vx; c.y += c.vy; c.vy += .13;
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = "#fff4d6";
+      ctx.beginPath(); ctx.arc(c.x, c.y, 2.4, 0, Math.PI * 2); ctx.fill();
+      if (Math.random() < .9){
+        parts.push({x:c.x, y:c.y + 4, vx:azar(-.4, .4), vy:azar(.5, 1.5), vida:.7, decae:.04, color:"#ffd27a", r:1.4, g:0, roce:.95, forma:"punto"});
+      }
+      if (c.vy >= -.5){ cohetes.splice(i, 1); explotar(c); }
+    }
+
+    for (let i = parts.length - 1; i >= 0; i--){
+      const p = parts[i];
+      p.vx *= p.roce; p.vy *= p.roce; p.vy += p.g;
+      p.x += p.vx; p.y += p.vy;
+      p.vida -= p.decae;
+      if (p.vida <= 0){ parts.splice(i, 1); continue; }
+      const parpadeo = p.brillo ? (.6 + Math.random() * .4) : 1;
+      ctx.globalAlpha = Math.max(0, p.vida) * parpadeo;
+      ctx.fillStyle = p.color;
+      if (p.forma === "corazon"){
+        corazon(p.x, p.y, p.r * 2.4);
+      } else {
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
+
+    if (parts.length || cohetes.length) requestAnimationFrame(cuadro);
+    else { corriendo = false; ctx.clearRect(0, 0, W, H); }
+  }
+
+  function posEn(e){
+    const r = scene.getBoundingClientRect();
+    return {x: e.clientX - r.left, y: e.clientY - r.top};
+  }
+
+  // Estela de brillo que sigue el dedo / el mouse
+  let ultimo = 0;
+  scene.addEventListener("pointermove", (e) => {
+    const t = performance.now();
+    if (t - ultimo < 24) return;
+    ultimo = t;
+    const {x, y} = posEn(e);
+    chispas(x, y, etapa >= 3 ? 3 : 2, {vel:1.2, g:.02, colores:etapa >= 3 ? FUEGOS : ["#e9b44c", "#ffd166", "#e76f8a"]});
+  });
+
+  // Tocar la pantalla: chispas al principio, fuegos artificiales en la fiesta
+  scene.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("button, .letter")) return;
+    const {x, y} = posEn(e);
+    if (etapa >= 3){
+      cohete(x, Math.min(y, H - 60));
+    } else {
+      chispas(x, y, 24, {vel:3, colores:["#e9b44c", "#ffd166", "#e76f8a", "#b9a3e3"]});
+    }
+  });
+
+  function relampago(x, y){
+    if (reduce) return;
+    const f = document.createElement("div");
+    f.className = "flash";
+    f.style.setProperty("--fx", x + "px");
+    f.style.setProperty("--fy", y + "px");
+    scene.appendChild(f);
+    f.addEventListener("animationend", () => f.remove());
   }
 
   function confeti(n = 60){
@@ -580,18 +870,54 @@
     }
   }
 
-  // 1. Regalo
+  // ===================================================================
+  //  1. Regalo
+  // ===================================================================
   const gift = $("gift");
   gift.addEventListener("click", () => {
     if (gift.classList.contains("open")) return;
     gift.classList.add("open");
-    confeti(24);
-    setTimeout(() => ir("s1", "s2"), reduce ? 100 : 900);
+    const g = gift.getBoundingClientRect(), r = scene.getBoundingClientRect();
+    const x = g.left - r.left + g.width / 2, y = g.top - r.top + g.height / 2;
+    relampago(x, y);
+    chispas(x, y, 120, {vel:7, colores:["#ffd166", "#e9b44c", "#fff4d6", "#e76f8a"], grande:true});
+    vibrar(30);
+    confeti(30);
+    setTimeout(() => { ir("s1", "s2"); etapa = 2; }, reduce ? 100 : 900);
   });
 
-  // 2. Velas
+  // ===================================================================
+  //  2. Velas (tocándolas o soplando al micrófono)
+  // ===================================================================
   const candles = $("candles");
   let encendidas = CONFIG.velas;
+  const velas = [];
+
+  function apagar(b){
+    if (b.classList.contains("out")) return;
+    b.classList.add("out");
+    b.classList.remove("wind");
+    b.disabled = true;
+    vibrar(20);
+    if (!reduce){
+      for (let k = 0; k < 3; k++){
+        const s = document.createElement("span");
+        s.className = "smoke";
+        s.style.animationDelay = k * .15 + "s";
+        s.style.setProperty("--sx", azar(-10, 10) + "px");
+        b.appendChild(s);
+        s.addEventListener("animationend", () => s.remove());
+      }
+      const f = b.getBoundingClientRect(), r = scene.getBoundingClientRect();
+      chispas(f.left - r.left + f.width / 2, f.top - r.top + 8, 14, {vel:2, g:-.02, colores:["#ffd166", "#ffb347", "#fff4d6"]});
+    }
+    encendidas--;
+    if (encendidas === 0){
+      apagarMic();
+      setTimeout(fiesta, reduce ? 100 : 900);
+    }
+  }
+
   for (let i = 0; i < CONFIG.velas; i++){
     const b = document.createElement("button");
     b.className = "candle";
@@ -599,29 +925,123 @@
     b.style.setProperty("--c", COLORES[i % COLORES.length]);
     b.innerHTML = '<span class="flame"></span><span class="stick"></span>';
     b.style.transform = `translateY(${i % 2 ? 0 : -8}px)`;
-    b.addEventListener("click", () => {
-      if (b.classList.contains("out")) return;
-      b.classList.add("out");
-      b.disabled = true;
-      if (!reduce){
-        for (let k = 0; k < 3; k++){
-          const s = document.createElement("span");
-          s.className = "smoke";
-          s.style.animationDelay = k * .15 + "s";
-          s.style.setProperty("--sx", azar(-10, 10) + "px");
-          b.appendChild(s);
-          s.addEventListener("animationend", () => s.remove());
-        }
-      }
-      encendidas--;
-      if (encendidas === 0){
-        setTimeout(() => { ir("s2", "s3"); confeti(80); }, reduce ? 100 : 900);
-      }
-    });
+    b.addEventListener("click", () => apagar(b));
     candles.appendChild(b);
+    velas.push(b);
   }
 
-  // 3 → 4. Carta
+  // Soplar de verdad con el micrófono
+  let audio = null, micStream = null, micActivo = false;
+  async function encenderMic(){
+    const btn = $("mic"), msg = $("micMsg");
+    if (micActivo){ apagarMic(); return; }
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
+    } catch(e){
+      msg.textContent = "No se pudo usar el micrófono. Tócalas con el dedo 😊";
+      btn.hidden = true;
+      return;
+    }
+    audio = new (window.AudioContext || window.webkitAudioContext)();
+    const src = audio.createMediaStreamSource(micStream);
+    const an = audio.createAnalyser();
+    an.fftSize = 1024;
+    src.connect(an);
+    const datos = new Float32Array(an.fftSize);
+    micActivo = true;
+    btn.classList.add("on");
+    btn.textContent = "🎤 Sopla fuerte…";
+    msg.textContent = "Acerca el celular y sopla 💨";
+    let soplando = 0, ultimaApagada = 0;
+    (function escuchar(){
+      if (!micActivo) return;
+      an.getFloatTimeDomainData(datos);
+      let suma = 0;
+      for (let i = 0; i < datos.length; i++) suma += datos[i] * datos[i];
+      const vol = Math.sqrt(suma / datos.length);
+      const t = performance.now();
+      const vivas = velas.filter((v) => !v.classList.contains("out"));
+      if (vol > .12){
+        soplando++;
+        vivas.forEach((v) => v.classList.add("wind"));
+        if (soplando > 4 && t - ultimaApagada > 220 && vivas.length){
+          apagar(vivas[Math.floor(Math.random() * vivas.length)]);
+          ultimaApagada = t;
+        }
+      } else {
+        soplando = 0;
+        vivas.forEach((v) => v.classList.remove("wind"));
+      }
+      requestAnimationFrame(escuchar);
+    })();
+  }
+  function apagarMic(){
+    micActivo = false;
+    if (micStream) micStream.getTracks().forEach((t) => t.stop());
+    if (audio) audio.close().catch(() => {});
+    micStream = null; audio = null;
+    $("mic").hidden = true;
+    $("micMsg").textContent = "";
+  }
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) $("mic").addEventListener("click", encenderMic);
+  else $("mic").hidden = true;
+
+  // ===================================================================
+  //  3. Fiesta: cielo de noche, fuegos artificiales y globos
+  // ===================================================================
+  let globosVivos = 0;
+  function fiesta(){
+    ir("s2", "s3");
+    etapa = 3;
+    scene.classList.add("party");
+    confeti(80);
+    vibrar([30, 60, 30]);
+    // Show de fuegos artificiales al llegar
+    for (let i = 0; i < 9; i++){
+      setTimeout(() => cohete(azar(W * .15, W * .85), azar(H * .12, H * .4)), 300 + i * 380);
+    }
+    soltarGlobos();
+  }
+
+  function soltarGlobos(){
+    if (reduce) return;
+    const cont = $("balloons");
+    CONFIG.globos.forEach((palabra, i) => {
+      const b = document.createElement("button");
+      b.className = "balloon";
+      b.setAttribute("aria-label", "Reventar globo");
+      b.style.setProperty("--c", COLORES[i % COLORES.length]);
+      b.style.left = (6 + (i * 83) % 80) + "%";
+      b.style.setProperty("--dur", azar(8, 11).toFixed(1) + "s");
+      b.style.setProperty("--delay", (i * .9).toFixed(1) + "s");
+      b.addEventListener("pointerdown", (e) => {
+        e.stopPropagation();
+        const g = b.getBoundingClientRect(), r = scene.getBoundingClientRect();
+        const x = g.left - r.left + g.width / 2, y = g.top - r.top + g.height / 2;
+        const color = b.style.getPropertyValue("--c");
+        b.remove();
+        globosVivos--;
+        chispas(x, y, 50, {vel:5, colores:[color, color, "#fff"]});
+        vibrar(25);
+        const w = document.createElement("span");
+        w.className = "word";
+        w.textContent = palabra;
+        w.style.left = x + "px";
+        w.style.top = y + "px";
+        scene.appendChild(w);
+        w.addEventListener("animationend", () => w.remove());
+        if (globosVivos === 0){
+          for (let k = 0; k < 6; k++) setTimeout(() => cohete(azar(W * .2, W * .8), azar(H * .1, H * .35)), k * 250);
+        }
+      });
+      cont.appendChild(b);
+      globosVivos++;
+    });
+  }
+
+  // ===================================================================
+  //  4. Carta
+  // ===================================================================
   let pag = 0;
   const total = CONFIG.paginas.length;
   const dots = $("dots");
@@ -652,7 +1072,13 @@
     $("next").disabled = pag === total - 1;
   }
 
-  $("leer").addEventListener("click", () => { ir("s3", "s4"); pintar(); });
+  $("leer").addEventListener("click", () => {
+    ir("s3", "s4");
+    etapa = 4;
+    scene.classList.add("reading");
+    $("balloons").innerHTML = "";
+    pintar();
+  });
   $("next").addEventListener("click", () => { if (pag < total - 1){ pag++; pintar(1); } });
   $("prev").addEventListener("click", () => { if (pag > 0){ pag--; pintar(-1); } });
 
@@ -668,20 +1094,25 @@
     x0 = null;
   });
 
-  // Abrazos
+  // Abrazos: lluvia de corazones y fuegos artificiales
   let abrazos = 0;
   $("hug").addEventListener("click", (e) => {
     abrazos++;
     $("hugCount").textContent = abrazos === 1 ? "1 abrazo enviado con amor" : abrazos + " abrazos enviados con amor";
-    if (reduce) return;
+    vibrar([20, 40, 20]);
     const r = scene.getBoundingClientRect();
     const b = e.currentTarget.getBoundingClientRect();
-    for (let i = 0; i < 8; i++){
+    const x = b.left - r.left + b.width / 2, y = b.top - r.top;
+    chispas(x, y, 40, {forma:"corazon", colores:["#ff6b8b", "#ff9fb4", "#ffd3de", "#e76f8a"], vel:6, grande:true, lento:true, g:.04});
+    cohete(azar(W * .2, W * .45), azar(H * .1, H * .3), "#ff6b8b");
+    cohete(azar(W * .55, W * .8), azar(H * .1, H * .3), "#ffd166");
+    if (reduce) return;
+    for (let i = 0; i < 6; i++){
       const h = document.createElement("span");
       h.className = "heart";
       h.textContent = ["💖", "💗", "🤗", "🌷"][i % 4];
-      h.style.left = (b.left - r.left + b.width / 2 + azar(-60, 40)) + "px";
-      h.style.top = (b.top - r.top) + "px";
+      h.style.left = (x + azar(-80, 60)) + "px";
+      h.style.top = y + "px";
       h.style.setProperty("--x", azar(-50, 50) + "px");
       h.style.animationDelay = azar(0, .3) + "s";
       scene.appendChild(h);
