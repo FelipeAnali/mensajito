@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feliz cumpleaños, Mamá</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Caveat:wght@500;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#f6ede4;
+    --card:#fffaf5;
+    --ink:#3b2a2a;
+    --body:#6b5550;
+    --rose:#e76f8a;
+    --rose-deep:#c9506d;
+    --gold:#e9b44c;
+    --mint:#8ccfb7;
+    --lilac:#b9a3e3;
+    --paper:#fffdf8;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background-color:var(--page);
+    background-image:radial-gradient(rgba(231,111,138,.16) 1.2px, transparent 1.3px);
+    background-size:22px 22px;
+    color:var(--ink);
+    font-family:"Nunito",system-ui,sans-serif;
+    min-height:100dvh;
+    display:flex;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .frame{
+    margin:auto 0;
+    width:min(94vw,460px);
+    background:var(--card);
+    border-radius:30px;
+    padding:12px;
+    box-shadow:0 30px 60px -25px rgba(120,60,60,.45), 0 0 0 1px rgba(231,111,138,.15);
+  }
+  .topbar{
+    height:46px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 14px;
+    font-weight:700;
+    font-size:15px;
+  }
+  .topbar::before{
+    content:"";
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--rose);
+  }
+
+  .scene{
+    position:relative;
+    border-radius:20px;
+    overflow:hidden;
+    overflow:clip;
+    min-height:600px;
+    background:
+      radial-gradient(70% 45% at 50% 30%, rgba(233,180,76,.22) 0%, transparent 70%),
+      radial-gradient(60% 40% at 0% 100%, rgba(185,163,227,.30) 0%, transparent 70%),
+      radial-gradient(60% 40% at 100% 100%, rgba(140,207,183,.30) 0%, transparent 70%),
+      #fdf3ea;
+  }
+  .stage{
+    position:relative;
+    z-index:2;
+    min-height:600px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:36px 24px;
+    text-align:center;
+  }
+  .step{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    animation:rise .8s cubic-bezier(.2,.9,.25,1) both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  .hint{
+    margin-top:22px;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--rose-deep);
+    animation:breathe 2.4s ease-in-out infinite;
+  }
+  @keyframes breathe{0%,100%{opacity:.45}50%{opacity:1}}
+
+  /* ---------- 1. REGALO ---------- */
+  .gift{
+    position:relative;
+    width:190px;height:190px;
+    border:0;background:transparent;padding:0;
+    cursor:pointer;
+    animation:wobble 2.8s ease-in-out infinite;
+  }
+  @keyframes wobble{
+    0%,70%,100%{transform:rotate(0)}
+    76%{transform:rotate(-5deg)}
+    82%{transform:rotate(5deg)}
+    88%{transform:rotate(-3deg)}
+    94%{transform:rotate(2deg)}
+  }
+  .gift:focus-visible{outline:3px solid var(--rose);outline-offset:10px;border-radius:12px}
+  .gift .box{
+    position:absolute;
+    left:15px;right:15px;bottom:0;
+    height:120px;
+    background:var(--rose);
+    border-radius:6px 6px 12px 12px;
+    box-shadow:inset 0 -14px 0 rgba(0,0,0,.08);
+  }
+  .gift .box::before{
+    content:"";
+    position:absolute;
+    left:50%;top:0;bottom:0;
+    width:26px;margin-left:-13px;
+    background:var(--gold);
+  }
+  .gift .lid{
+    position:absolute;
+    left:5px;right:5px;top:44px;
+    height:34px;
+    background:var(--rose-deep);
+    border-radius:8px;
+    z-index:2;
+    transition:transform .8s cubic-bezier(.3,1.4,.5,1), opacity .6s ease .3s;
+  }
+  .gift .lid::before{
+    content:"";
+    position:absolute;
+    left:50%;top:0;bottom:0;
+    width:26px;margin-left:-13px;
+    background:#d79a2f;
+  }
+  .gift .bow{
+    position:absolute;
+    left:50%;top:-30px;
+    width:80px;height:36px;
+    margin-left:-40px;
+  }
+  .gift .bow::before,.gift .bow::after{
+    content:"";
+    position:absolute;
+    top:4px;
+    width:38px;height:28px;
+    border:7px solid var(--gold);
+    border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
+  }
+  .gift .bow::before{left:0;transform:rotate(-18deg)}
+  .gift .bow::after{right:0;transform:rotate(18deg)}
+  .gift .tag{
+    position:absolute;
+    right:-6px;bottom:24px;
+    z-index:3;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Caveat",cursive;
+    font-size:22px;
+    font-weight:700;
+    padding:2px 12px;
+    border-radius:6px;
+    transform:rotate(8deg);
+    box-shadow:0 4px 10px rgba(0,0,0,.12);
+  }
+  .gift.open{animation:none}
+  .gift.open .lid{transform:translate(40px,-150px) rotate(35deg);opacity:0}
+
+  /* ---------- 2. PASTEL ---------- */
+  .title-sm{
+    font-family:"Fraunces",Georgia,serif;
+    font-weight:600;
+    font-size:24px;
+    line-height:1.2;
+    margin:0 0 6px;
+  }
+  .sub{
+    font-size:14.5px;
+    line-height:1.7;
+    color:var(--body);
+    margin:0 0 18px;
+    max-width:30ch;
+  }
+  .cake{
+    position:relative;
+    width:250px;
+    height:250px;
+    margin-top:8px;
+  }
+  .plate{
+    position:absolute;
+    left:5px;right:5px;bottom:0;
+    height:22px;
+    background:#fff;
+    border-radius:50%;
+    box-shadow:0 6px 14px rgba(120,60,60,.18);
+  }
+  .tier{
+    position:absolute;
+    left:50%;
+    border-radius:14px 14px 10px 10px;
+  }
+  .tier.t1{
+    width:220px;height:90px;
+    margin-left:-110px;
+    bottom:12px;
+    background:linear-gradient(180deg, #f7c6d0, #efa7b8);
+  }
+  .tier.t2{
+    width:160px;height:70px;
+    margin-left:-80px;
+    bottom:100px;
+    background:linear-gradient(180deg, #fff3e3, #f6dcc0);
+  }
+  .tier::before{
+    content:"";
+    position:absolute;
+    left:0;right:0;top:0;
+    height:22px;
+    border-radius:14px 14px 0 0;
+    background:
+      radial-gradient(circle at 10% 100%, #fff 10px, transparent 11px),
+      radial-gradient(circle at 30% 100%, #fff 13px, transparent 14px),
+      radial-gradient(circle at 50% 100%, #fff 9px, transparent 10px),
+      radial-gradient(circle at 70% 100%, #fff 12px, transparent 13px),
+      radial-gradient(circle at 90% 100%, #fff 10px, transparent 11px),
+      #fff;
+    background-size:100% 30px;
+    background-repeat:no-repeat;
+  }
+  .tier.t2::before{background-color:#f7c6d0;
+    background-image:
+      radial-gradient(circle at 15% 100%, #f7c6d0 9px, transparent 10px),
+      radial-gradient(circle at 45% 100%, #f7c6d0 12px, transparent 13px),
+      radial-gradient(circle at 80% 100%, #f7c6d0 10px, transparent 11px)}
+  .sprinkles{
+    position:absolute;inset:26px 10px 10px;
+    background:
+      radial-gradient(circle, var(--gold) 2.5px, transparent 3px) 0 0/34px 26px,
+      radial-gradient(circle, var(--mint) 2.5px, transparent 3px) 17px 13px/34px 26px;
+    opacity:.85;
+  }
+  .candles{
+    position:absolute;
+    left:50%;
+    bottom:170px;
+    width:150px;
+    margin-left:-75px;
+    display:flex;
+    justify-content:space-around;
+    align-items:flex-end;
+  }
+  .candle{
+    position:relative;
+    width:28px;height:80px;
+    border:0;background:transparent;padding:0;
+    cursor:pointer;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .candle:focus-visible{outline:2px solid var(--rose);outline-offset:4px;border-radius:6px}
+  .candle .stick{
+    width:10px;height:44px;
+    border-radius:3px;
+    background:repeating-linear-gradient(135deg, #fff 0 6px, var(--c,#e76f8a) 6px 12px);
+  }
+  .candle .flame{
+    position:absolute;
+    left:50%;bottom:46px;
+    width:14px;height:24px;
+    margin-left:-7px;
+    border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
+    background:radial-gradient(circle at 50% 70%, #fff7c2 0%, #ffd34d 40%, #ff8a2b 80%);
+    box-shadow:0 0 16px 6px rgba(255,190,80,.55);
+    transform-origin:50% 100%;
+    animation:flicker .18s ease-in-out infinite alternate;
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  @keyframes flicker{
+    from{transform:scale(1,1) rotate(-2deg)}
+    to{transform:scale(.92,1.08) rotate(2deg)}
+  }
+  .candle.out .flame{opacity:0;transform:scale(.2);animation:none}
+  .smoke{
+    position:absolute;
+    left:50%;bottom:50px;
+    width:10px;height:10px;
+    margin-left:-5px;
+    border-radius:50%;
+    background:rgba(120,110,110,.35);
+    pointer-events:none;
+    animation:smoke 1.4s ease-out forwards;
+  }
+  @keyframes smoke{
+    to{transform:translate(var(--sx,6px),-60px) scale(3);opacity:0}
+  }
+
+  /* ---------- 3. CELEBRACIÓN ---------- */
+  .big-title{
+    font-family:"Fraunces",Georgia,serif;
+    font-weight:700;
+    font-size:clamp(34px,9vw,46px);
+    line-height:1.05;
+    margin:0 0 14px;
+    color:var(--rose-deep);
+  }
+  .big-title span{display:block;color:var(--ink)}
+  .btn{
+    margin-top:22px;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 24px;
+    border:0;
+    border-radius:999px;
+    background:var(--rose);
+    color:#fff;
+    font:inherit;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+    box-shadow:0 10px 22px -8px rgba(201,80,109,.7);
+    transition:transform .2s ease, background .2s ease;
+  }
+  .btn:hover{transform:translateY(-2px);background:var(--rose-deep)}
+  .btn:active{transform:scale(.97)}
+  .btn:focus-visible{outline:3px solid var(--ink);outline-offset:4px}
+  .btn.ghost{background:transparent;color:var(--rose-deep);box-shadow:none;border:2px solid var(--rose)}
+  .btn.ghost:hover{background:rgba(231,111,138,.1)}
+
+  .confetti{
+    position:absolute;
+    top:-14px;
+    width:9px;height:14px;
+    border-radius:2px;
+    z-index:5;
+    pointer-events:none;
+    animation:fall var(--dur,2.6s) cubic-bezier(.3,.1,.6,1) var(--delay,0s) forwards;
+  }
+  @keyframes fall{
+    to{transform:translate(var(--x,0),680px) rotate(var(--r,540deg))}
+  }
+
+  /* ---------- 4. CARTA ---------- */
+  .letter{
+    position:relative;
+    width:100%;
+    background:var(--paper);
+    border-radius:16px;
+    padding:30px 24px 22px;
+    text-align:left;
+    box-shadow:0 18px 36px -18px rgba(120,60,60,.45);
+    background-image:repeating-linear-gradient(180deg, transparent 0 33px, rgba(231,111,138,.13) 33px 34px);
+    background-position:0 18px;
+    min-height:330px;
+    display:flex;
+    flex-direction:column;
+  }
+  .letter::before{
+    content:"";
+    position:absolute;
+    left:16px;top:0;bottom:0;
+    width:2px;
+    background:rgba(231,111,138,.25);
+  }
+  .letter .page{
+    flex:1;
+    padding-left:8px;
+    font-family:"Caveat",cursive;
+    font-size:26px;
+    line-height:34px;
+    color:var(--ink);
+    animation:pageIn .6s ease both;
+  }
+  @keyframes pageIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+  .letter .page.back{animation-name:pageBack}
+  @keyframes pageBack{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+  .letter .greet{font-weight:700;color:var(--rose-deep);margin-bottom:2px}
+  .letter .sign{margin-top:14px;text-align:right;font-weight:700;color:var(--rose-deep)}
+  .nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:16px;
+  }
+  .dots{display:flex;gap:7px}
+  .dots i{
+    width:8px;height:8px;
+    border-radius:50%;
+    background:rgba(231,111,138,.3);
+    transition:background .3s ease, transform .3s ease;
+  }
+  .dots i.on{background:var(--rose);transform:scale(1.25)}
+  .arrow{
+    width:44px;height:44px;
+    border-radius:50%;
+    border:0;
+    background:var(--rose);
+    color:#fff;
+    font-size:20px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .2s ease, opacity .2s ease;
+  }
+  .arrow:active{transform:scale(.92)}
+  .arrow:disabled{opacity:.25;cursor:default}
+  .arrow:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+
+  .hug-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    margin-top:6px;
+  }
+  .hug-count{font-size:13px;color:var(--body);min-height:1.2em}
+  .heart{
+    position:absolute;
+    z-index:5;
+    pointer-events:none;
+    font-size:24px;
+    animation:float 1.8s ease-out forwards;
+  }
+  @keyframes float{
+    to{transform:translate(var(--x,0),-260px) scale(1.3);opacity:0}
+  }
+
+  [hidden]{display:none !important}
+
+  @media (prefers-reduced-motion: reduce){
+    .gift,.hint,.candle .flame{animation:none}
+    .step,.letter .page{animation:none}
+    .confetti,.heart,.smoke{display:none}
+  }
+  @media (max-width:420px){
+    .scene,.stage{min-height:560px}
+    .stage{padding:30px 18px}
+    .letter{padding:26px 18px 20px}
+    .letter .page{font-size:24px}
+  }
+</style>
+</head>
+<body>
+  <main class="frame">
+    <div class="topbar" id="para"></div>
+    <div class="scene" id="scene">
+      <div class="stage" id="stage">
+
+        <!-- 1. Regalo -->
+        <section class="step" id="s1">
+          <button class="gift" id="gift" aria-label="Abrir el regalo">
+            <div class="box"></div>
+            <div class="lid"><div class="bow"></div></div>
+            <div class="tag">Mamá</div>
+          </button>
+          <div class="hint">toca el regalo</div>
+        </section>
+
+        <!-- 2. Pastel -->
+        <section class="step" id="s2" hidden>
+          <h2 class="title-sm" id="pastelTitulo"></h2>
+          <p class="sub" id="pastelTexto"></p>
+          <div class="cake">
+            <div class="plate"></div>
+            <div class="tier t1"><div class="sprinkles"></div></div>
+            <div class="tier t2"></div>
+            <div class="candles" id="candles"></div>
+          </div>
+          <div class="hint" id="velasHint"></div>
+        </section>
+
+        <!-- 3. Celebración -->
+        <section class="step" id="s3" hidden>
+          <h1 class="big-title" id="celebra"></h1>
+          <p class="sub" id="celebraTexto"></p>
+          <button class="btn" id="leer">Leer tu carta 💌</button>
+        </section>
+
+        <!-- 4. Carta -->
+        <section class="step" id="s4" hidden>
+          <article class="letter" aria-live="polite">
+            <div class="page" id="page"></div>
+            <div class="nav">
+              <button class="arrow" id="prev" aria-label="Página anterior">‹</button>
+              <div class="dots" id="dots"></div>
+              <button class="arrow" id="next" aria-label="Página siguiente">›</button>
+            </div>
+          </article>
+          <div class="hug-wrap" id="hugWrap" hidden>
+            <button class="btn" id="hug">Recibir un abrazo 🤗</button>
+            <div class="hug-count" id="hugCount"></div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+<script>
+  // ===================================================================
+  //  EDITA AQUÍ  →  todo lo personalizable está en este bloque
+  // ===================================================================
+  const CONFIG = {
+    para: "Para Mamá",
+    firma: "Felipe",
+    velas: 5,
+
+    pastelTitulo: "Pide un deseo",
+    pastelTexto: "Cierra los ojos, piensa en algo bonito y sopla las velas.",
+    velasHint: "toca cada vela para soplarla",
+
+    celebra: "¡Feliz cumpleaños,",
+    celebraNombre: "Mamá!",
+    celebraTexto: "Que este año te traiga todo lo que le has dado a los demás… multiplicado.",
+
+    // Cada elemento es una página de la carta
+    paginas: [
+      "Hoy celebramos a la persona que me enseñó a caminar, a levantarme y a seguir. Gracias por cada desvelo, cada consejo y cada abrazo que llegó justo cuando más lo necesitaba.",
+      "Todo lo bueno que hay en mí tiene un poquito de ti: tu fuerza, tu risa y esa manera tuya de hacer que cualquier lugar se sienta como casa.",
+      "Hoy te deseo salud, paz y muchísimos motivos para sonreír. Que la vida te devuelva todo el amor que siempre has dado sin pedir nada a cambio.",
+      "Gracias por ser mi mamá. Te quiero con todo mi corazón, hoy y siempre."
+    ],
+    saludo: "Mamá:",
+    despedida: "Con todo mi amor,"
+  };
+  // ===================================================================
+
+  const $ = (id) => document.getElementById(id);
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const scene = $("scene");
+  const azar = (a, b) => a + Math.random() * (b - a);
+  const COLORES = ["#e76f8a", "#e9b44c", "#8ccfb7", "#b9a3e3", "#f7a072"];
+
+  $("para").textContent = CONFIG.para;
+  $("pastelTitulo").textContent = CONFIG.pastelTitulo;
+  $("pastelTexto").textContent = CONFIG.pastelTexto;
+  $("velasHint").textContent = CONFIG.velasHint;
+  $("celebraTexto").textContent = CONFIG.celebraTexto;
+  const h1 = $("celebra");
+  h1.textContent = CONFIG.celebra;
+  const nombre = document.createElement("span");
+  nombre.textContent = CONFIG.celebraNombre;
+  h1.appendChild(nombre);
+
+  function ir(desde, hasta){
+    $(desde).hidden = true;
+    $(hasta).hidden = false;
+  }
+
+  function confeti(n = 60){
+    if (reduce) return;
+    for (let i = 0; i < n; i++){
+      const c = document.createElement("span");
+      c.className = "confetti";
+      c.style.left = azar(0, 100) + "%";
+      c.style.background = COLORES[i % COLORES.length];
+      c.style.setProperty("--x", azar(-80, 80) + "px");
+      c.style.setProperty("--r", azar(-720, 720) + "deg");
+      c.style.setProperty("--dur", azar(2, 3.4) + "s");
+      c.style.setProperty("--delay", azar(0, .8) + "s");
+      scene.appendChild(c);
+      c.addEventListener("animationend", () => c.remove());
+    }
+  }
+
+  // 1. Regalo
+  const gift = $("gift");
+  gift.addEventListener("click", () => {
+    if (gift.classList.contains("open")) return;
+    gift.classList.add("open");
+    confeti(24);
+    setTimeout(() => ir("s1", "s2"), reduce ? 100 : 900);
+  });
+
+  // 2. Velas
+  const candles = $("candles");
+  let encendidas = CONFIG.velas;
+  for (let i = 0; i < CONFIG.velas; i++){
+    const b = document.createElement("button");
+    b.className = "candle";
+    b.setAttribute("aria-label", "Soplar vela " + (i + 1));
+    b.style.setProperty("--c", COLORES[i % COLORES.length]);
+    b.innerHTML = '<span class="flame"></span><span class="stick"></span>';
+    b.style.transform = `translateY(${i % 2 ? 0 : -8}px)`;
+    b.addEventListener("click", () => {
+      if (b.classList.contains("out")) return;
+      b.classList.add("out");
+      b.disabled = true;
+      if (!reduce){
+        for (let k = 0; k < 3; k++){
+          const s = document.createElement("span");
+          s.className = "smoke";
+          s.style.animationDelay = k * .15 + "s";
+          s.style.setProperty("--sx", azar(-10, 10) + "px");
+          b.appendChild(s);
+          s.addEventListener("animationend", () => s.remove());
+        }
+      }
+      encendidas--;
+      if (encendidas === 0){
+        setTimeout(() => { ir("s2", "s3"); confeti(80); }, reduce ? 100 : 900);
+      }
+    });
+    candles.appendChild(b);
+  }
+
+  // 3 → 4. Carta
+  let pag = 0;
+  const total = CONFIG.paginas.length;
+  const dots = $("dots");
+  for (let i = 0; i < total; i++) dots.appendChild(document.createElement("i"));
+
+  function pintar(dir = 1){
+    const p = $("page");
+    p.className = "page" + (dir < 0 ? " back" : "");
+    void p.offsetWidth;
+    p.innerHTML = "";
+    if (pag === 0){
+      const g = document.createElement("div");
+      g.className = "greet";
+      g.textContent = CONFIG.saludo;
+      p.appendChild(g);
+    }
+    p.appendChild(document.createTextNode(CONFIG.paginas[pag]));
+    if (pag === total - 1){
+      const s = document.createElement("div");
+      s.className = "sign";
+      s.style.whiteSpace = "pre-line";
+      s.textContent = CONFIG.despedida + "\n" + CONFIG.firma;
+      p.appendChild(s);
+      $("hugWrap").hidden = false;
+    }
+    [...dots.children].forEach((d, i) => d.classList.toggle("on", i === pag));
+    $("prev").disabled = pag === 0;
+    $("next").disabled = pag === total - 1;
+  }
+
+  $("leer").addEventListener("click", () => { ir("s3", "s4"); pintar(); });
+  $("next").addEventListener("click", () => { if (pag < total - 1){ pag++; pintar(1); } });
+  $("prev").addEventListener("click", () => { if (pag > 0){ pag--; pintar(-1); } });
+
+  // Deslizar con el dedo para cambiar de página
+  let x0 = null;
+  const letter = document.querySelector(".letter");
+  letter.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; }, {passive:true});
+  letter.addEventListener("touchend", (e) => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (dx < -40) $("next").click();
+    if (dx > 40) $("prev").click();
+    x0 = null;
+  });
+
+  // Abrazos
+  let abrazos = 0;
+  $("hug").addEventListener("click", (e) => {
+    abrazos++;
+    $("hugCount").textContent = abrazos === 1 ? "1 abrazo enviado con amor" : abrazos + " abrazos enviados con amor";
+    if (reduce) return;
+    const r = scene.getBoundingClientRect();
+    const b = e.currentTarget.getBoundingClientRect();
+    for (let i = 0; i < 8; i++){
+      const h = document.createElement("span");
+      h.className = "heart";
+      h.textContent = ["💖", "💗", "🤗", "🌷"][i % 4];
+      h.style.left = (b.left - r.left + b.width / 2 + azar(-60, 40)) + "px";
+      h.style.top = (b.top - r.top) + "px";
+      h.style.setProperty("--x", azar(-50, 50) + "px");
+      h.style.animationDelay = azar(0, .3) + "s";
+      scene.appendChild(h);
+      h.addEventListener("animationend", () => h.remove());
+    }
+  });
+</script>
+</body>
+</html>
