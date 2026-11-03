@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vamos a cine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#070405;
+    --frame:#0f0a0b;
+    --screen:#0c0809;
+    --velvet:#8f1424;
+    --velvet-deep:#4a0811;
+    --gold:#f2c14e;
+    --gold-soft:#ffe29a;
+    --text:#fbf4ea;
+    --muted:rgba(251,244,234,.74);
+    --ticket:#fff4dc;
+    --ticket-ink:#2a1a12;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background-color:var(--night);
+    background-image:radial-gradient(rgba(242,193,78,.12) 1.1px, transparent 1.2px);
+    background-size:22px 22px;
+    color:var(--text);
+    font-family:"Space Mono",ui-monospace,monospace;
+    min-height:100dvh;
+    display:flex;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .frame{
+    margin:auto 0;
+    width:min(94vw,460px);
+    background:var(--frame);
+    border:1px solid rgba(242,193,78,.25);
+    border-radius:30px;
+    padding:12px;
+    box-shadow:0 0 60px -10px rgba(242,193,78,.18), 0 30px 60px -25px #000;
+  }
+  .topbar{
+    height:46px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 14px;
+  }
+  .topbar::before{
+    content:"";
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 10px var(--gold);
+  }
+  .sender{font-size:15px;letter-spacing:.5px}
+
+  .theater{
+    position:relative;
+    border-radius:20px;
+    overflow:hidden;
+    overflow:clip; /* que los telones abiertos no permitan desplazar de lado */
+    min-height:600px;
+    background:
+      radial-gradient(70% 40% at 50% 0%, rgba(255,226,154,.16) 0%, transparent 70%),
+      radial-gradient(80% 50% at 50% 100%, rgba(143,20,36,.35) 0%, transparent 70%),
+      var(--screen);
+  }
+
+  /* Bombillos de marquesina */
+  .bulbs{
+    position:absolute;
+    top:10px;left:16px;right:16px;
+    display:flex;
+    justify-content:space-between;
+    z-index:6;
+    pointer-events:none;
+  }
+  .bulbs i{
+    width:7px;height:7px;
+    border-radius:50%;
+    background:var(--gold-soft);
+    box-shadow:0 0 8px 2px rgba(242,193,78,.75);
+    animation:blink 1.6s ease-in-out infinite;
+  }
+  .bulbs i:nth-child(odd){animation-delay:.8s}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+  /* ---------- TELÓN ---------- */
+  .curtain{
+    position:absolute;
+    top:0;bottom:0;
+    width:51%;
+    z-index:5;
+    background:
+      repeating-linear-gradient(90deg,
+        var(--velvet-deep) 0px, var(--velvet) 14px, #b5223a 22px, var(--velvet) 30px, var(--velvet-deep) 44px);
+    box-shadow:inset 0 -60px 60px -20px rgba(0,0,0,.6);
+    transition:transform 1.6s cubic-bezier(.7,0,.25,1);
+  }
+  .curtain.left{left:0;transform-origin:left center}
+  .curtain.right{right:0;transform-origin:right center}
+  .curtain::after{
+    content:"";
+    position:absolute;
+    left:0;right:0;top:0;
+    height:44px;
+    background:linear-gradient(180deg, #5a0a15, #8f1424 70%, transparent);
+  }
+  .theater.open .curtain.left{transform:translateX(-96%) scaleX(.5)}
+  .theater.open .curtain.right{transform:translateX(96%) scaleX(.5)}
+
+  .curtain-cta{
+    position:absolute;
+    inset:0;
+    z-index:7;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:22px;
+    border:0;
+    background:transparent;
+    color:var(--text);
+    font:inherit;
+    cursor:pointer;
+    transition:opacity .5s ease;
+  }
+  .curtain-cta:focus-visible{outline:3px solid var(--gold);outline-offset:-10px;border-radius:20px}
+  .theater.open .curtain-cta{opacity:0;pointer-events:none}
+
+  /* Las dos entradas sobre el telón */
+  .stubs{
+    position:relative;
+    width:230px;height:150px;
+    animation:hover 3.2s ease-in-out infinite;
+    filter:drop-shadow(0 12px 22px rgba(0,0,0,.55));
+  }
+  @keyframes hover{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .stub{
+    position:absolute;
+    left:15px;top:25px;
+    width:200px;height:96px;
+    background:var(--ticket);
+    color:var(--ticket-ink);
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    -webkit-mask:radial-gradient(circle 9px at 0 50%, transparent 98%, #000) left/51% 100% no-repeat,
+                 radial-gradient(circle 9px at 100% 50%, transparent 98%, #000) right/51% 100% no-repeat;
+            mask:radial-gradient(circle 9px at 0 50%, transparent 98%, #000) left/51% 100% no-repeat,
+                 radial-gradient(circle 9px at 100% 50%, transparent 98%, #000) right/51% 100% no-repeat;
+  }
+  .stub.a{transform:rotate(-9deg) translate(-10px,-6px)}
+  .stub.b{transform:rotate(7deg) translate(12px,8px);background:var(--gold-soft)}
+  .stub .main{
+    flex:1;
+    padding:0 14px 0 20px;
+    text-align:left;
+  }
+  .stub .admit{font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:.65}
+  .stub .big{font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:22px;line-height:1.1}
+  .stub .cut{
+    width:54px;height:100%;
+    border-left:2px dashed rgba(42,26,18,.35);
+    display:flex;align-items:center;justify-content:center;
+    font-size:24px;
+  }
+  .tap{
+    color:var(--gold);
+    font-size:13px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    text-shadow:0 1px 6px rgba(0,0,0,.6);
+    animation:breathe 2.4s ease-in-out infinite;
+  }
+  @keyframes breathe{0%,100%{opacity:.4}50%{opacity:1}}
+
+  /* ---------- INVITACIÓN ---------- */
+  .stage{
+    position:relative;
+    z-index:2;
+    min-height:600px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:46px 24px 30px;
+    text-align:center;
+  }
+  .invite{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    opacity:0;
+    transform:translateY(12px);
+    transition:opacity .9s ease .9s, transform .9s ease .9s;
+  }
+  .theater.open .invite{opacity:1;transform:none}
+  .invite .emoji{font-size:44px;margin-bottom:8px}
+  .invite h1{
+    font-family:"Fraunces",Georgia,serif;
+    font-weight:600;
+    font-size:clamp(30px,7.5vw,40px);
+    line-height:1.08;
+    margin:0 0 14px;
+    color:var(--gold-soft);
+    text-shadow:0 0 24px rgba(242,193,78,.35);
+  }
+  .invite p.msg{
+    font-size:14.5px;
+    line-height:1.8;
+    color:var(--muted);
+    max-width:32ch;
+    margin:0 auto 22px;
+  }
+
+  form{
+    width:100%;
+    max-width:330px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    text-align:left;
+  }
+  label{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--gold);
+  }
+  .opt{color:var(--muted);letter-spacing:1px;text-transform:none}
+  input,select,textarea{
+    width:100%;
+    font:inherit;
+    font-size:16px; /* evita el zoom en iPhone */
+    letter-spacing:0;
+    text-transform:none;
+    color:var(--text);
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(242,193,78,.35);
+    border-radius:12px;
+    padding:12px 14px;
+    outline:none;
+    color-scheme:dark;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  textarea{resize:vertical;min-height:70px}
+  input:focus,select:focus,textarea:focus{
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(242,193,78,.18);
+  }
+  input::placeholder,textarea::placeholder{color:rgba(251,244,234,.4)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{
+    flex:1;
+    min-width:80px;
+    font:inherit;
+    font-size:13px;
+    letter-spacing:0;
+    text-transform:none;
+    color:var(--text);
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(242,193,78,.35);
+    border-radius:999px;
+    padding:9px 10px;
+    cursor:pointer;
+    transition:background .2s ease, color .2s ease, transform .15s ease;
+  }
+  .chip:active{transform:scale(.96)}
+  .chip[aria-pressed="true"]{background:var(--gold);color:var(--ticket-ink);border-color:var(--gold)}
+  .chip:focus-visible{outline:2px solid var(--gold-soft);outline-offset:2px}
+  .link{
+    color:var(--gold-soft);
+    font-size:12px;
+    letter-spacing:.5px;
+    text-transform:none;
+  }
+  .note{
+    font-size:11.5px;
+    line-height:1.6;
+    color:var(--muted);
+    margin:-4px 0 0;
+  }
+  .error{
+    min-height:1.2em;
+    font-size:12.5px;
+    color:#ff8f8f;
+    margin:-4px 0 0;
+    text-align:center;
+  }
+  .send{
+    margin-top:4px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:14px 22px;
+    border:0;
+    border-radius:999px;
+    background:var(--gold);
+    color:var(--ticket-ink);
+    font:inherit;
+    font-weight:700;
+    font-size:14px;
+    text-decoration:none;
+    cursor:pointer;
+    box-shadow:0 0 24px rgba(242,193,78,.45);
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .send:hover{transform:scale(1.03);box-shadow:0 0 34px rgba(242,193,78,.7)}
+  .send:active{transform:scale(.98)}
+  .send:focus-visible{outline:3px solid var(--text);outline-offset:4px}
+
+  /* ---------- ENTRADA CONFIRMADA ---------- */
+  .done{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+    animation:rise .8s cubic-bezier(.2,.9,.25,1) both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .done h2{
+    font-family:"Fraunces",Georgia,serif;
+    font-weight:600;
+    font-size:32px;
+    margin:0;
+    color:var(--gold-soft);
+  }
+  .done p{font-size:13.5px;line-height:1.7;color:var(--muted);margin:0;max-width:30ch}
+  .ticket{
+    width:100%;
+    max-width:320px;
+    background:var(--ticket);
+    color:var(--ticket-ink);
+    border-radius:14px;
+    text-align:left;
+    position:relative;
+    box-shadow:0 14px 34px rgba(0,0,0,.5), 0 0 30px rgba(242,193,78,.25);
+    -webkit-mask:radial-gradient(circle 11px at 0 64%, transparent 98%, #000) left/51% 100% no-repeat,
+                 radial-gradient(circle 11px at 100% 64%, transparent 98%, #000) right/51% 100% no-repeat;
+            mask:radial-gradient(circle 11px at 0 64%, transparent 98%, #000) left/51% 100% no-repeat,
+                 radial-gradient(circle 11px at 100% 64%, transparent 98%, #000) right/51% 100% no-repeat;
+  }
+  .ticket .top{padding:18px 20px 14px}
+  .ticket .kicker{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;opacity:.6}
+  .ticket .movie{
+    font-family:"Fraunces",Georgia,serif;
+    font-weight:700;
+    font-size:24px;
+    line-height:1.15;
+    margin:4px 0 0;
+    overflow-wrap:anywhere;
+  }
+  .ticket .rows{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px 14px;
+    padding:14px 20px 18px;
+    border-top:2px dashed rgba(42,26,18,.3);
+  }
+  .ticket .k{font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:.6}
+  .ticket .v{font-size:14px;font-weight:700;margin-top:2px;overflow-wrap:anywhere}
+  .ticket .full{grid-column:1 / -1}
+  .again{
+    background:none;
+    border:0;
+    color:var(--gold-soft);
+    font:inherit;
+    font-size:12.5px;
+    text-decoration:underline;
+    text-underline-offset:3px;
+    cursor:pointer;
+  }
+
+  /* Palomitas que caen al confirmar */
+  .pop{
+    position:absolute;
+    top:-30px;
+    font-size:22px;
+    z-index:8;
+    pointer-events:none;
+    animation:drop var(--dur,2.4s) cubic-bezier(.3,.1,.6,1) var(--delay,0s) forwards;
+  }
+  @keyframes drop{
+    to{transform:translate(var(--x,0), 700px) rotate(var(--r,360deg));opacity:.2}
+  }
+
+  [hidden]{display:none !important}
+
+  @media (prefers-reduced-motion: reduce){
+    .curtain{transition:opacity .4s ease}
+    .theater.open .curtain{transform:none;opacity:0}
+    .stubs,.tap,.bulbs i{animation:none}
+    .invite{transition:opacity .4s ease}
+    .pop{display:none}
+  }
+  @media (max-width:420px){
+    .theater,.stage{min-height:560px}
+    .stage{padding:42px 18px 26px}
+  }
+</style>
+</head>
+<body>
+  <main class="frame">
+    <div class="topbar"><span class="sender" id="sender"></span></div>
+
+    <div class="theater" id="theater">
+      <div class="bulbs" aria-hidden="true"></div>
+      <div class="curtain left" aria-hidden="true"></div>
+      <div class="curtain right" aria-hidden="true"></div>
+
+      <button class="curtain-cta" id="openBtn" aria-label="Abrir la invitación">
+        <div class="stubs" aria-hidden="true">
+          <div class="stub a"><div class="main"><div class="admit">Admite uno</div><div class="big">Tú</div></div><div class="cut">🎬</div></div>
+          <div class="stub b"><div class="main"><div class="admit">Admite uno</div><div class="big">Yo</div></div><div class="cut">🍿</div></div>
+        </div>
+        <span class="tap">toca para abrir</span>
+      </button>
+
+      <div class="stage">
+        <!-- Invitación + formulario -->
+        <section class="invite" id="invite">
+          <div class="emoji" aria-hidden="true">🍿</div>
+          <h1 id="titulo"></h1>
+          <p class="msg" id="mensaje"></p>
+
+          <form id="form" novalidate>
+            <label>Película
+              <input id="pelicula" type="text" autocomplete="off" placeholder="La que tú quieras" maxlength="80">
+              <a class="link" id="cartelera" target="_blank" rel="noopener">Ver la cartelera →</a>
+            </label>
+
+            <label>Fecha
+              <input id="fecha" type="date">
+            </label>
+
+            <label>Hora
+              <div class="chips" id="horas">
+                <button type="button" class="chip" aria-pressed="false" data-v="Tarde">Tarde</button>
+                <button type="button" class="chip" aria-pressed="false" data-v="Noche">Noche</button>
+                <button type="button" class="chip" aria-pressed="true" data-v="Me da igual">Me da igual</button>
+              </div>
+            </label>
+
+            <label>Algo más <span class="opt">(opcional)</span>
+              <textarea id="extra" maxlength="200" placeholder="Qué cine, si quieres palomitas…"></textarea>
+            </label>
+
+            <p class="note" id="nota"></p>
+            <p class="error" id="error" role="alert"></p>
+            <button class="send" type="submit">Confirmar por WhatsApp</button>
+          </form>
+        </section>
+
+        <!-- Entrada confirmada -->
+        <section class="done" id="done" hidden>
+          <h2>¡Es una cita!</h2>
+          <div class="ticket">
+            <div class="top">
+              <div class="kicker">Admite dos</div>
+              <div class="movie" id="tMovie"></div>
+            </div>
+            <div class="rows">
+              <div><div class="k">Fecha</div><div class="v" id="tFecha"></div></div>
+              <div><div class="k">Hora</div><div class="v" id="tHora"></div></div>
+              <div class="full" id="tExtraRow"><div class="k">Nota</div><div class="v" id="tExtra"></div></div>
+            </div>
+          </div>
+          <p>Ya te mandé mi respuesta por WhatsApp. Si no se abrió, tócalo aquí:</p>
+          <a class="send" id="resend" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+          <button class="again" id="again" type="button">Cambiar la película o la fecha</button>
+        </section>
+      </div>
+    </div>
+  </main>
+
+<script>
+  // ===================================================================
+  //  EDITA AQUÍ  →  todo lo personalizable está en este bloque
+  // ===================================================================
+  const CONFIG = {
+    remitente: "Anonimo",
+    titulo: "¿Vamos a cine?",
+    mensaje: "Tengo dos entradas para Cinemark y una de ellas tiene tu nombre. Tú escoges la película y el día, yo solo llego.",
+
+    // Tu número de WhatsApp con indicativo de país, solo números (57 = Colombia).
+    // Aquí es donde te llega la fecha y la película que ella escoja.
+    whatsapp: "",
+
+    cartelera: "https://www.cinemark.com.co/",
+    nota: "Las entradas son para sala general en 2D o 3D (no aplican XD, DBOX, Premier ni Bistro).",
+    validoHasta: "2027-08-20",
+    clave: "cine_invitacion_v1"
+  };
+  // ===================================================================
+
+  const $ = (id) => document.getElementById(id);
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  $("sender").textContent = CONFIG.remitente;
+  $("titulo").textContent = CONFIG.titulo;
+  $("mensaje").textContent = CONFIG.mensaje;
+  $("nota").textContent = CONFIG.nota;
+  $("cartelera").href = CONFIG.cartelera;
+
+  // Bombillos
+  const bulbs = document.querySelector(".bulbs");
+  for (let i = 0; i < 14; i++) bulbs.appendChild(document.createElement("i"));
+
+  // Rango de fechas: desde hoy hasta que vencen las entradas
+  const hoy = new Date();
+  const iso = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const fecha = $("fecha");
+  fecha.min = iso(hoy);
+  fecha.max = CONFIG.validoHasta;
+
+  function bonita(isoStr){
+    const [y, m, d] = isoStr.split("-").map(Number);
+    const txt = new Date(y, m - 1, d).toLocaleDateString("es-CO", {weekday:"long", day:"numeric", month:"long"});
+    return txt.charAt(0).toUpperCase() + txt.slice(1);
+  }
+
+  // Selector de hora
+  let hora = "Me da igual";
+  document.querySelectorAll("#horas .chip").forEach((b) => {
+    b.addEventListener("click", () => {
+      document.querySelectorAll("#horas .chip").forEach((x) => x.setAttribute("aria-pressed", "false"));
+      b.setAttribute("aria-pressed", "true");
+      hora = b.dataset.v;
+    });
+  });
+
+  // Guardado local para que vea su entrada si vuelve
+  function leer(){
+    try { return JSON.parse(localStorage.getItem(CONFIG.clave)); } catch(e){ return null; }
+  }
+  function guardar(v){
+    try { localStorage.setItem(CONFIG.clave, JSON.stringify(v)); } catch(e){}
+  }
+
+  // Abrir el telón
+  const theater = $("theater");
+  $("openBtn").addEventListener("click", () => {
+    theater.classList.add("open");
+    setTimeout(() => $("pelicula").focus({preventScroll:true}), reduce ? 200 : 1800);
+  });
+
+  function palomitas(){
+    if (reduce) return;
+    for (let i = 0; i < 22; i++){
+      const p = document.createElement("span");
+      p.className = "pop";
+      p.textContent = i % 5 === 0 ? "🎬" : "🍿";
+      p.style.left = Math.random() * 100 + "%";
+      p.style.setProperty("--x", (Math.random() * 120 - 60) + "px");
+      p.style.setProperty("--r", (Math.random() * 540 - 270) + "deg");
+      p.style.setProperty("--dur", (1.8 + Math.random() * 1.4) + "s");
+      p.style.setProperty("--delay", (Math.random() * .6) + "s");
+      theater.appendChild(p);
+      p.addEventListener("animationend", () => p.remove());
+    }
+  }
+
+  function mostrarEntrada(v){
+    $("invite").hidden = true;
+    $("done").hidden = false;
+    $("tMovie").textContent = v.pelicula;
+    $("tFecha").textContent = bonita(v.fecha);
+    $("tHora").textContent = v.hora;
+    $("tExtra").textContent = v.extra;
+    $("tExtraRow").hidden = !v.extra;
+    $("resend").href = urlWhatsApp(v);
+  }
+
+  function urlWhatsApp(v){
+    const texto =
+      "🍿 ¡Acepto la invitación a cine!\n\n" +
+      "🎬 Película: " + v.pelicula + "\n" +
+      "📅 Fecha: " + bonita(v.fecha) + "\n" +
+      "🕒 Hora: " + v.hora +
+      (v.extra ? "\n📝 " + v.extra : "");
+    return "https://wa.me/" + CONFIG.whatsapp.replace(/\D/g, "") + "?text=" + encodeURIComponent(texto);
+  }
+
+  // Enviar
+  $("form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const v = {
+      pelicula: $("pelicula").value.trim(),
+      fecha: fecha.value,
+      hora,
+      extra: $("extra").value.trim()
+    };
+    const err = $("error");
+    if (!v.pelicula){ err.textContent = "Escribe qué película quieres ver 🎬"; $("pelicula").focus(); return; }
+    if (!v.fecha){ err.textContent = "Escoge el día 📅"; fecha.focus(); return; }
+    if (v.fecha < fecha.min || v.fecha > fecha.max){ err.textContent = "Escoge un día entre hoy y el " + bonita(CONFIG.validoHasta).toLowerCase() + "."; fecha.focus(); return; }
+    err.textContent = "";
+
+    guardar(v);
+    palomitas();
+    mostrarEntrada(v);
+    window.open(urlWhatsApp(v), "_blank", "noopener");
+  });
+
+  // Reenviar o cambiar
+  $("again").addEventListener("click", () => {
+    const v = leer();
+    if (v){
+      $("pelicula").value = v.pelicula;
+      fecha.value = v.fecha;
+      $("extra").value = v.extra || "";
+      document.querySelectorAll("#horas .chip").forEach((x) =>
+        x.setAttribute("aria-pressed", String(x.dataset.v === v.hora)));
+      hora = v.hora;
+    }
+    $("done").hidden = true;
+    $("invite").hidden = false;
+  });
+
+  // Si ya respondió antes, mostrar su entrada directamente
+  const previa = leer();
+  if (previa && previa.fecha){
+    theater.classList.add("open");
+    mostrarEntrada(previa);
+  }
+</script>
+</body>
+</html>
