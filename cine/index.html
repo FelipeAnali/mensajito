@@ -443,6 +443,10 @@
               <a class="link" id="cartelera" target="_blank" rel="noopener">Ver la cartelera →</a>
             </label>
 
+            <label>Cine
+              <input id="cine" type="text" autocomplete="off" placeholder="¿Cuál Cinemark de Cali?" maxlength="60">
+            </label>
+
             <label>Fecha
               <input id="fecha" type="date">
             </label>
@@ -456,7 +460,7 @@
             </label>
 
             <label>Algo más <span class="opt">(opcional)</span>
-              <textarea id="extra" maxlength="200" placeholder="Qué cine, si quieres palomitas…"></textarea>
+              <textarea id="extra" maxlength="200" placeholder="Si quieres palomitas, una hora exacta…"></textarea>
             </label>
 
             <p class="note" id="nota"></p>
@@ -476,6 +480,7 @@
             <div class="rows">
               <div><div class="k">Fecha</div><div class="v" id="tFecha"></div></div>
               <div><div class="k">Hora</div><div class="v" id="tHora"></div></div>
+              <div class="full" id="tCineRow"><div class="k">Cine</div><div class="v" id="tCine"></div></div>
               <div class="full" id="tExtraRow"><div class="k">Nota</div><div class="v" id="tExtra"></div></div>
             </div>
           </div>
@@ -494,7 +499,7 @@
   const CONFIG = {
     remitente: "Anonimo",
     titulo: "¿Vamos a cine?",
-    mensaje: "Tengo dos entradas para Cinemark y una de ellas tiene tu nombre. Tú escoges la película y el día, yo solo llego.",
+    mensaje: "Tengo dos entradas para Cinemark aquí en Cali y una de ellas tiene tu nombre. Tú escoges la película y el día, yo solo llego.",
 
     // Tu número de WhatsApp con indicativo de país, solo números (57 = Colombia).
     // Aquí es donde te llega la fecha y la película que ella escoja.
@@ -580,6 +585,8 @@
     $("tMovie").textContent = v.pelicula;
     $("tFecha").textContent = bonita(v.fecha);
     $("tHora").textContent = v.hora;
+    $("tCine").textContent = v.cine;
+    $("tCineRow").hidden = !v.cine;
     $("tExtra").textContent = v.extra;
     $("tExtraRow").hidden = !v.extra;
     $("resend").href = urlWhatsApp(v);
@@ -591,6 +598,7 @@
       "🎬 Película: " + v.pelicula + "\n" +
       "📅 Fecha: " + bonita(v.fecha) + "\n" +
       "🕒 Hora: " + v.hora +
+      (v.cine ? "\n📍 Cine: " + v.cine : "") +
       (v.extra ? "\n📝 " + v.extra : "");
     return "https://wa.me/" + CONFIG.whatsapp.replace(/\D/g, "") + "?text=" + encodeURIComponent(texto);
   }
@@ -600,6 +608,7 @@
     e.preventDefault();
     const v = {
       pelicula: $("pelicula").value.trim(),
+      cine: $("cine").value.trim(),
       fecha: fecha.value,
       hora,
       extra: $("extra").value.trim()
@@ -621,6 +630,7 @@
     const v = leer();
     if (v){
       $("pelicula").value = v.pelicula;
+      $("cine").value = v.cine || "";
       fecha.value = v.fecha;
       $("extra").value = v.extra || "";
       document.querySelectorAll("#horas .chip").forEach((x) =>
