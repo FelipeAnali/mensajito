@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manuela, 10 meses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Caveat:wght@600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#fdf1f6;
+    --card:#fffafc;
+    --ink:#3d2c3e;
+    --body:#6e5a6f;
+    --pink:#ff8fb8;
+    --pink-deep:#e8649a;
+    --lilac:#b9a3ff;
+    --sky:#a9d8ff;
+    --gold:#ffc861;
+    --mint:#9fe3c9;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background-color:var(--page);
+    background-image:radial-gradient(rgba(255,143,184,.20) 1.2px, transparent 1.3px);
+    background-size:22px 22px;
+    color:var(--ink);
+    font-family:"Nunito",system-ui,sans-serif;
+    min-height:100dvh;
+    display:flex;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .frame{
+    margin:auto 0;
+    width:min(94vw,460px);
+    background:var(--card);
+    border-radius:30px;
+    padding:12px;
+    box-shadow:0 30px 60px -25px rgba(140,70,110,.45), 0 0 0 1px rgba(255,143,184,.18);
+  }
+  .topbar{
+    height:46px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 8px 0 14px;
+    font-weight:700;
+    font-size:15px;
+  }
+  .topbar::before{
+    content:"";
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--pink);
+  }
+  .sound{
+    margin-left:auto;
+    width:38px;height:38px;
+    border-radius:50%;
+    border:0;
+    background:rgba(255,143,184,.15);
+    font-size:17px;
+    cursor:pointer;
+  }
+  .sound:focus-visible{outline:2px solid var(--pink-deep);outline-offset:2px}
+
+  .sky{
+    position:relative;
+    border-radius:20px;
+    overflow:hidden;
+    overflow:clip;
+    min-height:640px;
+    background:linear-gradient(180deg, #cfe9ff 0%, #ead9ff 45%, #ffdcea 100%);
+    touch-action:manipulation;
+  }
+  .cloud{
+    position:absolute;
+    width:120px;height:40px;
+    background:#fff;
+    border-radius:40px;
+    opacity:.85;
+    pointer-events:none;
+    animation:drift var(--t,40s) linear var(--d,0s) infinite;
+  }
+  .cloud::before,.cloud::after{
+    content:"";
+    position:absolute;
+    background:#fff;
+    border-radius:50%;
+  }
+  .cloud::before{width:56px;height:56px;left:16px;top:-26px}
+  .cloud::after{width:42px;height:42px;left:58px;top:-18px}
+  @keyframes drift{from{transform:translateX(-160px) scale(var(--s,1))}to{transform:translateX(560px) scale(var(--s,1))}}
+
+  .fx{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    z-index:1;
+    pointer-events:none;
+  }
+  .stage{
+    position:relative;
+    z-index:2;
+    min-height:640px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:30px 20px 34px;
+    text-align:center;
+  }
+  .step{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    animation:rise .8s cubic-bezier(.2,.9,.25,1) both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+  .name{
+    font-family:"Fredoka",system-ui,sans-serif;
+    font-weight:700;
+    font-size:clamp(40px,11vw,56px);
+    line-height:1;
+    margin:0;
+    color:#fff;
+    text-shadow:0 3px 0 var(--pink-deep), 0 10px 26px rgba(232,100,154,.45);
+    letter-spacing:1px;
+  }
+  .kicker{
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:15px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--pink-deep);
+    margin:0 0 8px;
+  }
+  .hint{
+    margin-top:18px;
+    font-size:12.5px;
+    font-weight:700;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--pink-deep);
+    animation:breathe 2.4s ease-in-out infinite;
+  }
+  @keyframes breathe{0%,100%{opacity:.45}50%{opacity:1}}
+
+  /* ---------- 1. GLOBOS "10" ---------- */
+  .balloons{
+    position:relative;
+    margin-top:26px;
+    display:flex;
+    gap:6px;
+    border:0;background:transparent;padding:0;
+    cursor:pointer;
+  }
+  .balloons:focus-visible{outline:3px solid var(--pink-deep);outline-offset:8px;border-radius:20px}
+  .num{
+    position:relative;
+    display:block;
+    font-family:"Fredoka",sans-serif;
+    font-weight:700;
+    font-size:190px;
+    line-height:.9;
+    background:linear-gradient(135deg, #fff 0%, #ffd1e3 18%, #ff8fb8 45%, #e8649a 70%, #ffc0d8 100%);
+    -webkit-background-clip:text;
+            background-clip:text;
+    color:transparent;
+    filter:drop-shadow(0 6px 0 rgba(232,100,154,.35)) drop-shadow(0 18px 24px rgba(140,70,110,.25));
+    animation:bob 3s ease-in-out infinite;
+  }
+  .num.b{animation-delay:-1.2s;background-image:linear-gradient(135deg, #fff 0%, #e6dcff 18%, #b9a3ff 45%, #8f74f0 70%, #d9ccff 100%);filter:drop-shadow(0 6px 0 rgba(143,116,240,.35)) drop-shadow(0 18px 24px rgba(90,70,140,.25))}
+  .num::after{
+    content:"";
+    position:absolute;
+    left:50%;top:100%;
+    width:1.5px;height:110px;
+    background:linear-gradient(rgba(110,90,111,.5), rgba(110,90,111,0));
+  }
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
+  .balloons.away .num{animation:away 1.6s cubic-bezier(.5,0,.75,0) forwards}
+  .balloons.away .num.b{animation-delay:.12s}
+  @keyframes away{to{transform:translateY(-900px) rotate(14deg)}}
+
+  /* ---------- 2. NÚMEROS ---------- */
+  .stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    width:100%;
+    max-width:340px;
+    margin:22px 0 4px;
+  }
+  .stat{
+    background:rgba(255,255,255,.7);
+    border-radius:18px;
+    padding:16px 10px 14px;
+    box-shadow:0 10px 24px -14px rgba(140,70,110,.5);
+    animation:rise .7s cubic-bezier(.2,.9,.25,1) both;
+  }
+  .stat:nth-child(2){animation-delay:.12s}
+  .stat:nth-child(3){animation-delay:.24s}
+  .stat:nth-child(4){animation-delay:.36s}
+  .stat b{
+    display:block;
+    font-family:"Fredoka",sans-serif;
+    font-weight:700;
+    font-size:34px;
+    line-height:1.05;
+    color:var(--pink-deep);
+  }
+  .stat:nth-child(2) b{color:#8f74f0}
+  .stat:nth-child(3) b{color:#3a9fd8}
+  .stat:nth-child(4) b{color:#e09a1c}
+  .stat span{font-size:13px;font-weight:700;color:var(--body)}
+  .lead{
+    font-size:15px;
+    line-height:1.7;
+    color:var(--body);
+    max-width:30ch;
+    margin:12px 0 0;
+  }
+  .btn{
+    margin-top:22px;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 26px;
+    border:0;
+    border-radius:999px;
+    background:var(--pink-deep);
+    color:#fff;
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:17px;
+    cursor:pointer;
+    box-shadow:0 8px 0 #c94c80, 0 16px 26px -10px rgba(201,76,128,.7);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(5px);box-shadow:0 3px 0 #c94c80, 0 8px 16px -10px rgba(201,76,128,.7)}
+  .btn:focus-visible{outline:3px solid var(--ink);outline-offset:5px}
+  .btn.soft{background:#fff;color:var(--pink-deep);box-shadow:0 6px 0 #f2c6d8}
+
+  /* ---------- 3. POLAROIDS ---------- */
+  .deck{
+    position:relative;
+    width:270px;
+    height:360px;
+    margin-top:14px;
+  }
+  .polaroid{
+    position:absolute;
+    inset:0;
+    background:#fff;
+    border-radius:6px;
+    padding:12px 12px 0;
+    box-shadow:0 14px 30px -12px rgba(90,50,80,.55);
+    transform:rotate(var(--rot,0deg));
+    transition:transform .5s cubic-bezier(.2,.9,.25,1), opacity .4s ease;
+    touch-action:none;
+    user-select:none;
+    -webkit-user-select:none;
+    cursor:grab;
+  }
+  .polaroid img{
+    display:block;
+    width:100%;
+    height:270px;
+    object-fit:cover;
+    border-radius:2px;
+    pointer-events:none;
+    background:#f3e8ee;
+  }
+  .polaroid .cap{
+    height:66px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 6px;
+    font-family:"Caveat",cursive;
+    font-weight:700;
+    font-size:24px;
+    line-height:1.05;
+    color:var(--ink);
+  }
+  .polaroid.dragging{transition:none;cursor:grabbing}
+  .polaroid.gone{transition:transform .55s cubic-bezier(.4,0,.6,1), opacity .55s ease;opacity:0;pointer-events:none}
+  .counter{
+    margin-top:18px;
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:15px;
+    color:var(--pink-deep);
+  }
+
+  /* ---------- 4. CORAZÓN DE FOTOS ---------- */
+  .heart{
+    position:relative;
+    width:min(100%,340px);
+    height:310px;
+    margin:6px 0 4px;
+  }
+  .heart .ph{
+    position:absolute;
+    width:var(--ps,52px);height:var(--ps,52px);
+    margin:calc(var(--ps,52px) / -2) 0 0 calc(var(--ps,52px) / -2);
+    border-radius:50%;
+    border:3px solid #fff;
+    box-shadow:0 6px 14px -4px rgba(140,70,110,.55);
+    object-fit:cover;
+    opacity:0;
+    transform:translate(var(--fx,0px),var(--fy,-300px)) scale(.3) rotate(-30deg);
+    animation:land .9s cubic-bezier(.3,1.4,.5,1) var(--d,0s) forwards;
+  }
+  .heart .ph:nth-child(3n){border-color:#ffe1ec}
+  @keyframes land{to{opacity:1;transform:none}}
+  .heart .center{
+    position:absolute;
+    left:50%;top:var(--cy,44%);
+    transform:translate(-50%,-50%);
+    font-family:"Fredoka",sans-serif;
+    font-weight:700;
+    font-size:64px;
+    line-height:1;
+    color:var(--pink-deep);
+    text-shadow:0 4px 0 #fff;
+    opacity:0;
+    animation:pop .8s cubic-bezier(.3,1.6,.5,1) 2.4s forwards;
+  }
+  .heart .center small{
+    display:block;
+    font-size:16px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--body);
+    text-shadow:none;
+  }
+  @keyframes pop{from{opacity:0;transform:translate(-50%,-50%) scale(.3)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+  .letter{
+    font-family:"Caveat",cursive;
+    font-weight:700;
+    font-size:25px;
+    line-height:1.25;
+    color:var(--ink);
+    max-width:30ch;
+    margin:4px 0 0;
+    opacity:0;
+    animation:rise .8s ease 2.9s forwards;
+  }
+  .letter .firma{display:block;margin-top:6px;color:var(--pink-deep)}
+  .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;opacity:0;animation:rise .8s ease 3.3s forwards}
+
+  .confetti{
+    position:absolute;
+    top:-14px;
+    width:9px;height:14px;
+    border-radius:2px;
+    z-index:4;
+    pointer-events:none;
+    animation:fall var(--dur,2.6s) cubic-bezier(.3,.1,.6,1) var(--delay,0s) forwards;
+  }
+  @keyframes fall{to{transform:translate(var(--x,0),720px) rotate(var(--r,540deg))}}
+
+  [hidden]{display:none !important}
+
+  @media (prefers-reduced-motion: reduce){
+    .cloud,.num,.hint{animation:none}
+    .step,.stat,.letter,.row{animation:none;opacity:1}
+    .heart .ph,.heart .center{animation:none;opacity:1;transform:none}
+    .heart .center{transform:translate(-50%,-50%)}
+    .confetti{display:none}
+  }
+  @media (max-width:420px){
+    .sky,.stage{min-height:600px}
+    .num{font-size:160px}
+    .deck{width:250px;height:340px}
+    .polaroid img{height:250px}
+  }
+</style>
+</head>
+<body>
+  <main class="frame">
+    <div class="topbar">
+      <span id="para"></span>
+      <button class="sound" id="sound" aria-label="Activar la música" hidden>🔇</button>
+    </div>
+
+    <div class="sky" id="sky">
+      <canvas class="fx" id="fx" aria-hidden="true"></canvas>
+
+      <div class="stage">
+        <!-- 1. Globos -->
+        <section class="step" id="s1">
+          <p class="kicker" id="kicker"></p>
+          <h1 class="name" id="nombre"></h1>
+          <button class="balloons" id="balloons" aria-label="Soltar los globos">
+            <span class="num a">1</span><span class="num b">0</span>
+          </button>
+          <div class="hint">toca los globos</div>
+        </section>
+
+        <!-- 2. Números -->
+        <section class="step" id="s2" hidden>
+          <p class="kicker">Feliz cumple mes</p>
+          <h1 class="name" id="nombre2"></h1>
+          <div class="stats" id="stats"></div>
+          <p class="lead" id="lead"></p>
+          <button class="btn" id="verFotos">Ver sus fotos 📸</button>
+        </section>
+
+        <!-- 3. Polaroids -->
+        <section class="step" id="s3" hidden>
+          <p class="kicker">Mira cuánto ha crecido</p>
+          <div class="deck" id="deck"></div>
+          <div class="counter" id="counter"></div>
+          <div class="hint">desliza o toca la foto</div>
+        </section>
+
+        <!-- 4. Corazón -->
+        <section class="step" id="s4" hidden>
+          <div class="heart" id="heart">
+            <div class="center">10<small>meses</small></div>
+          </div>
+          <p class="letter" id="carta"></p>
+          <div class="row">
+            <button class="btn" id="burbujas">🫧 Más burbujas</button>
+            <button class="btn soft" id="otraVez">Ver otra vez</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+<script>
+  // ===================================================================
+  //  EDITA AQUÍ  →  todo lo personalizable está en este bloque
+  // ===================================================================
+  const CONFIG = {
+    nombre: "Manuela",
+    meses: 10,
+    nacimiento: "2026-01-04",   // para calcular días y horas
+    lead: "Diez meses llenando la casa de risas, cachetes y amor.",
+    carta: "Llegaste hace 10 meses y desde entonces todo tiene más color. Que nunca te falten razones para reír así.",
+    firma: "Te quiere mucho, tu tío Felipe 💕",
+
+    // Fotos en orden (de más bebé a más grande) con su frase
+    fotos: [
+      ["fotos/01.jpg", "Tan chiquita y ya con moño de reina 🎀"],
+      ["fotos/02.jpg", "Esa risa que lo arregla todo"],
+      ["fotos/03.jpg", "Mirada de modelo desde siempre"],
+      ["fotos/04.jpg", "Cara de: “¿otra foto?” 😒"],
+      ["fotos/05.jpg", "Con sombrero, lista para el sol ☀️"],
+      ["fotos/06.jpg", "Pensando cosas muy importantes 🤔"],
+      ["fotos/07.jpg", "Modo diva activado 😎"],
+      ["fotos/08.jpg", "Paseo con estilo"],
+      ["fotos/09.jpg", "Esos ojazos…"],
+      ["fotos/10.jpg", "Seria, pero igual adorable"],
+      ["fotos/11.jpg", "Lista para salir a pasear"],
+      ["fotos/12.jpg", "Peinado de recién levantada"],
+      ["fotos/13.jpg", "La reina de la casa 👑"],
+      ["fotos/14.jpg", "Esos cachetes 🥹"],
+      ["fotos/15.jpg", "Sonrisa con dientecitos"],
+      ["fotos/16.jpg", "Corazones por todos lados ❤️"],
+      ["fotos/17.jpg", "La calabacita más linda 🎃"],
+      ["fotos/18.jpg", "Pollito oficial 🐣"],
+      ["fotos/19.jpg", "Y ya cabalga… en su vaquita 🐮"]
+    ]
+  };
+  // ===================================================================
+
+  const $ = (id) => document.getElementById(id);
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const sky = $("sky");
+  const azar = (a, b) => a + Math.random() * (b - a);
+  const COLORES = ["#ff8fb8", "#b9a3ff", "#a9d8ff", "#ffc861", "#9fe3c9", "#ffffff"];
+  const vibrar = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch(e){} };
+
+  $("para").textContent = "Para " + CONFIG.nombre + " 🎀";
+  $("kicker").textContent = "Hoy cumple " + CONFIG.meses + " meses";
+  $("nombre").textContent = CONFIG.nombre;
+  $("nombre2").textContent = CONFIG.nombre;
+  $("lead").textContent = CONFIG.lead;
+  const carta = $("carta");
+  carta.textContent = CONFIG.carta;
+  const firma = document.createElement("span");
+  firma.className = "firma";
+  firma.textContent = CONFIG.firma;
+  carta.appendChild(firma);
+
+  // Precargar fotos
+  CONFIG.fotos.forEach(([src]) => { const i = new Image(); i.src = src; });
+
+  // Nubes
+  for (let i = 0; i < 4; i++){
+    const c = document.createElement("div");
+    c.className = "cloud";
+    c.style.top = (40 + i * 150 + azar(-20, 20)) + "px";
+    c.style.setProperty("--t", azar(34, 52) + "s");
+    c.style.setProperty("--d", (-azar(0, 40)) + "s");
+    c.style.setProperty("--s", azar(.6, 1.1).toFixed(2));
+    sky.prepend(c);
+  }
+
+  function ir(desde, hasta){
+    $(desde).hidden = true;
+    $(hasta).hidden = false;
+  }
+
+  // ===================================================================
+  //  Burbujas de jabón (canvas)
+  // ===================================================================
+  const fx = $("fx");
+  const ctx = fx.getContext("2d");
+  let W = 0, H = 0;
+  function medir(){
+    const r = sky.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    fx.width = Math.round(W * dpr);
+    fx.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  medir();
+  if ("ResizeObserver" in window) new ResizeObserver(medir).observe(sky);
+  else window.addEventListener("resize", medir);
+
+  const burbujas = [];
+  const gotas = [];
+
+  function burbuja(x, y, r){
+    burbujas.push({
+      x: x ?? azar(20, W - 20),
+      y: y ?? H + azar(10, 80),
+      r: r ?? azar(10, 26),
+      vy: azar(.35, .9),
+      fase: azar(0, Math.PI * 2),
+      tono: azar(0, 360)
+    });
+  }
+  function reventar(b){
+    for (let i = 0; i < 12; i++){
+      const a = (i / 12) * Math.PI * 2;
+      gotas.push({x:b.x + Math.cos(a) * b.r, y:b.y + Math.sin(a) * b.r, vx:Math.cos(a) * 2.2, vy:Math.sin(a) * 2.2, vida:1});
+    }
+    vibrar(12);
+    blip(900 + Math.random() * 500);
+  }
+
+  for (let i = 0; i < 8; i++) burbuja(undefined, azar(80, 640));
+
+  function cuadro(t){
+    ctx.clearRect(0, 0, W, H);
+    if (burbujas.length < 9 && Math.random() < .02) burbuja();
+
+    for (let i = burbujas.length - 1; i >= 0; i--){
+      const b = burbujas[i];
+      b.y -= b.vy;
+      b.x += Math.sin(t / 900 + b.fase) * .35;
+      if (b.y < -40){ burbujas.splice(i, 1); continue; }
+      const g = ctx.createRadialGradient(b.x - b.r * .3, b.y - b.r * .3, b.r * .1, b.x, b.y, b.r);
+      g.addColorStop(0, "rgba(255,255,255,.05)");
+      g.addColorStop(.75, `hsla(${(b.tono + t / 30) % 360},90%,80%,.18)`);
+      g.addColorStop(1, `hsla(${(b.tono + 120 + t / 30) % 360},90%,75%,.55)`);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,.7)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      ctx.beginPath(); ctx.ellipse(b.x - b.r * .38, b.y - b.r * .4, b.r * .22, b.r * .12, -.6, 0, Math.PI * 2); ctx.fill();
+    }
+
+    for (let i = gotas.length - 1; i >= 0; i--){
+      const d = gotas[i];
+      d.x += d.vx; d.y += d.vy; d.vy += .08; d.vida -= .04;
+      if (d.vida <= 0){ gotas.splice(i, 1); continue; }
+      ctx.globalAlpha = d.vida;
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(d.x, d.y, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    requestAnimationFrame(cuadro);
+  }
+  if (!reduce) requestAnimationFrame(cuadro);
+
+  // Tocar: revienta la burbuja más cercana o suelta nuevas
+  sky.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("button, .polaroid")) return;
+    const r = sky.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    let tocada = -1;
+    burbujas.forEach((b, i) => { if (Math.hypot(b.x - x, b.y - y) < b.r + 16) tocada = i; });
+    if (tocada >= 0){
+      reventar(burbujas.splice(tocada, 1)[0]);
+    } else {
+      for (let i = 0; i < 3; i++) burbuja(x + azar(-20, 20), y + azar(-10, 10), azar(8, 18));
+    }
+  });
+
+  function confeti(n = 70){
+    if (reduce) return;
+    for (let i = 0; i < n; i++){
+      const c = document.createElement("span");
+      c.className = "confetti";
+      c.style.left = azar(0, 100) + "%";
+      c.style.background = COLORES[i % COLORES.length];
+      c.style.setProperty("--x", azar(-80, 80) + "px");
+      c.style.setProperty("--r", azar(-720, 720) + "deg");
+      c.style.setProperty("--dur", azar(2, 3.4) + "s");
+      c.style.setProperty("--delay", azar(0, .7) + "s");
+      sky.appendChild(c);
+      c.addEventListener("animationend", () => c.remove());
+    }
+  }
+
+  // ===================================================================
+  //  Cajita de música: "Estrellita, ¿dónde estás?"
+  // ===================================================================
+  let audio = null, musica = false, timer = null;
+  const N = {C:523.25, D:587.33, E:659.25, F:698.46, G:783.99, A:880};
+  const melodia = "C C G G A A G- F F E E D D C- G G F F E E D- G G F F E E D- C C G G A A G- F F E E D D C-".split(" ");
+  let paso = 0, proxima = 0;
+
+  function tono(freq, cuando, dur, vol = .16){
+    const o1 = audio.createOscillator(), o2 = audio.createOscillator(), g = audio.createGain();
+    o1.type = "sine"; o1.frequency.value = freq;
+    o2.type = "sine"; o2.frequency.value = freq * 4;
+    const g2 = audio.createGain(); g2.gain.value = .12;
+    o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(audio.destination);
+    g.gain.setValueAtTime(0, cuando);
+    g.gain.linearRampToValueAtTime(vol, cuando + .01);
+    g.gain.exponentialRampToValueAtTime(.0005, cuando + dur);
+    o1.start(cuando); o2.start(cuando);
+    o1.stop(cuando + dur + .05); o2.stop(cuando + dur + .05);
+  }
+  function programar(){
+    while (proxima < audio.currentTime + .4){
+      const n = melodia[paso % melodia.length];
+      const larga = n.endsWith("-");
+      tono(N[n[0]], proxima, larga ? 1.6 : 1.1);
+      proxima += larga ? .9 : .45;
+      paso++;
+      if (paso % melodia.length === 0) proxima += .6;
+    }
+  }
+  function blip(freq){
+    if (!audio || !musica) return;
+    tono(freq, audio.currentTime, .25, .07);
+  }
+  function encenderMusica(){
+    try {
+      if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+      audio.resume();
+      musica = true;
+      proxima = audio.currentTime + .1;
+      clearInterval(timer);
+      timer = setInterval(programar, 120);
+      $("sound").textContent = "🎵";
+      $("sound").setAttribute("aria-label", "Apagar la música");
+    } catch(e){ $("sound").hidden = true; }
+  }
+  function apagarMusica(){
+    musica = false;
+    clearInterval(timer);
+    $("sound").textContent = "🔇";
+    $("sound").setAttribute("aria-label", "Activar la música");
+  }
+  $("sound").addEventListener("click", () => musica ? apagarMusica() : encenderMusica());
+
+  // ===================================================================
+  //  1. Globos
+  // ===================================================================
+  const globos = $("balloons");
+  globos.addEventListener("click", () => {
+    if (globos.classList.contains("away")) return;
+    globos.classList.add("away");
+    $("sound").hidden = false;
+    encenderMusica();
+    confeti(90);
+    vibrar([30, 50, 30]);
+    for (let i = 0; i < 14; i++) burbuja(azar(40, W - 40), H + azar(0, 120));
+    setTimeout(() => { ir("s1", "s2"); contar(); }, reduce ? 100 : 1300);
+  });
+
+  // ===================================================================
+  //  2. Números que cuentan
+  // ===================================================================
+  function contar(){
+    const nac = new Date(CONFIG.nacimiento + "T00:00:00");
+    const dias = Math.max(0, Math.floor((Date.now() - nac) / 86400000));
+    const datos = [
+      [CONFIG.meses, "meses"],
+      [dias, "días"],
+      [dias * 24, "horas"],
+      ["∞", "sonrisas"]
+    ];
+    const cont = $("stats");
+    cont.innerHTML = "";
+    datos.forEach(([v, l], i) => {
+      const d = document.createElement("div");
+      d.className = "stat";
+      const b = document.createElement("b");
+      const s = document.createElement("span");
+      s.textContent = l;
+      d.append(b, s);
+      cont.appendChild(d);
+      if (typeof v !== "number" || reduce){ b.textContent = typeof v === "number" ? v.toLocaleString("es-CO") : v; return; }
+      const t0 = performance.now() + i * 150, dur = 1400;
+      (function anim(t){
+        const p = Math.min(1, Math.max(0, (t - t0) / dur));
+        const e = 1 - Math.pow(1 - p, 3);
+        b.textContent = Math.round(v * e).toLocaleString("es-CO");
+        if (p < 1) requestAnimationFrame(anim);
+      })(performance.now());
+    });
+  }
+
+  // ===================================================================
+  //  3. Polaroids que se deslizan
+  // ===================================================================
+  let actual = 0;
+  const deck = $("deck");
+
+  function armarMazo(){
+    deck.innerHTML = "";
+    actual = 0;
+    for (let i = CONFIG.fotos.length - 1; i >= 0; i--){
+      const [src, cap] = CONFIG.fotos[i];
+      const p = document.createElement("div");
+      p.className = "polaroid";
+      p.style.setProperty("--rot", (i === 0 ? 0 : azar(-7, 7)).toFixed(1) + "deg");
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = cap;
+      img.loading = i < 3 ? "eager" : "lazy";
+      const c = document.createElement("div");
+      c.className = "cap";
+      c.textContent = cap;
+      p.append(img, c);
+      deck.appendChild(p);
+    }
+    contador();
+    activarArriba();
+  }
+  function contador(){
+    $("counter").textContent = Math.min(actual + 1, CONFIG.fotos.length) + " / " + CONFIG.fotos.length;
+  }
+
+  function lanzar(p, dx, dy){
+    p.classList.remove("dragging");
+    p.classList.add("gone");
+    const dir = dx === 0 ? (Math.random() < .5 ? -1 : 1) : Math.sign(dx);
+    p.style.transform = `translate(${dir * 520}px, ${dy - 80}px) rotate(${dir * 40}deg)`;
+    p.addEventListener("transitionend", () => p.remove(), {once:true});
+    vibrar(10);
+    blip(1046);
+    actual++;
+    if (actual >= CONFIG.fotos.length){
+      setTimeout(finale, reduce ? 200 : 600);
+    } else {
+      contador();
+      activarArriba();
+      if (actual % 5 === 0) confeti(30);
+    }
+  }
+
+  function activarArriba(){
+    const vivas = deck.querySelectorAll(".polaroid:not(.gone)");
+    const p = vivas[vivas.length - 1];
+    if (!p) return;
+    p.style.setProperty("--rot", "0deg");
+    let x0 = 0, y0 = 0, dx = 0, dy = 0, arrastrando = false, t0 = 0;
+    p.addEventListener("pointerdown", (e) => {
+      arrastrando = true; x0 = e.clientX; y0 = e.clientY; dx = dy = 0; t0 = performance.now();
+      p.setPointerCapture(e.pointerId);
+      p.classList.add("dragging");
+    });
+    p.addEventListener("pointermove", (e) => {
+      if (!arrastrando) return;
+      dx = e.clientX - x0; dy = e.clientY - y0;
+      p.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx / 14}deg)`;
+    });
+    const soltar = () => {
+      if (!arrastrando) return;
+      arrastrando = false;
+      const rapido = performance.now() - t0 < 250;
+      if (Math.abs(dx) > 80 || (Math.abs(dx) < 6 && Math.abs(dy) < 6 && rapido)){
+        lanzar(p, dx, dy);
+      } else {
+        p.classList.remove("dragging");
+        p.style.transform = "";
+      }
+    };
+    p.addEventListener("pointerup", soltar);
+    p.addEventListener("pointercancel", soltar);
+  }
+
+  $("verFotos").addEventListener("click", () => { ir("s2", "s3"); armarMazo(); });
+
+  // ===================================================================
+  //  4. Corazón de fotos
+  // ===================================================================
+  function finale(){
+    ir("s3", "s4");
+    const heart = $("heart");
+    heart.querySelectorAll(".ph").forEach((n) => n.remove());
+    const w = heart.clientWidth;
+    const n = CONFIG.fotos.length;
+    const s = Math.min((w / 2 - 30) / 16, 10);
+    const forma = (t) => [16 * Math.pow(Math.sin(t), 3), -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))];
+    // Puntos repartidos a igual distancia por el contorno, empezando por la punta de abajo
+    const pts = [];
+    let largo = 0, prev = forma(Math.PI);
+    const M = 720;
+    for (let k = 1; k <= M; k++){
+      const t = Math.PI + (k / M) * Math.PI * 2;
+      const q = forma(t);
+      largo += Math.hypot(q[0] - prev[0], q[1] - prev[1]);
+      pts.push([t, largo]);
+      prev = q;
+    }
+    const paso = largo / n;
+    const ts = [Math.PI];
+    for (let i = 1, j = 0; i < n; i++){
+      while (pts[j][1] < paso * i) j++;
+      ts.push(pts[j][0]);
+    }
+    const ps = Math.round(Math.min(58, paso * s * .92));
+    const cx = w / 2, cy = 11.7 * s + ps / 2 + 4;
+    heart.style.height = Math.round(cy + 17 * s + ps / 2 + 8) + "px";
+    heart.style.setProperty("--ps", ps + "px");
+    heart.style.setProperty("--cy", Math.round(cy + 2.5 * s) + "px");
+    CONFIG.fotos.forEach(([src, cap], i) => {
+      const [fx0, fy0] = forma(ts[i]);
+      const x = cx + s * fx0;
+      const y = cy + s * fy0;
+      const img = document.createElement("img");
+      img.className = "ph";
+      img.src = src;
+      img.alt = cap;
+      img.style.left = x + "px";
+      img.style.top = y + "px";
+      img.style.setProperty("--d", (i * .1).toFixed(2) + "s");
+      img.style.setProperty("--fx", (cx - x) + "px");
+      img.style.setProperty("--fy", (-260 - y) + "px");
+      heart.insertBefore(img, heart.firstChild);
+    });
+    setTimeout(() => { confeti(110); vibrar([40, 60, 40, 60, 80]); for (let i = 0; i < 16; i++) burbuja(azar(30, W - 30), H + azar(0, 160)); }, reduce ? 0 : 2400);
+  }
+
+  $("burbujas").addEventListener("click", () => {
+    for (let i = 0; i < 28; i++) burbuja(azar(20, W - 20), H + azar(0, 220), azar(8, 30));
+    vibrar(20);
+  });
+  $("otraVez").addEventListener("click", () => { ir("s4", "s3"); armarMazo(); });
+</script>
+</body>
+</html>
