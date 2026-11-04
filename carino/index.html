@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Madame Cariño</title>
+<meta name="description" content="Madame Cariño, la diseñadora más exigente del mundo, quiere conocerte, cariño.">
+<meta name="theme-color" content="#111111">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Madame Cariño quiere conocerte, cariño 💋">
+<meta property="og:description" content="Dile tu nombre. Ella decide si eres fabulosa (spoiler: sí).">
+<meta property="og:url" content="https://felipeanali.github.io/mensajito/carino/">
+<meta property="og:image" content="https://felipeanali.github.io/mensajito/carino/portada.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="es_CO">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;1,6..96,500;1,6..96,700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f6f2ec;
+    --ink:#111111;
+    --soft:#5b5550;
+    --red:#d7263d;
+    --red-deep:#a3162a;
+    --gold:#c9a34a;
+    --skin:#f0c6a6;
+  }
+
+  *{box-sizing:border-box}
+  button{-webkit-tap-highlight-color:transparent;font:inherit}
+  body{
+    margin:0;
+    background-color:#e9e3da;
+    background-image:
+      linear-gradient(90deg, rgba(17,17,17,.04) 1px, transparent 1px),
+      linear-gradient(rgba(17,17,17,.04) 1px, transparent 1px);
+    background-size:28px 28px;
+    color:var(--ink);
+    font-family:"Inter",system-ui,sans-serif;
+    -webkit-text-size-adjust:100%;
+            text-size-adjust:100%;
+    min-height:100vh;
+    min-height:100dvh;
+    display:flex;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .frame{
+    margin:auto 0;
+    width:min(94vw,460px);
+    background:var(--ink);
+    border-radius:30px;
+    padding:12px;
+    box-shadow:0 30px 60px -25px rgba(0,0,0,.6);
+  }
+  .topbar{
+    height:46px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 8px 0 14px;
+    color:#fff;
+  }
+  .brand{
+    font-family:"Bodoni Moda",Didot,serif;
+    font-style:italic;
+    font-weight:700;
+    font-size:18px;
+    letter-spacing:.5px;
+  }
+  .brand b{color:var(--red);font-style:normal}
+  .mute{
+    margin-left:auto;
+    width:36px;height:36px;
+    border-radius:50%;
+    border:0;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    font-size:16px;
+    cursor:pointer;
+  }
+  .mute:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+  .atelier{
+    position:relative;
+    border-radius:20px;
+    overflow:hidden;
+    overflow:clip;
+    min-height:640px;
+    background:
+      radial-gradient(60% 40% at 50% 28%, #fffdf9 0%, transparent 70%),
+      repeating-linear-gradient(90deg, transparent 0 46px, rgba(17,17,17,.035) 46px 47px),
+      var(--paper);
+    touch-action:manipulation;
+  }
+  .stage{
+    position:relative;
+    z-index:2;
+    min-height:640px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    padding:26px 22px 30px;
+    text-align:center;
+  }
+
+  /* ---------- MADAME ---------- */
+  .madame{
+    position:relative;
+    width:190px;
+    height:220px;
+    border:0;background:transparent;padding:0;
+    cursor:pointer;
+    flex:none;
+  }
+  .madame:focus-visible{outline:3px solid var(--red);outline-offset:6px;border-radius:20px}
+  .madame svg{width:100%;height:100%;overflow:visible}
+  .madame .cuerpo{transform-origin:100px 230px;animation:respira 3.4s ease-in-out infinite}
+  @keyframes respira{0%,100%{transform:scale(1)}50%{transform:scale(1.015,.99)}}
+  .madame.wow .cuerpo{animation:wow .6s cubic-bezier(.3,1.6,.5,1)}
+  @keyframes wow{30%{transform:translateY(-14px) scale(1.04)}}
+  .madame .boca{transform-origin:100px 142px;transition:transform .08s}
+  .madame.habla .boca{animation:habla .18s ease-in-out infinite alternate}
+  @keyframes habla{from{transform:scaleY(.4)}to{transform:scaleY(1.5)}}
+  .madame .brillo{animation:brilla 4s ease-in-out infinite}
+  @keyframes brilla{0%,80%,100%{opacity:.85}90%{opacity:.2}}
+  .madame .parpado{transform-origin:center;transform:scaleY(0);animation:parpadea 5s infinite}
+  @keyframes parpadea{0%,94%,100%{transform:scaleY(0)}96%{transform:scaleY(1)}}
+
+  /* ---------- BURBUJA DE DIÁLOGO ---------- */
+  .bubble{
+    position:relative;
+    width:100%;
+    margin-top:14px;
+    background:#fff;
+    border:2px solid var(--ink);
+    border-radius:18px;
+    padding:18px 18px 16px;
+    font-family:"Bodoni Moda",Didot,serif;
+    font-weight:500;
+    font-size:21px;
+    line-height:1.3;
+    text-align:left;
+    box-shadow:6px 6px 0 var(--ink);
+    min-height:92px;
+  }
+  .bubble::before{
+    content:"";
+    position:absolute;
+    left:50%;top:-12px;
+    width:20px;height:20px;
+    margin-left:-10px;
+    background:#fff;
+    border-left:2px solid var(--ink);
+    border-top:2px solid var(--ink);
+    transform:rotate(45deg);
+  }
+  .bubble em{font-style:italic;color:var(--red)}
+  .bubble .who{
+    display:block;
+    margin-bottom:4px;
+    font-family:"Inter",sans-serif;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:2.5px;
+    text-transform:uppercase;
+    color:var(--soft);
+  }
+  .cursor{display:inline-block;width:2px;height:1em;background:var(--ink);vertical-align:-2px;margin-left:2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* ---------- FORMULARIOS Y BOTONES ---------- */
+  .ask{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-top:18px;
+  }
+  .ask input{
+    width:100%;
+    font-family:"Bodoni Moda",Didot,serif;
+    font-weight:700;
+    font-size:24px;
+    text-align:center;
+    color:var(--ink);
+    background:transparent;
+    border:0;
+    border-bottom:3px solid var(--ink);
+    border-radius:0;
+    padding:8px 6px;
+    outline:none;
+    -webkit-appearance:none;
+            appearance:none;
+  }
+  .ask input::placeholder{color:rgba(17,17,17,.3);font-style:italic;font-weight:500}
+  .ask input:focus{border-color:var(--red)}
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:14px 22px;
+    border:2px solid var(--ink);
+    border-radius:999px;
+    background:var(--ink);
+    color:#fff;
+    font-family:"Inter",sans-serif;
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:.5px;
+    cursor:pointer;
+    box-shadow:4px 4px 0 var(--red);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--red)}
+  .btn:focus-visible{outline:3px solid var(--red);outline-offset:4px}
+  .btn.light{background:#fff;color:var(--ink);box-shadow:4px 4px 0 var(--ink)}
+  .btn.light:active{box-shadow:1px 1px 0 var(--ink)}
+  .link{
+    background:none;border:0;
+    color:var(--soft);
+    font-size:13px;
+    text-decoration:underline;
+    text-underline-offset:3px;
+    cursor:pointer;
+  }
+  .error{min-height:1.2em;margin:0;font-size:13px;color:var(--red);font-weight:600}
+  .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+  .count{margin-top:10px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--soft)}
+
+  /* ---------- EL GRITO: ¡NOMBRE, CARIÑO! ---------- */
+  .shout{
+    position:absolute;
+    left:0;right:0;top:0;bottom:0;
+    z-index:10;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:var(--ink);
+    color:#fff;
+    text-align:center;
+    animation:fadein .2s ease;
+  }
+  @keyframes fadein{from{opacity:0}}
+  .shout .nombre{
+    font-family:"Bodoni Moda",Didot,serif;
+    font-weight:900;
+    font-size:clamp(46px,14vw,74px);
+    line-height:1;
+    max-width:100%;
+    overflow-wrap:break-word;
+    animation:zoom .7s cubic-bezier(.3,1.6,.5,1);
+  }
+  .shout .carino{
+    margin-top:10px;
+    font-family:"Bodoni Moda",Didot,serif;
+    font-style:italic;
+    font-weight:700;
+    font-size:clamp(36px,11vw,56px);
+    color:var(--red);
+    white-space:nowrap;
+  }
+  .shout .carino span{display:inline-block;opacity:0;animation:letra .35s ease forwards}
+  @keyframes letra{from{opacity:0;transform:translateY(16px) scale(.6)}to{opacity:1;transform:none}}
+  @keyframes zoom{from{transform:scale(.2);opacity:0}}
+
+  /* ---------- PASARELA ---------- */
+  .runway{
+    position:relative;
+    width:100%;
+    margin-top:6px;
+    padding:30px 16px 26px;
+    border-radius:18px;
+    background:
+      radial-gradient(70% 60% at 50% 0%, rgba(255,255,255,.18), transparent 70%),
+      linear-gradient(180deg, #1b1b1b, #000);
+    color:#fff;
+    overflow:hidden;
+  }
+  .runway .lights{
+    position:absolute;
+    left:10px;right:10px;top:10px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .runway .lights i{
+    width:7px;height:7px;
+    border-radius:50%;
+    background:#ffe9a8;
+    box-shadow:0 0 8px 2px rgba(255,220,130,.8);
+    animation:luz 1.2s ease-in-out infinite;
+  }
+  .runway .lights i:nth-child(odd){animation-delay:.6s}
+  @keyframes luz{50%{opacity:.25}}
+  .runway .kicker{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--gold)}
+  .runway .star{
+    margin:10px 0 6px;
+    font-family:"Bodoni Moda",Didot,serif;
+    font-weight:900;
+    font-size:clamp(40px,12vw,60px);
+    line-height:1;
+    overflow-wrap:break-word;
+    background:linear-gradient(180deg, #fff 0%, #f3e3b8 55%, var(--gold) 100%);
+    -webkit-background-clip:text;
+            background-clip:text;
+    -webkit-text-fill-color:transparent;
+    color:transparent;
+  }
+  .runway .sub{
+    font-family:"Bodoni Moda",Didot,serif;
+    font-style:italic;
+    font-size:18px;
+    color:rgba(255,255,255,.85);
+  }
+  .runway .tap{margin-top:14px;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.55)}
+  .flash{
+    position:absolute;
+    z-index:20;
+    pointer-events:none;
+    width:260px;height:260px;
+    margin:-130px 0 0 -130px;
+    border-radius:50%;
+    background:radial-gradient(circle, #fff 0%, rgba(255,255,255,.7) 20%, transparent 65%);
+    animation:flash .5s ease-out forwards;
+  }
+  @keyframes flash{from{opacity:1;transform:scale(.3)}to{opacity:0;transform:scale(1.3)}}
+  .sequin{
+    position:absolute;
+    z-index:15;
+    top:-12px;
+    width:8px;height:8px;
+    border-radius:50%;
+    pointer-events:none;
+    animation:cae var(--dur,2.4s) linear var(--delay,0s) forwards;
+  }
+  @keyframes cae{to{transform:translate(var(--x,0),700px) rotate(540deg)}}
+  .kiss{
+    position:absolute;
+    z-index:16;
+    pointer-events:none;
+    font-size:30px;
+    animation:beso 1.4s ease-out forwards;
+  }
+  @keyframes beso{
+    0%{opacity:0;transform:scale(.3) rotate(-20deg)}
+    20%{opacity:1;transform:scale(1.2) rotate(8deg)}
+    100%{opacity:0;transform:translateY(-120px) scale(1)}
+  }
+
+  .step{width:100%;display:flex;flex-direction:column;align-items:center;animation:sube .6s cubic-bezier(.2,.9,.25,1) both}
+  @keyframes sube{from{opacity:0;transform:translateY(12px)}}
+
+  [hidden]{display:none !important}
+
+  @media (prefers-reduced-motion: reduce){
+    .madame .cuerpo,.madame .brillo,.madame .parpado,.madame.habla .boca,.runway .lights i{animation:none}
+    .step,.shout,.shout .nombre{animation:none}
+    .shout .carino span{animation:none;opacity:1}
+    .sequin,.flash,.kiss{display:none}
+  }
+  @media (max-width:420px){
+    .atelier,.stage{min-height:600px}
+    .bubble{font-size:19px}
+  }
+</style>
+</head>
+<body>
+  <main class="frame">
+    <div class="topbar">
+      <span class="brand">Atelier <b>Cariño</b></span>
+      <button class="mute" id="mute" aria-label="Silenciar a Madame">🔊</button>
+    </div>
+
+    <div class="atelier" id="atelier">
+      <div class="stage">
+        <button class="madame" id="madame" aria-label="Madame Cariño">
+          <svg viewBox="0 0 200 230" aria-hidden="true">
+            <g class="cuerpo">
+              <!-- vestido -->
+              <path d="M58 230 L70 168 Q100 158 130 168 L142 230 Z" fill="#111"/>
+              <path d="M84 162 L100 190 L116 162 Z" fill="#fff" opacity=".9"/>
+              <rect x="92" y="150" width="16" height="18" fill="#f0c6a6"/>
+              <!-- cuello alto -->
+              <path d="M82 160 Q100 172 118 160 L120 168 Q100 180 80 168 Z" fill="#111"/>
+              <!-- cabeza -->
+              <ellipse cx="100" cy="110" rx="42" ry="46" fill="#f0c6a6"/>
+              <!-- melena -->
+              <path d="M54 118 Q50 58 100 54 Q150 58 146 118 L146 138 Q138 142 130 135 L130 92 Q100 84 70 92 L70 135 Q62 142 54 138 Z" fill="#0a0a0a"/>
+              <path d="M70 92 Q100 82 130 92" stroke="#2a2a2a" stroke-width="2" fill="none"/>
+              <!-- gafas -->
+              <g>
+                <circle cx="80" cy="112" r="21" fill="#fff" stroke="#111" stroke-width="6"/>
+                <circle cx="120" cy="112" r="21" fill="#fff" stroke="#111" stroke-width="6"/>
+                <path d="M100 110 Q100 104 100 110" stroke="#111" stroke-width="5"/>
+                <line x1="99" y1="109" x2="101" y2="109" stroke="#111" stroke-width="6"/>
+                <circle id="ojoI" cx="80" cy="113" r="7" fill="#1d1d1d"/>
+                <circle id="ojoD" cx="120" cy="113" r="7" fill="#1d1d1d"/>
+                <circle id="luzI" cx="82" cy="110" r="2.2" fill="#fff"/>
+                <circle id="luzD" cx="122" cy="110" r="2.2" fill="#fff"/>
+                <ellipse class="parpado" cx="80" cy="112" rx="17" ry="17" fill="#f0c6a6"/>
+                <ellipse class="parpado" cx="120" cy="112" rx="17" ry="17" fill="#f0c6a6"/>
+                <path class="brillo" d="M66 102 Q70 94 78 93" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".85"/>
+                <path class="brillo" d="M106 102 Q110 94 118 93" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".85"/>
+              </g>
+              <!-- boca -->
+              <ellipse class="boca" cx="100" cy="142" rx="8" ry="3.5" fill="#d7263d"/>
+            </g>
+          </svg>
+        </button>
+
+        <div class="bubble" id="bubble" aria-live="polite"><span class="who">Madame Cariño</span><span id="dice"></span><span class="cursor"></span></div>
+
+        <!-- 1. Nombre -->
+        <form class="ask step" id="pasoNombre">
+          <input id="nombre" type="text" maxlength="24" autocomplete="given-name" placeholder="tu nombre, cariño" aria-label="Tu nombre">
+          <p class="error" id="error" role="alert"></p>
+          <button class="btn" type="submit">Soy yo ✨</button>
+        </form>
+
+        <!-- 2. Piropos -->
+        <div class="step" id="pasoFrases" hidden>
+          <div class="row" style="margin-top:16px">
+            <button class="btn" id="siguiente">Sigue, Madame →</button>
+          </div>
+          <div class="count" id="count"></div>
+        </div>
+
+        <!-- 3. ¿A quién quieres? -->
+        <form class="ask step" id="pasoAmor" hidden>
+          <input id="amor" type="text" maxlength="24" autocomplete="off" placeholder="su nombre…" aria-label="Nombre de alguien a quien quieres">
+          <button class="btn" type="submit">Contarle a Madame 🤫</button>
+          <button class="link" type="button" id="secreto">Es un secreto, cariño</button>
+        </form>
+        <div class="step" id="pasoReaccion" hidden>
+          <div class="row"><button class="btn" id="aPasarela">A la pasarela 💃</button></div>
+        </div>
+
+        <!-- 4. Pasarela -->
+        <div class="step" id="pasoPasarela" hidden>
+          <div class="runway" id="runway">
+            <div class="lights" id="lights"></div>
+            <div class="kicker">Colección otoño · Musa oficial</div>
+            <div class="star" id="star"></div>
+            <div class="sub">fabulosa, cariño. Fabulosa.</div>
+            <div class="tap">toca la pasarela: ¡flashes!</div>
+          </div>
+          <div class="row">
+            <button class="btn light" id="otraVez">Otra vez, cariño</button>
+            <button class="btn" id="compartir">Compartir 📲</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script>
+  // ===================================================================
+  //  EDITA AQUÍ  →  todo lo que dice Madame Cariño
+  // ===================================================================
+  const CONFIG = {
+    saludo: "¡Cariñoooo! Pasa, pasa. No te quedes ahí en la puerta. ¿Cómo te llamas?",
+    sinNombre: "Un nombre, cariño. No leo mentes… todavía.",
+    // {n} se reemplaza por su nombre
+    frases: [
+      "Mírate, {n}. Llegaste y este atelier subió de categoría.",
+      "Yo he vestido a reinas, cariño. Y ninguna tenía ese brillo.",
+      "Ese brillo no se compra, {n}. Se nace con él.",
+      "Las tendencias pasan, cariño. Tú no.",
+      "Nada de modestia conmigo. Eres fabulosa. Punto. Siguiente tema.",
+      "Desde hoy te declaro mi musa oficial, {n}. No se discute."
+    ],
+    preguntaAmor: "Y dime, cariño… ¿hay alguien a quien quieras?",
+    // {a} es el nombre de esa persona
+    reacciones: [
+      "¿{a}? Mmm… *te mira por encima de las gafas*… Tiene buen gusto. Y suerte, cariño. Muchísima suerte.",
+      "¿{a}? Ajá. Ya veo. Dile que Madame lo aprueba… pero que se ponga las pilas, cariño."
+    ],
+    secreto: "Misteriosa. Me encanta, cariño. El misterio nunca pasa de moda.",
+    pasarela: "¡Ahora sí! A la pasarela, {n}. El mundo te está esperando.",
+    toques: ["¡Ay, cariño!", "¡No me toques el peinado!", "Fabulosa. Lo sé.", "¿Qué? ¿Nunca habías visto a una genia?", "¡Cariñoooo!"]
+  };
+  // ===================================================================
+
+  const $ = (id) => document.getElementById(id);
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const atelier = $("atelier");
+  const madame = $("madame");
+  const azar = (a, b) => a + Math.random() * (b - a);
+  const vibrar = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch(e){} };
+  let nombre = "";
+
+  // ===================================================================
+  //  Voz de Madame (síntesis de voz del celular)
+  // ===================================================================
+  let conVoz = true;
+  let voz = null;
+  function elegirVoz(){
+    if (!("speechSynthesis" in window)) return;
+    const vs = speechSynthesis.getVoices().filter((v) => /^es/i.test(v.lang));
+    const pref = (re) => vs.find((v) => re.test(v.name));
+    voz = pref(/Paulina|Monica|Mónica|Marisol|Helena|Sabina|Google español|female|mujer/i) || vs.find((v) => /es-(MX|US|CO|419)/i.test(v.lang)) || vs[0] || null;
+  }
+  if ("speechSynthesis" in window){
+    elegirVoz();
+    speechSynthesis.onvoiceschanged = elegirVoz;
+  }
+  function hablar(partes){
+    // partes: [[texto, rate, pitch], ...]
+    madame.classList.add("habla");
+    const fin = () => madame.classList.remove("habla");
+    if (!conVoz || !("speechSynthesis" in window)){
+      const ms = partes.reduce((t, p) => t + p[0].length * 55, 400);
+      setTimeout(fin, Math.min(ms, 4000));
+      return;
+    }
+    try {
+      speechSynthesis.cancel();
+      partes.forEach(([texto, rate, pitch], i) => {
+        const u = new SpeechSynthesisUtterance(texto.replace(/\*[^*]*\*/g, ""));
+        u.lang = voz ? voz.lang : "es-ES";
+        if (voz) u.voice = voz;
+        u.rate = rate; u.pitch = pitch; u.volume = 1;
+        if (i === partes.length - 1){ u.onend = fin; u.onerror = fin; }
+        speechSynthesis.speak(u);
+      });
+      setTimeout(fin, 9000);
+    } catch(e){ fin(); }
+  }
+  $("mute").addEventListener("click", () => {
+    conVoz = !conVoz;
+    $("mute").textContent = conVoz ? "🔊" : "🔇";
+    $("mute").setAttribute("aria-label", conVoz ? "Silenciar a Madame" : "Activar la voz de Madame");
+    if (!conVoz && "speechSynthesis" in window) speechSynthesis.cancel();
+  });
+
+  // Efectos de sonido (acorde de "ta-dá" y flash de cámara)
+  let ac = null;
+  function sonido(){
+    if (!ac){ try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return null; } }
+    if (ac.state === "suspended") ac.resume();
+    return ac;
+  }
+  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch(e){}
+  function acorde(frecs, dur = 1.2, vol = .08){
+    const a = sonido(); if (!a || !conVoz) return;
+    const t = a.currentTime;
+    frecs.forEach((f, i) => {
+      const o = a.createOscillator(), g = a.createGain();
+      o.type = "triangle"; o.frequency.value = f;
+      o.connect(g); g.connect(a.destination);
+      g.gain.setValueAtTime(0, t + i * .05);
+      g.gain.linearRampToValueAtTime(vol, t + i * .05 + .02);
+      g.gain.exponentialRampToValueAtTime(.0004, t + i * .05 + dur);
+      o.start(t + i * .05); o.stop(t + i * .05 + dur + .05);
+    });
+  }
+  function clic(){
+    const a = sonido(); if (!a || !conVoz) return;
+    const n = Math.floor(a.sampleRate * .08);
+    const buf = a.createBuffer(1, n, a.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+    const s = a.createBufferSource(), g = a.createGain();
+    g.gain.value = .25;
+    s.buffer = buf; s.connect(g); g.connect(a.destination); s.start();
+  }
+
+  // ===================================================================
+  //  Lo que dice en la burbuja (se escribe letra por letra)
+  // ===================================================================
+  let escribiendo = null;
+  function decir(texto, voz = true, partesVoz){
+    const d = $("dice");
+    clearInterval(escribiendo);
+    d.textContent = "";
+    // *acotación* en cursiva y roja
+    const trozos = texto.split(/(\*[^*]+\*)/);
+    const nodos = [];
+    trozos.forEach((t) => {
+      if (!t) return;
+      if (t.startsWith("*")){ const em = document.createElement("em"); d.appendChild(em); nodos.push([em, t.slice(1, -1)]); }
+      else { const sp = document.createElement("span"); d.appendChild(sp); nodos.push([sp, t]); }
+    });
+    if (reduce){ nodos.forEach(([n, t]) => n.textContent = t); }
+    else {
+      let k = 0, j = 0;
+      escribiendo = setInterval(() => {
+        if (k >= nodos.length){ clearInterval(escribiendo); return; }
+        const [n, t] = nodos[k];
+        n.textContent = t.slice(0, ++j);
+        if (j >= t.length){ k++; j = 0; }
+      }, 28);
+    }
+    if (voz) hablar(partesVoz || [[texto, 1.02, 1.15]]);
+  }
+
+  // ===================================================================
+  //  Los ojos siguen el dedo
+  // ===================================================================
+  const ojos = [["ojoI", "luzI", 80], ["ojoD", "luzD", 120]];
+  function mirar(cx, cy){
+    const svg = madame.querySelector("svg").getBoundingClientRect();
+    const sx = svg.width / 200, sy = svg.height / 230;
+    ojos.forEach(([o, l, x0]) => {
+      const ox = svg.left + x0 * sx, oy = svg.top + 113 * sy;
+      const ang = Math.atan2(cy - oy, cx - ox);
+      const dist = Math.min(9, Math.hypot(cx - ox, cy - oy) / 18);
+      const dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist;
+      $(o).setAttribute("cx", x0 + dx); $(o).setAttribute("cy", 113 + dy);
+      $(l).setAttribute("cx", x0 + 2 + dx); $(l).setAttribute("cy", 110 + dy);
+    });
+  }
+  window.addEventListener("pointermove", (e) => mirar(e.clientX, e.clientY));
+  window.addEventListener("pointerdown", (e) => mirar(e.clientX, e.clientY));
+
+  // Tocar a Madame
+  let toque = 0;
+  madame.addEventListener("click", () => {
+    madame.classList.remove("wow"); void madame.offsetWidth; madame.classList.add("wow");
+    const t = CONFIG.toques[toque++ % CONFIG.toques.length];
+    decir(t, true, [[t, 1.05, 1.3]]);
+    vibrar(15);
+  });
+
+  // ===================================================================
+  //  Destellos, lentejuelas y besos
+  // ===================================================================
+  function flash(x, y){
+    if (reduce) return;
+    const f = document.createElement("div");
+    f.className = "flash";
+    f.style.left = x + "px"; f.style.top = y + "px";
+    atelier.appendChild(f);
+    f.addEventListener("animationend", () => f.remove());
+    clic();
+  }
+  function lentejuelas(n = 60){
+    if (reduce) return;
+    const col = ["#c9a34a", "#f3e3b8", "#d7263d", "#ffffff", "#111111"];
+    for (let i = 0; i < n; i++){
+      const s = document.createElement("span");
+      s.className = "sequin";
+      s.style.left = azar(0, 100) + "%";
+      s.style.background = col[i % col.length];
+      s.style.boxShadow = "0 0 6px rgba(255,255,255,.8)";
+      s.style.setProperty("--x", azar(-60, 60) + "px");
+      s.style.setProperty("--dur", azar(1.8, 3.2) + "s");
+      s.style.setProperty("--delay", azar(0, .7) + "s");
+      atelier.appendChild(s);
+      s.addEventListener("animationend", () => s.remove());
+    }
+  }
+  function beso(x, y){
+    if (reduce) return;
+    const k = document.createElement("span");
+    k.className = "kiss";
+    k.textContent = "💋";
+    k.style.left = (x - 15) + "px"; k.style.top = (y - 15) + "px";
+    atelier.appendChild(k);
+    k.addEventListener("animationend", () => k.remove());
+  }
+  function enAtelier(el){
+    const a = el.getBoundingClientRect(), r = atelier.getBoundingClientRect();
+    return {x: a.left - r.left + a.width / 2, y: a.top - r.top + a.height / 2};
+  }
+
+  // ===================================================================
+  //  Flujo
+  // ===================================================================
+  const reemplazar = (t) => t.replace(/\{n\}/g, nombre);
+  const mostrar = (id) => ["pasoNombre", "pasoFrases", "pasoAmor", "pasoReaccion", "pasoPasarela"].forEach((p) => $(p).hidden = p !== id);
+  const capital = (s) => s.split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+
+  // Si el link trae ?para=Nombre, ya viene escrito
+  const params = new URLSearchParams(location.search);
+  if (params.get("para")) $("nombre").value = params.get("para").slice(0, 24);
+
+  decir(CONFIG.saludo, false);
+
+  $("pasoNombre").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const v = $("nombre").value.trim();
+    if (!v){ $("error").textContent = ""; decir(CONFIG.sinNombre, true); $("nombre").focus(); return; }
+    nombre = capital(v);
+    $("nombre").blur();
+    gritar();
+  });
+
+  // ¡NOMBRE, CARIÑOOOO!
+  function gritar(){
+    sonido();
+    const s = document.createElement("div");
+    s.className = "shout";
+    const n = document.createElement("div");
+    n.className = "nombre";
+    n.textContent = "¡" + nombre + ",";
+    // Que el nombre quepa entero en una línea si se puede
+    const ancho = Math.min(atelier.clientWidth - 40, 420);
+    n.style.fontSize = Math.max(30, Math.min(74, ancho / ((nombre.length + 2) * .62))) + "px";
+    const c = document.createElement("div");
+    c.className = "carino";
+    "cariñoooo!".split("").forEach((ch, i) => {
+      const sp = document.createElement("span");
+      sp.textContent = ch;
+      sp.style.animationDelay = (.45 + i * .09) + "s";
+      c.appendChild(sp);
+    });
+    s.append(n, c);
+    atelier.appendChild(s);
+    acorde([261.63, 329.63, 392, 523.25], 1.6, .09);
+    hablar([[nombre + "!", .9, 1.35], ["cariño", .45, 1.15]]);
+    vibrar([40, 60, 120]);
+    setTimeout(() => lentejuelas(70), 300);
+    setTimeout(() => {
+      s.style.transition = "opacity .5s ease";
+      s.style.opacity = "0";
+      setTimeout(() => s.remove(), 500);
+      mostrar("pasoFrases");
+      frase = 0;
+      siguienteFrase();
+    }, reduce ? 1500 : 3400);
+  }
+
+  let frase = 0;
+  function siguienteFrase(){
+    if (frase < CONFIG.frases.length){
+      decir(reemplazar(CONFIG.frases[frase]));
+      frase++;
+      $("count").textContent = frase + " / " + CONFIG.frases.length;
+      madame.classList.remove("wow"); void madame.offsetWidth; madame.classList.add("wow");
+    } else {
+      mostrar("pasoAmor");
+      decir(CONFIG.preguntaAmor);
+      setTimeout(() => $("amor").focus({preventScroll:true}), 400);
+    }
+  }
+  $("siguiente").addEventListener("click", (e) => {
+    const {x, y} = enAtelier(e.currentTarget);
+    beso(x + azar(-60, 60), y - 30);
+    siguienteFrase();
+  });
+
+  $("pasoAmor").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const a = capital($("amor").value.trim());
+    if (!a){ $("secreto").click(); return; }
+    $("amor").blur();
+    const t = CONFIG.reacciones[Math.floor(Math.random() * CONFIG.reacciones.length)].replace(/\{a\}/g, a);
+    decir(t);
+    mostrar("pasoReaccion");
+    const {x, y} = enAtelier(madame);
+    for (let i = 0; i < 5; i++) setTimeout(() => beso(x + azar(-70, 70), y + azar(-40, 40)), i * 160);
+    acorde([392, 493.88, 587.33], 1, .06);
+  });
+  $("secreto").addEventListener("click", () => {
+    decir(CONFIG.secreto);
+    mostrar("pasoReaccion");
+  });
+
+  $("aPasarela").addEventListener("click", () => {
+    mostrar("pasoPasarela");
+    $("star").textContent = nombre;
+    $("star").style.fontSize = Math.max(28, Math.min(60, ($("runway").clientWidth - 30) / (nombre.length * .62))) + "px";
+    decir(reemplazar(CONFIG.pasarela));
+    const l = $("lights");
+    if (!l.children.length) for (let i = 0; i < 12; i++) l.appendChild(document.createElement("i"));
+    acorde([261.63, 329.63, 392, 523.25, 659.25], 1.8, .08);
+    lentejuelas(90);
+    vibrar([30, 40, 30, 40, 80]);
+    const r = atelier.getBoundingClientRect();
+    for (let i = 0; i < 6; i++) setTimeout(() => flash(azar(30, r.width - 30), azar(120, r.height - 120)), 300 + i * 220);
+  });
+
+  $("runway").addEventListener("pointerdown", (e) => {
+    const r = atelier.getBoundingClientRect();
+    flash(e.clientX - r.left, e.clientY - r.top);
+    vibrar(10);
+  });
+
+  $("otraVez").addEventListener("click", () => {
+    $("nombre").value = nombre;
+    $("amor").value = "";
+    mostrar("pasoNombre");
+    decir(CONFIG.saludo);
+  });
+
+  // Compartir: manda el link con su nombre ya puesto
+  $("compartir").addEventListener("click", async () => {
+    const url = location.origin + location.pathname;
+    const texto = "Madame Cariño quiere conocerte, cariño 💋";
+    if (navigator.share){
+      try { await navigator.share({title: "Madame Cariño", text: texto, url}); return; }
+      catch(e){ if (e && e.name === "AbortError") return; }
+    }
+    window.open("https://wa.me/?text=" + encodeURIComponent(texto + " " + url), "_blank", "noopener");
+  });
+</script>
+</body>
+</html>
