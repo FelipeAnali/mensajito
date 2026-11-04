@@ -369,11 +369,145 @@
   }
   @keyframes fall{to{transform:translate(var(--x,0),720px) rotate(var(--r,540deg))}}
 
+  .sky.wand{touch-action:none}
+
+  /* Besos en las polaroids */
+  .kiss{
+    position:absolute;
+    top:20px;right:20px;
+    min-width:44px;height:40px;
+    padding:0 10px;
+    border-radius:999px;
+    border:0;
+    background:rgba(255,255,255,.88);
+    color:var(--pink-deep);
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:15px;
+    cursor:pointer;
+    box-shadow:0 4px 12px -4px rgba(232,100,154,.8);
+    transition:transform .15s ease;
+  }
+  .kiss:active{transform:scale(.88)}
+  .kiss:focus-visible{outline:2px solid var(--pink-deep);outline-offset:2px}
+  .lovefx{
+    position:absolute;
+    z-index:6;
+    pointer-events:none;
+    font-size:24px;
+    animation:love 1.5s ease-out forwards;
+  }
+  .lovefx.word{
+    font-family:"Fredoka",sans-serif;
+    font-weight:700;
+    font-size:28px;
+    color:var(--pink-deep);
+    text-shadow:0 3px 0 #fff;
+  }
+  @keyframes love{
+    0%{opacity:0;transform:translate(0,0) scale(.4)}
+    15%{opacity:1;transform:translate(0,-10px) scale(1.15)}
+    100%{opacity:0;transform:translate(var(--x,0),-170px) scale(1)}
+  }
+
+  /* Foto grande al tocar el corazón */
+  .heart .ph{cursor:pointer}
+  .lightbox{
+    position:fixed;inset:0;
+    z-index:50;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    padding:24px;
+    background:rgba(61,44,62,.55);
+    -webkit-backdrop-filter:blur(4px);
+            backdrop-filter:blur(4px);
+    cursor:pointer;
+    animation:fade .3s ease;
+  }
+  @keyframes fade{from{opacity:0}}
+  .lightbox img{
+    max-width:100%;
+    max-height:68%;
+    border-radius:12px;
+    border:6px solid #fff;
+    box-shadow:0 20px 40px -14px rgba(0,0,0,.5);
+    animation:zoom .45s cubic-bezier(.3,1.4,.5,1);
+  }
+  @keyframes zoom{from{transform:scale(.4) rotate(-8deg)}}
+  .lightbox p{
+    margin:0;
+    font-family:"Caveat",cursive;
+    font-weight:700;
+    font-size:30px;
+    color:#fff;
+    text-shadow:0 2px 10px rgba(0,0,0,.4);
+  }
+  .lightbox small{color:rgba(255,255,255,.8);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+
+  /* Xilófono */
+  .xilo-wrap{
+    width:100%;
+    margin-top:18px;
+    padding:16px 10px 14px;
+    border-radius:20px;
+    background:rgba(255,255,255,.55);
+    opacity:0;
+    animation:rise .8s ease 3.1s forwards;
+  }
+  .xilo-title{
+    margin:0 0 10px;
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:19px;
+    color:var(--ink);
+  }
+  .xilo{
+    display:flex;
+    gap:6px;
+    align-items:center;
+    justify-content:center;
+    height:150px;
+  }
+  .bar{
+    position:relative;
+    width:31px;
+    height:var(--h);
+    border:0;
+    border-radius:10px;
+    background:var(--c);
+    box-shadow:inset 0 -7px 0 rgba(0,0,0,.12), 0 7px 14px -7px rgba(0,0,0,.35);
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .bar::before,.bar::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    width:7px;height:7px;
+    margin-left:-3.5px;
+    border-radius:50%;
+    background:rgba(255,255,255,.75);
+  }
+  .bar::before{top:10px}
+  .bar::after{bottom:12px}
+  .bar.hit{animation:hit .25s ease}
+  @keyframes hit{50%{transform:scaleY(.93);filter:brightness(1.2)}}
+  .bar.next{box-shadow:0 0 0 4px #fff, 0 0 22px 4px var(--c);animation:salta .9s ease-in-out infinite}
+  @keyframes salta{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .bar:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+  .xilo-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+  .btn.small{margin-top:0;padding:10px 18px;font-size:15px;box-shadow:0 5px 0 #f2c6d8}
+  .xilo-msg{min-height:1.4em;margin:10px 0 0;font-family:"Fredoka",sans-serif;font-weight:600;color:var(--pink-deep)}
+
   [hidden]{display:none !important}
 
   @media (prefers-reduced-motion: reduce){
     .cloud,.num,.hint{animation:none}
-    .step,.stat,.letter,.row{animation:none;opacity:1}
+    .step,.stat,.letter,.row,.xilo-wrap{animation:none;opacity:1}
+    .lovefx,.bar.next{animation:none}
     .heart .ph,.heart .center{animation:none;opacity:1;transform:none}
     .heart .center{transform:translate(-50%,-50%)}
     .confetti{display:none}
@@ -393,7 +527,7 @@
       <button class="sound" id="sound" aria-label="Activar la música" hidden>🔇</button>
     </div>
 
-    <div class="sky" id="sky">
+    <div class="sky wand" id="sky">
       <canvas class="fx" id="fx" aria-hidden="true"></canvas>
 
       <div class="stage">
@@ -414,6 +548,7 @@
           <div class="stats" id="stats"></div>
           <p class="lead" id="lead"></p>
           <button class="btn" id="verFotos">Ver sus fotos 📸</button>
+          <div class="hint">arrastra el dedo y haz burbujas · agita el celular</div>
         </section>
 
         <!-- 3. Polaroids -->
@@ -421,7 +556,7 @@
           <p class="kicker">Mira cuánto ha crecido</p>
           <div class="deck" id="deck"></div>
           <div class="counter" id="counter"></div>
-          <div class="hint">desliza o toca la foto</div>
+          <div class="hint">desliza la foto · dale 💗 a tus favoritas</div>
         </section>
 
         <!-- 4. Corazón -->
@@ -430,11 +565,24 @@
             <div class="center">10<small>meses</small></div>
           </div>
           <p class="letter" id="carta"></p>
+          <div class="xilo-wrap">
+            <p class="xilo-title">Tócale una canción 🎶</p>
+            <div class="xilo" id="xilo"></div>
+            <div class="xilo-row">
+              <button class="btn soft small" id="guiar">Enséñame “Estrellita” ⭐</button>
+            </div>
+            <p class="xilo-msg" id="xiloMsg" role="status"></p>
+          </div>
           <div class="row">
             <button class="btn" id="burbujas">🫧 Más burbujas</button>
             <button class="btn soft" id="otraVez">Ver otra vez</button>
           </div>
         </section>
+      </div>
+      <div class="lightbox" id="lightbox" hidden>
+        <img id="lbImg" alt="">
+        <p id="lbCap"></p>
+        <small>toca para cerrar</small>
       </div>
     </div>
   </main>
@@ -593,7 +741,7 @@
 
   // Tocar: revienta la burbuja más cercana o suelta nuevas
   sky.addEventListener("pointerdown", (e) => {
-    if (e.target.closest("button, .polaroid")) return;
+    if (e.target.closest("button, .polaroid, .lightbox, .heart")) return;
     const r = sky.getBoundingClientRect();
     const x = e.clientX - r.left, y = e.clientY - r.top;
     let tocada = -1;
@@ -622,58 +770,134 @@
   }
 
   // ===================================================================
-  //  Cajita de música: "Estrellita, ¿dónde estás?"
+  //  Música de fondo (jazz o cajita de música) y efectos de sonido
   // ===================================================================
-  let audio = null, musica = false, timer = null;
-  const N = {C:523.25, D:587.33, E:659.25, F:698.46, G:783.99, A:880};
-  const melodia = "C C G G A A G- F F E E D D C- G G F F E E D- G G F F E E D- C C G G A A G- F F E E D D C-".split(" ");
-  let paso = 0, proxima = 0;
+  const PISTAS = [
+    {src:"musica.mp3", icono:"🎷", nombre:"jazz"},
+    {src:"cajita.mp3", icono:"🎵", nombre:"cajita de música"}
+  ];
+  const bgm = new Audio();
+  bgm.loop = true;
+  bgm.preload = "auto";
+  bgm.volume = .8;
+  let pista = -1; // -1 = en silencio
+  // En iPhone, que suene aunque el celular esté en modo silencio
+  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch(e){}
 
-  function tono(freq, cuando, dur, vol = .16){
-    const o1 = audio.createOscillator(), o2 = audio.createOscillator(), g = audio.createGain();
-    o1.type = "sine"; o1.frequency.value = freq;
-    o2.type = "sine"; o2.frequency.value = freq * 4;
-    const g2 = audio.createGain(); g2.gain.value = .12;
-    o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(audio.destination);
-    g.gain.setValueAtTime(0, cuando);
-    g.gain.linearRampToValueAtTime(vol, cuando + .01);
-    g.gain.exponentialRampToValueAtTime(.0005, cuando + dur);
-    o1.start(cuando); o2.start(cuando);
-    o1.stop(cuando + dur + .05); o2.stop(cuando + dur + .05);
+  function ponerPista(i){
+    pista = i;
+    const btn = $("sound");
+    if (i < 0){
+      bgm.pause();
+      btn.textContent = "🔇";
+      btn.setAttribute("aria-label", "Activar la música");
+      return;
+    }
+    const p = PISTAS[i];
+    if (!bgm.src.endsWith(p.src)) bgm.src = p.src;
+    bgm.play().catch(() => {});
+    btn.textContent = p.icono;
+    btn.setAttribute("aria-label", "Música: " + p.nombre + ". Toca para cambiar");
   }
-  function programar(){
-    while (proxima < audio.currentTime + .4){
-      const n = melodia[paso % melodia.length];
-      const larga = n.endsWith("-");
-      tono(N[n[0]], proxima, larga ? 1.6 : 1.1);
-      proxima += larga ? .9 : .45;
-      paso++;
-      if (paso % melodia.length === 0) proxima += .6;
+  $("sound").addEventListener("click", () => ponerPista(pista + 1 < PISTAS.length ? pista + 1 : -1));
+
+  let audio = null;
+  function sonido(){
+    if (!audio){ try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return null; } }
+    if (audio.state === "suspended") audio.resume();
+    return audio;
+  }
+  function tono(freq, dur = .6, vol = .12, tipo = "campana"){
+    const a = sonido();
+    if (!a) return;
+    const t = a.currentTime;
+    const g = a.createGain();
+    g.connect(a.destination);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + .008);
+    g.gain.exponentialRampToValueAtTime(.0004, t + dur);
+    const parciales = tipo === "xilo" ? [[1, 1], [3.93, .28], [9.2, .07]] : [[1, 1], [2, .25], [4.16, .12]];
+    parciales.forEach(([r, amp]) => {
+      const o = a.createOscillator(), gg = a.createGain();
+      gg.gain.value = amp;
+      o.frequency.value = freq * r;
+      o.connect(gg); gg.connect(g);
+      o.start(t); o.stop(t + dur + .05);
+    });
+  }
+  const PENTA = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.5];
+  function blip(){ tono(PENTA[Math.floor(Math.random() * PENTA.length)], .5, .08); }
+  let bajaTimer = null;
+  function bajarMusica(){
+    bgm.volume = .3;
+    clearTimeout(bajaTimer);
+    bajaTimer = setTimeout(() => { bgm.volume = .8; }, 2500);
+  }
+
+  // Corazones y palabras que salen volando
+  function amor(x, y, n = 7, palabra = ""){
+    if (reduce) return;
+    for (let i = 0; i < n; i++){
+      const h = document.createElement("span");
+      h.className = "lovefx";
+      h.textContent = ["💗", "💖", "💕", "🩷", "✨"][i % 5];
+      h.style.left = (x + azar(-30, 30)) + "px";
+      h.style.top = (y + azar(-10, 10)) + "px";
+      h.style.setProperty("--x", azar(-70, 70) + "px");
+      h.style.animationDelay = azar(0, .25) + "s";
+      sky.appendChild(h);
+      h.addEventListener("animationend", () => h.remove());
+    }
+    if (palabra){
+      const w = document.createElement("span");
+      w.className = "lovefx word";
+      w.textContent = palabra;
+      w.style.left = (x - 40) + "px";
+      w.style.top = (y - 20) + "px";
+      sky.appendChild(w);
+      w.addEventListener("animationend", () => w.remove());
     }
   }
-  function blip(freq){
-    if (!audio || !musica) return;
-    tono(freq, audio.currentTime, .25, .07);
+  function posEnCielo(el){
+    const a = el.getBoundingClientRect(), r = sky.getBoundingClientRect();
+    return {x: a.left - r.left + a.width / 2, y: a.top - r.top + a.height / 2};
   }
-  function encenderMusica(){
-    try {
-      if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
-      audio.resume();
-      musica = true;
-      proxima = audio.currentTime + .1;
-      clearInterval(timer);
-      timer = setInterval(programar, 120);
-      $("sound").textContent = "🎵";
-      $("sound").setAttribute("aria-label", "Apagar la música");
-    } catch(e){ $("sound").hidden = true; }
+
+  // Varita de burbujas: arrastrar el dedo deja una estela de burbujas
+  let ultimaVarita = 0;
+  sky.addEventListener("pointermove", (e) => {
+    if (!(e.buttons || e.pointerType === "touch")) return;
+    if (e.target.closest("button, .polaroid, .xilo, .lightbox")) return;
+    const t = performance.now();
+    if (t - ultimaVarita < 60) return;
+    ultimaVarita = t;
+    const r = sky.getBoundingClientRect();
+    burbuja(e.clientX - r.left + azar(-6, 6), e.clientY - r.top + azar(-6, 6), azar(7, 16));
+  });
+
+  // Agitar el celular: ¡lluvia de burbujas!
+  let ultimoAgite = 0;
+  function alMover(e){
+    const a = e.accelerationIncludingGravity || e.acceleration;
+    if (!a) return;
+    const f = Math.hypot(a.x || 0, a.y || 0, a.z || 0);
+    const t = performance.now();
+    if (f > 24 && t - ultimoAgite > 900){
+      ultimoAgite = t;
+      for (let i = 0; i < 22; i++) burbuja(azar(20, W - 20), H + azar(0, 200), azar(8, 28));
+      confeti(25);
+      vibrar(40);
+      blip();
+    }
   }
-  function apagarMusica(){
-    musica = false;
-    clearInterval(timer);
-    $("sound").textContent = "🔇";
-    $("sound").setAttribute("aria-label", "Activar la música");
+  function pedirMovimiento(){
+    if (typeof DeviceMotionEvent === "undefined") return;
+    if (typeof DeviceMotionEvent.requestPermission === "function"){
+      DeviceMotionEvent.requestPermission().then((r) => { if (r === "granted") window.addEventListener("devicemotion", alMover); }).catch(() => {});
+    } else {
+      window.addEventListener("devicemotion", alMover);
+    }
   }
-  $("sound").addEventListener("click", () => musica ? apagarMusica() : encenderMusica());
 
   // ===================================================================
   //  1. Globos
@@ -683,7 +907,9 @@
     if (globos.classList.contains("away")) return;
     globos.classList.add("away");
     $("sound").hidden = false;
-    encenderMusica();
+    ponerPista(0);
+    sonido();
+    pedirMovimiento();
     confeti(90);
     vibrar([30, 50, 30]);
     for (let i = 0; i < 14; i++) burbuja(azar(40, W - 40), H + azar(0, 120));
@@ -744,7 +970,23 @@
       const c = document.createElement("div");
       c.className = "cap";
       c.textContent = cap;
-      p.append(img, c);
+      const k = document.createElement("button");
+      k.className = "kiss";
+      k.type = "button";
+      k.textContent = "💗";
+      k.setAttribute("aria-label", "Mandar un beso");
+      let besos = 0;
+      k.addEventListener("pointerdown", (e) => e.stopPropagation());
+      k.addEventListener("click", (e) => {
+        e.stopPropagation();
+        besos++;
+        k.textContent = "💗 " + besos;
+        const {x, y} = posEnCielo(k);
+        amor(x, y, 8, besos === 1 ? "¡Muak!" : "");
+        tono(987.77, .18, .09); setTimeout(() => tono(783.99, .3, .09), 90);
+        vibrar(15);
+      });
+      p.append(img, c, k);
       deck.appendChild(p);
     }
     contador();
@@ -761,7 +1003,7 @@
     p.style.transform = `translate(${dir * 520}px, ${dy - 80}px) rotate(${dir * 40}deg)`;
     p.addEventListener("transitionend", () => p.remove(), {once:true});
     vibrar(10);
-    blip(1046);
+    tono(1046.5, .35, .07);
     actual++;
     if (actual >= CONFIG.fotos.length){
       setTimeout(finale, reduce ? 200 : 600);
@@ -810,6 +1052,7 @@
   // ===================================================================
   function finale(){
     ir("s3", "s4");
+    sky.classList.remove("wand");
     const heart = $("heart");
     heart.querySelectorAll(".ph").forEach((n) => n.remove());
     const w = heart.clientWidth;
@@ -851,10 +1094,70 @@
       img.style.setProperty("--d", (i * .1).toFixed(2) + "s");
       img.style.setProperty("--fx", (cx - x) + "px");
       img.style.setProperty("--fy", (-260 - y) + "px");
+      img.addEventListener("click", () => {
+        $("lbImg").src = src;
+        $("lbImg").alt = cap;
+        $("lbCap").textContent = cap;
+        $("lightbox").hidden = false;
+        tono(1318.5, .4, .08);
+      });
       heart.insertBefore(img, heart.firstChild);
     });
     setTimeout(() => { confeti(110); vibrar([40, 60, 40, 60, 80]); for (let i = 0; i < 16; i++) burbuja(azar(30, W - 30), H + azar(0, 160)); }, reduce ? 0 : 2400);
   }
+
+  $("lightbox").addEventListener("click", () => { $("lightbox").hidden = true; });
+
+  const NOTAS_X = [
+    [523.25, "#ff6b8b"], [587.33, "#ff9f5a"], [659.25, "#ffd166"], [698.46, "#7fdc8c"],
+    [783.99, "#5cc8f0"], [880, "#7b8cff"], [987.77, "#b07cff"], [1046.5, "#ff8fcf"]
+  ];
+  const ESTRELLITA = [0, 0, 4, 4, 5, 5, 4, 3, 3, 2, 2, 1, 1, 0];
+  let guia = -1;
+  const barras = NOTAS_X.map(([f, c], i) => {
+    const b = document.createElement("button");
+    b.className = "bar";
+    b.type = "button";
+    b.setAttribute("aria-label", "Nota " + (i + 1));
+    b.style.setProperty("--c", c);
+    b.style.setProperty("--h", (148 - i * 8) + "px");
+    b.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      tono(f, 1.3, .2, "xilo");
+      bajarMusica();
+      vibrar(8);
+      b.classList.remove("hit"); void b.offsetWidth; b.classList.add("hit");
+      const {x, y} = posEnCielo(b);
+      burbuja(x, y - 70, azar(8, 14));
+      if (guia >= 0){
+        if (i === ESTRELLITA[guia]){
+          guia++;
+          if (guia >= ESTRELLITA.length){
+            guia = -1;
+            barras.forEach((x) => x.classList.remove("next"));
+            $("xiloMsg").textContent = "¡Bravo! 👏 Manuela te aplaude";
+            confeti(80);
+            amor(x, y - 80, 10, "¡Bravo!");
+            for (let k = 0; k < 20; k++) burbuja(azar(20, W - 20), H + azar(0, 200));
+            vibrar([30, 50, 30, 50, 60]);
+          } else {
+            marcarSiguiente();
+          }
+        }
+      }
+    });
+    $("xilo").appendChild(b);
+    return b;
+  });
+  function marcarSiguiente(){
+    barras.forEach((x, k) => x.classList.toggle("next", k === ESTRELLITA[guia]));
+    $("xiloMsg").textContent = "Toca la que salta ✨  (" + guia + " / " + ESTRELLITA.length + ")";
+  }
+  $("guiar").addEventListener("click", () => {
+    guia = 0;
+    marcarSiguiente();
+    sonido();
+  });
 
   $("burbujas").addEventListener("click", () => {
     for (let i = 0; i < 28; i++) burbuja(azar(20, W - 20), H + azar(0, 220), azar(8, 30));
