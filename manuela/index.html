@@ -4,6 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Manuela, 10 meses</title>
+<meta name="description" content="Hoy Manuela cumple 10 meses. Toca los globos, mira sus fotos y tócale una canción 🎀">
+<meta name="theme-color" content="#cfe9ff">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mensajito">
+<meta property="og:title" content="Manuela cumple 10 meses 🎀">
+<meta property="og:description" content="Toca los globos, mira sus fotos y tócale una canción.">
+<meta property="og:url" content="https://felipeanali.github.io/mensajito/manuela/">
+<meta property="og:image" content="https://felipeanali.github.io/mensajito/manuela/portada.jpg">
+<meta property="og:image:secure_url" content="https://felipeanali.github.io/mensajito/manuela/portada.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fotos de Manuela con el texto: ¡Hoy cumple 10 meses!">
+<meta property="og:locale" content="es_CO">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Manuela cumple 10 meses 🎀">
+<meta name="twitter:image" content="https://felipeanali.github.io/mensajito/manuela/portada.jpg">
+<link rel="apple-touch-icon" href="fotos/14.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Caveat:wght@600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -22,6 +40,8 @@
   }
 
   *{box-sizing:border-box}
+  button{-webkit-tap-highlight-color:transparent;font:inherit}
+  img{-webkit-user-drag:none;-webkit-touch-callout:none}
   body{
     margin:0;
     background-color:var(--page);
@@ -29,7 +49,10 @@
     background-size:22px 22px;
     color:var(--ink);
     font-family:"Nunito",system-ui,sans-serif;
-    min-height:100dvh;
+    -webkit-text-size-adjust:100%;
+            text-size-adjust:100%;
+    min-height:100vh;   /* navegadores viejos */
+    min-height:100dvh;  /* que no lo tape la barra del navegador en el celular */
     display:flex;
     justify-content:center;
     padding:24px;
@@ -98,7 +121,7 @@
   @keyframes drift{from{transform:translateX(-160px) scale(var(--s,1))}to{transform:translateX(560px) scale(var(--s,1))}}
 
   .fx{
-    position:absolute;inset:0;
+    position:absolute;top:0;right:0;bottom:0;left:0;
     width:100%;height:100%;
     z-index:1;
     pointer-events:none;
@@ -170,14 +193,23 @@
     font-weight:700;
     font-size:190px;
     line-height:.9;
-    background:linear-gradient(135deg, #fff 0%, #ffd1e3 18%, #ff8fb8 45%, #e8649a 70%, #ffc0d8 100%);
+    -webkit-filter:drop-shadow(0 6px 0 rgba(232,100,154,.35)) drop-shadow(0 18px 24px rgba(140,70,110,.25));
+            filter:drop-shadow(0 6px 0 rgba(232,100,154,.35)) drop-shadow(0 18px 24px rgba(140,70,110,.25));
+    animation:bob 3s ease-in-out infinite;
+    will-change:transform;
+  }
+  .num .fill{
+    display:block;
+    background-image:linear-gradient(135deg, #fff 0%, #ffd1e3 18%, #ff8fb8 45%, #e8649a 70%, #ffc0d8 100%);
     -webkit-background-clip:text;
             background-clip:text;
+    -webkit-text-fill-color:transparent;
     color:transparent;
-    filter:drop-shadow(0 6px 0 rgba(232,100,154,.35)) drop-shadow(0 18px 24px rgba(140,70,110,.25));
-    animation:bob 3s ease-in-out infinite;
   }
-  .num.b{animation-delay:-1.2s;background-image:linear-gradient(135deg, #fff 0%, #e6dcff 18%, #b9a3ff 45%, #8f74f0 70%, #d9ccff 100%);filter:drop-shadow(0 6px 0 rgba(143,116,240,.35)) drop-shadow(0 18px 24px rgba(90,70,140,.25))}
+  .num.b{animation-delay:-1.2s;
+    -webkit-filter:drop-shadow(0 6px 0 rgba(143,116,240,.35)) drop-shadow(0 18px 24px rgba(90,70,140,.25));
+            filter:drop-shadow(0 6px 0 rgba(143,116,240,.35)) drop-shadow(0 18px 24px rgba(90,70,140,.25))}
+  .num.b .fill{background-image:linear-gradient(135deg, #fff 0%, #e6dcff 18%, #b9a3ff 45%, #8f74f0 70%, #d9ccff 100%)}
   .num::after{
     content:"";
     position:absolute;
@@ -258,7 +290,7 @@
   }
   .polaroid{
     position:absolute;
-    inset:0;
+    top:0;right:0;bottom:0;left:0;
     background:#fff;
     border-radius:6px;
     padding:12px 12px 0;
@@ -413,7 +445,7 @@
   /* Foto grande al tocar el corazón */
   .heart .ph{cursor:pointer}
   .lightbox{
-    position:fixed;inset:0;
+    position:fixed;top:0;right:0;bottom:0;left:0;
     z-index:50;
     display:flex;
     flex-direction:column;
@@ -536,7 +568,7 @@
           <p class="kicker" id="kicker"></p>
           <h1 class="name" id="nombre"></h1>
           <button class="balloons" id="balloons" aria-label="Soltar los globos">
-            <span class="num a">1</span><span class="num b">0</span>
+            <span class="num a"><span class="fill">1</span></span><span class="num b"><span class="fill">0</span></span>
           </button>
           <div class="hint">toca los globos</div>
         </section>
@@ -576,6 +608,7 @@
           <div class="row">
             <button class="btn" id="burbujas">🫧 Más burbujas</button>
             <button class="btn soft" id="otraVez">Ver otra vez</button>
+            <button class="btn soft" id="compartir">Compartir 📲</button>
           </div>
         </section>
       </div>
@@ -685,9 +718,9 @@
 
   function burbuja(x, y, r){
     burbujas.push({
-      x: x ?? azar(20, W - 20),
-      y: y ?? H + azar(10, 80),
-      r: r ?? azar(10, 26),
+      x: x != null ? x : azar(20, W - 20),
+      y: y != null ? y : H + azar(10, 80),
+      r: r != null ? r : azar(10, 26),
       vy: azar(.35, .9),
       fase: azar(0, Math.PI * 2),
       tono: azar(0, 360)
@@ -779,6 +812,8 @@
   const bgm = new Audio();
   bgm.loop = true;
   bgm.preload = "auto";
+  bgm.src = PISTAS[0].src;
+  bgm.setAttribute("playsinline", "");
   bgm.volume = .8;
   let pista = -1; // -1 = en silencio
   // En iPhone, que suene aunque el celular esté en modo silencio
@@ -967,6 +1002,7 @@
       img.src = src;
       img.alt = cap;
       img.loading = i < 3 ? "eager" : "lazy";
+      img.decoding = "async";
       const c = document.createElement("div");
       c.className = "cap";
       c.textContent = cap;
@@ -1087,6 +1123,7 @@
       const y = cy + s * fy0;
       const img = document.createElement("img");
       img.className = "ph";
+      img.decoding = "async";
       img.src = src;
       img.alt = cap;
       img.style.left = x + "px";
@@ -1164,6 +1201,18 @@
     vibrar(20);
   });
   $("otraVez").addEventListener("click", () => { ir("s4", "s3"); armarMazo(); });
+
+  // Compartir: en el celular abre el menú del sistema (WhatsApp, etc.);
+  // si no se puede, abre WhatsApp directo con el link
+  $("compartir").addEventListener("click", async () => {
+    const url = location.href.split("#")[0];
+    const texto = CONFIG.nombre + " cumple " + CONFIG.meses + " meses 🎀 Mira esto:";
+    if (navigator.share){
+      try { await navigator.share({title: document.title, text: texto, url}); return; }
+      catch(e){ if (e && e.name === "AbortError") return; }
+    }
+    window.open("https://wa.me/?text=" + encodeURIComponent(texto + " " + url), "_blank", "noopener");
+  });
 </script>
 </body>
 </html>
