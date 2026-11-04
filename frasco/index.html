@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Un frasco para ti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Caveat:wght@500;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#060814;
+    --frame:#0c1020;
+    --deep:#0b1230;
+    --glow:#f4ff8a;
+    --glow-warm:#ffd66b;
+    --lilac:#b9a3e3;
+    --text:#f3f1ff;
+    --muted:rgba(243,241,255,.72);
+    --paper:#fffbea;
+    --ink:#2d2a3e;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background-color:var(--night);
+    background-image:radial-gradient(rgba(244,255,138,.10) 1.1px, transparent 1.2px);
+    background-size:22px 22px;
+    color:var(--text);
+    font-family:"Nunito",system-ui,sans-serif;
+    min-height:100dvh;
+    display:flex;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .frame{
+    margin:auto 0;
+    width:min(94vw,460px);
+    background:var(--frame);
+    border:1px solid rgba(244,255,138,.18);
+    border-radius:30px;
+    padding:12px;
+    box-shadow:0 0 60px -10px rgba(244,255,138,.16), 0 30px 60px -25px #000;
+  }
+  .topbar{
+    height:46px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 14px;
+    font-weight:700;
+    font-size:15px;
+  }
+  .topbar::before{
+    content:"";
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--glow);
+    box-shadow:0 0 10px var(--glow);
+  }
+  .progress{
+    margin-left:auto;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--muted);
+    opacity:0;
+    transition:opacity .5s ease;
+  }
+  .progress.show{opacity:1}
+
+  .night{
+    position:relative;
+    border-radius:20px;
+    overflow:hidden;
+    overflow:clip;
+    min-height:620px;
+    background:
+      radial-gradient(70% 40% at 50% 100%, rgba(80,120,60,.35) 0%, transparent 70%),
+      radial-gradient(60% 40% at 80% 0%, rgba(185,163,227,.22) 0%, transparent 70%),
+      linear-gradient(180deg, #0a0f2a 0%, #101a3a 60%, #13233a 100%);
+    touch-action:manipulation;
+  }
+  .stars{
+    position:absolute;inset:0;
+    pointer-events:none;
+    background:
+      radial-gradient(1px 1px at 12% 18%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 32% 8%, #fff 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 58% 14%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 78% 24%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 88% 9%, #fff 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 22% 34%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 66% 36%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 44% 26%, #fff 50%, transparent 51%);
+    opacity:.6;
+    animation:twinkle 4s ease-in-out infinite alternate;
+  }
+  @keyframes twinkle{to{opacity:.25}}
+  .grass{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    height:70px;
+    pointer-events:none;
+    background:
+      radial-gradient(14px 50px at 6% 100%, #1d3a2a 60%, transparent 62%),
+      radial-gradient(12px 40px at 15% 100%, #18301f 60%, transparent 62%),
+      radial-gradient(16px 60px at 27% 100%, #1d3a2a 60%, transparent 62%),
+      radial-gradient(12px 44px at 40% 100%, #18301f 60%, transparent 62%),
+      radial-gradient(15px 56px at 55% 100%, #1d3a2a 60%, transparent 62%),
+      radial-gradient(12px 40px at 68% 100%, #18301f 60%, transparent 62%),
+      radial-gradient(16px 62px at 80% 100%, #1d3a2a 60%, transparent 62%),
+      radial-gradient(12px 46px at 93% 100%, #18301f 60%, transparent 62%);
+    opacity:.9;
+  }
+  .fx{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    pointer-events:none;
+    z-index:1;
+  }
+
+  .stage{
+    position:relative;
+    z-index:2;
+    min-height:620px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:30px 22px 40px;
+    text-align:center;
+  }
+  .step{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    animation:rise .8s cubic-bezier(.2,.9,.25,1) both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  h1{
+    font-family:"Fraunces",Georgia,serif;
+    font-weight:600;
+    font-size:clamp(28px,7vw,36px);
+    line-height:1.1;
+    margin:0 0 8px;
+    text-shadow:0 0 24px rgba(244,255,138,.25);
+  }
+  .sub{
+    font-size:14.5px;
+    line-height:1.7;
+    color:var(--muted);
+    margin:0 0 6px;
+    max-width:30ch;
+  }
+  .hint{
+    margin-top:14px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--glow);
+    animation:breathe 2.4s ease-in-out infinite;
+  }
+  @keyframes breathe{0%,100%{opacity:.4}50%{opacity:1}}
+
+  /* ---------- NOTA ---------- */
+  .note-slot{
+    width:100%;
+    min-height:170px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    margin-bottom:8px;
+  }
+  .note{
+    position:relative;
+    width:min(100%,320px);
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:6px;
+    padding:20px 20px 16px;
+    font-family:"Caveat",cursive;
+    font-size:25px;
+    line-height:1.25;
+    text-align:left;
+    box-shadow:0 0 30px rgba(244,255,138,.35), 0 14px 30px rgba(0,0,0,.4);
+    transform-origin:50% 0;
+    animation:unfold .7s cubic-bezier(.2,.9,.25,1) both;
+  }
+  .note::before{
+    content:"";
+    position:absolute;
+    left:0;right:0;top:50%;
+    height:1px;
+    background:rgba(45,42,62,.08);
+  }
+  .note .num{
+    display:block;
+    font-family:"Nunito",sans-serif;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:#9a8a4a;
+    margin-bottom:4px;
+  }
+  @keyframes unfold{
+    0%{opacity:0;transform:perspective(600px) rotateX(-85deg) scale(.6)}
+    60%{opacity:1;transform:perspective(600px) rotateX(10deg) scale(1.02)}
+    100%{opacity:1;transform:none}
+  }
+  .note.old{animation:away .45s ease forwards}
+  @keyframes away{to{opacity:0;transform:translateY(-30px) rotate(-6deg) scale(.9)}}
+
+  /* ---------- FRASCO ---------- */
+  .jar{
+    position:relative;
+    width:170px;height:220px;
+    border:0;background:transparent;padding:0;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .jar:focus-visible{outline:3px solid var(--glow);outline-offset:8px;border-radius:20px}
+  .jar .lid{
+    position:absolute;
+    left:38px;right:38px;top:0;
+    height:30px;
+    border-radius:8px 8px 4px 4px;
+    background:repeating-linear-gradient(90deg, #a88a5a 0 6px, #8c7044 6px 12px);
+    box-shadow:inset 0 -6px 0 rgba(0,0,0,.18);
+    z-index:3;
+    transition:transform .8s cubic-bezier(.3,1.4,.5,1), opacity .5s ease .3s;
+  }
+  .jar .neck{
+    position:absolute;
+    left:44px;right:44px;top:26px;
+    height:20px;
+    border:2px solid rgba(220,235,255,.45);
+    border-top:0;border-bottom:0;
+    background:rgba(200,220,255,.06);
+    z-index:2;
+  }
+  .jar .body{
+    position:absolute;
+    left:8px;right:8px;top:44px;bottom:0;
+    border-radius:38px 38px 30px 30px;
+    border:2px solid rgba(220,235,255,.45);
+    background:
+      radial-gradient(80% 60% at 50% 70%, rgba(244,255,138,calc(.10 + var(--brillo,.25))) 0%, transparent 70%),
+      linear-gradient(90deg, rgba(255,255,255,.12) 0 12%, transparent 12% 80%, rgba(255,255,255,.06) 80% 86%, transparent 86%),
+      rgba(200,220,255,.07);
+    box-shadow:0 0 calc(30px + var(--brillo,.25) * 60px) rgba(244,255,138,calc(var(--brillo,.25) * .8));
+    overflow:hidden;
+    z-index:1;
+    transition:box-shadow .6s ease, background .6s ease;
+  }
+  .jar .bug{
+    position:absolute;
+    width:8px;height:8px;
+    border-radius:50%;
+    background:#fffbd0;
+    box-shadow:0 0 8px 3px rgba(244,255,138,.9), 0 0 20px 8px rgba(244,255,138,.35);
+    animation:buzz var(--d,3s) ease-in-out var(--dl,0s) infinite alternate, blink var(--b,2s) ease-in-out infinite;
+  }
+  @keyframes buzz{
+    0%{transform:translate(0,0)}
+    33%{transform:translate(var(--x1,10px),var(--y1,-14px))}
+    66%{transform:translate(var(--x2,-12px),var(--y2,8px))}
+    100%{transform:translate(var(--x3,6px),var(--y3,-6px))}
+  }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+  .jar.closed{animation:hover 3s ease-in-out infinite}
+  @keyframes hover{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .jar.open .lid{transform:translate(70px,-60px) rotate(40deg);opacity:0}
+  .jar.shake{animation:shake .45s ease}
+  @keyframes shake{
+    0%,100%{transform:rotate(0)}
+    20%{transform:rotate(-7deg)}
+    40%{transform:rotate(6deg)}
+    60%{transform:rotate(-4deg)}
+    80%{transform:rotate(2deg)}
+  }
+  .jar .tag{
+    position:absolute;
+    left:50%;bottom:34px;
+    transform:translateX(-50%) rotate(-3deg);
+    z-index:2;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Caveat",cursive;
+    font-weight:700;
+    font-size:20px;
+    padding:2px 12px;
+    border-radius:4px;
+    white-space:nowrap;
+    box-shadow:0 4px 10px rgba(0,0,0,.25);
+  }
+
+  /* ---------- FINAL ---------- */
+  .final h1{font-size:clamp(34px,9vw,46px);color:var(--glow);text-shadow:0 0 30px rgba(244,255,138,.5)}
+  .question{
+    font-family:"Fraunces",Georgia,serif;
+    font-weight:600;
+    font-size:22px;
+    margin:22px 0 4px;
+  }
+  .answers{
+    position:relative;
+    width:100%;
+    height:120px;
+    margin-top:10px;
+  }
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:13px 26px;
+    border:0;
+    border-radius:999px;
+    font:inherit;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+    text-decoration:none;
+    white-space:nowrap;
+    transition:transform .2s ease, box-shadow .2s ease, left .35s cubic-bezier(.3,1.4,.5,1), top .35s cubic-bezier(.3,1.4,.5,1);
+  }
+  .btn:focus-visible{outline:3px solid var(--text);outline-offset:4px}
+  .btn.yes{
+    background:var(--glow);
+    color:#232a0a;
+    box-shadow:0 0 26px rgba(244,255,138,.55);
+  }
+  .btn.yes:hover{transform:scale(1.05)}
+  .btn.no{
+    background:rgba(255,255,255,.08);
+    color:var(--text);
+    border:1px solid rgba(255,255,255,.25);
+  }
+  .answers .btn{position:absolute;top:20px}
+  .answers .yes{left:calc(50% - 130px)}
+  .answers .no{left:calc(50% + 20px)}
+  .yay{
+    margin-top:10px;
+    font-size:14px;
+    line-height:1.7;
+    color:var(--muted);
+    max-width:30ch;
+  }
+
+  [hidden]{display:none !important}
+
+  @media (prefers-reduced-motion: reduce){
+    .stars,.hint,.jar .bug,.jar.closed,.jar.shake{animation:none}
+    .note,.note.old,.step{animation:none}
+  }
+  @media (max-width:420px){
+    .night,.stage{min-height:590px}
+    .note{font-size:23px}
+  }
+</style>
+</head>
+<body>
+  <main class="frame">
+    <div class="topbar"><span id="para"></span><span class="progress" id="progress"></span></div>
+
+    <div class="night" id="night">
+      <div class="stars" aria-hidden="true"></div>
+      <div class="grass" aria-hidden="true"></div>
+      <canvas class="fx" id="fx" aria-hidden="true"></canvas>
+
+      <div class="stage">
+        <!-- 1 y 2: el frasco -->
+        <section class="step" id="s1">
+          <div id="intro">
+            <h1 id="titulo"></h1>
+            <p class="sub" id="subtitulo"></p>
+          </div>
+          <div class="note-slot" id="slot" aria-live="polite"></div>
+          <button class="jar closed" id="jar" aria-label="Abrir el frasco">
+            <div class="lid"></div>
+            <div class="neck"></div>
+            <div class="body" id="jarBody"></div>
+            <div class="tag" id="tag"></div>
+          </button>
+          <div class="hint" id="hint"></div>
+        </section>
+
+        <!-- 3: final -->
+        <section class="step final" id="s2" hidden>
+          <h1 id="finalTitulo"></h1>
+          <p class="sub" id="finalTexto"></p>
+          <p class="question" id="pregunta"></p>
+          <div class="answers" id="answers">
+            <a class="btn yes" id="si" target="_blank" rel="noopener"></a>
+            <button class="btn no" id="no" type="button"></button>
+          </div>
+          <p class="yay" id="yay" hidden></p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+<script>
+  // ===================================================================
+  //  EDITA AQUÍ  →  todo lo personalizable está en este bloque
+  // ===================================================================
+  const CONFIG = {
+    para: "Para ti",
+    titulo: "Te traje algo",
+    subtitulo: "Un frasco lleno de luciérnagas. Cada una trae algo que me gusta de ti.",
+    etiqueta: "para ti ✨",
+
+    notas: [
+      "Me gusta cómo te ríes cuando algo de verdad te da risa.",
+      "Contigo el tiempo pasa rapidísimo, y eso casi nunca me pasa.",
+      "Me gusta que contigo no tengo que fingir nada.",
+      "Tienes una forma de mirar que me desarma.",
+      "Me encanta escucharte hablar de lo que te apasiona.",
+      "Haces que un día normal se sienta especial.",
+      "Me descubro pensando en la próxima vez que te voy a ver.",
+      "Tu energía es bonita. Se contagia.",
+      "Gracias por darte el chance de conocerme.",
+      "Y aunque esto apenas empieza… ya me gusta mucho."
+    ],
+
+    finalTitulo: "Me encantas",
+    finalTexto: "Esto es solo un pedacito de lo que pienso de ti. Las luciérnagas se quedan contigo.",
+    pregunta: "¿Nos vemos pronto?",
+    si: "Sí 💛",
+    no: "No",
+    noRendido: "Bueno, sí 😅",
+    respuesta: "¡Sí! Nos vemos pronto 💛✨",
+    gracias: "Mándame ese mensaje por WhatsApp y te veo pronto ✨",
+
+    // Número de WhatsApp donde llega su respuesta (57 = Colombia)
+    whatsapp: "573160438600"
+  };
+  // ===================================================================
+
+  const $ = (id) => document.getElementById(id);
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const night = $("night");
+  const azar = (a, b) => a + Math.random() * (b - a);
+  const vibrar = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch(e){} };
+
+  $("para").textContent = CONFIG.para;
+  $("titulo").textContent = CONFIG.titulo;
+  $("subtitulo").textContent = CONFIG.subtitulo;
+  $("tag").textContent = CONFIG.etiqueta;
+  $("finalTitulo").textContent = CONFIG.finalTitulo;
+  $("finalTexto").textContent = CONFIG.finalTexto;
+  $("pregunta").textContent = CONFIG.pregunta;
+  $("si").textContent = CONFIG.si;
+  $("no").textContent = CONFIG.no;
+  $("si").href = "https://wa.me/" + CONFIG.whatsapp.replace(/\D/g, "") + "?text=" + encodeURIComponent(CONFIG.respuesta);
+
+  // ===================================================================
+  //  Luciérnagas (canvas): vuelan solas y se acercan al dedo
+  // ===================================================================
+  const fx = $("fx");
+  const ctx = fx.getContext("2d");
+  let W = 0, H = 0;
+  function medir(){
+    const r = night.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    fx.width = Math.round(W * dpr);
+    fx.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  medir();
+  if ("ResizeObserver" in window) new ResizeObserver(medir).observe(night);
+  else window.addEventListener("resize", medir);
+
+  const bichos = [];
+  const chispas = [];
+  let dedo = null;
+
+  function nuevaLuciernaga(x, y, vx = 0, vy = 0){
+    bichos.push({
+      x, y, vx, vy,
+      ang: azar(0, Math.PI * 2),
+      fase: azar(0, Math.PI * 2),
+      vel: azar(.4, .9),
+      r: azar(2, 3.2),
+      calor: Math.random() < .3
+    });
+  }
+
+  function chispa(x, y, n){
+    for (let i = 0; i < n; i++){
+      const a = azar(0, Math.PI * 2), s = azar(.5, 3);
+      chispas.push({x, y, vx:Math.cos(a) * s, vy:Math.sin(a) * s, vida:1, decae:azar(.015, .03)});
+    }
+  }
+
+  // Unas cuantas luciérnagas de ambiente desde el principio
+  for (let i = 0; i < 7; i++) nuevaLuciernaga(azar(20, 300), azar(60, 500));
+
+  function cuadro(t){
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = "lighter";
+
+    for (const b of bichos){
+      // Vuelo errático suave
+      b.ang += azar(-.25, .25);
+      b.vx += Math.cos(b.ang) * .05 * b.vel;
+      b.vy += Math.sin(b.ang) * .05 * b.vel;
+      // Se acercan al dedo
+      if (dedo){
+        const dx = dedo.x - b.x, dy = dedo.y - b.y;
+        const d = Math.hypot(dx, dy) || 1;
+        if (d < 260){
+          b.vx += (dx / d) * .09;
+          b.vy += (dy / d) * .09;
+        }
+      }
+      b.vx *= .96; b.vy *= .96;
+      b.x += b.vx; b.y += b.vy;
+      // Rebotan suave en los bordes
+      if (b.x < 10){ b.x = 10; b.vx = Math.abs(b.vx); }
+      if (b.x > W - 10){ b.x = W - 10; b.vx = -Math.abs(b.vx); }
+      if (b.y < 10){ b.y = 10; b.vy = Math.abs(b.vy); }
+      if (b.y > H - 30){ b.y = H - 30; b.vy = -Math.abs(b.vy); }
+
+      const luz = .55 + .45 * Math.sin(t / 380 + b.fase);
+      const color = b.calor ? "255,214,107" : "244,255,138";
+      const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r * 7);
+      g.addColorStop(0, `rgba(255,255,230,${luz})`);
+      g.addColorStop(.25, `rgba(${color},${luz * .7})`);
+      g.addColorStop(1, `rgba(${color},0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 7, 0, Math.PI * 2); ctx.fill();
+    }
+
+    for (let i = chispas.length - 1; i >= 0; i--){
+      const c = chispas[i];
+      c.vx *= .96; c.vy *= .96; c.vy -= .01;
+      c.x += c.vx; c.y += c.vy;
+      c.vida -= c.decae;
+      if (c.vida <= 0){ chispas.splice(i, 1); continue; }
+      ctx.globalAlpha = c.vida;
+      ctx.fillStyle = "#fbffc4";
+      ctx.beginPath(); ctx.arc(c.x, c.y, 1.6, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    ctx.globalCompositeOperation = "source-over";
+    requestAnimationFrame(cuadro);
+  }
+  if (!reduce) requestAnimationFrame(cuadro);
+
+  function posEn(e){
+    const r = night.getBoundingClientRect();
+    return {x: e.clientX - r.left, y: e.clientY - r.top};
+  }
+  night.addEventListener("pointerdown", (e) => {
+    dedo = posEn(e);
+    if (!e.target.closest("button, a")) chispa(dedo.x, dedo.y, 12);
+  });
+  night.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "mouse" || e.buttons) dedo = posEn(e);
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach((ev) =>
+    night.addEventListener(ev, (e) => { if (e.pointerType !== "mouse" || ev === "pointerleave") dedo = null; }));
+
+  // ===================================================================
+  //  El frasco
+  // ===================================================================
+  const jar = $("jar");
+  const jarBody = $("jarBody");
+  const total = CONFIG.notas.length;
+  let leidas = 0;
+  let abierto = false;
+
+  // Luciérnagas dentro del frasco
+  const dentro = [];
+  for (let i = 0; i < total; i++){
+    const s = document.createElement("span");
+    s.className = "bug";
+    s.style.left = azar(18, 82) + "%";
+    s.style.top = azar(22, 80) + "%";
+    s.style.setProperty("--d", azar(2.2, 4).toFixed(2) + "s");
+    s.style.setProperty("--dl", azar(-3, 0).toFixed(2) + "s");
+    s.style.setProperty("--b", azar(1.4, 2.8).toFixed(2) + "s");
+    for (const k of ["x1", "y1", "x2", "y2", "x3", "y3"]) s.style.setProperty("--" + k, azar(-16, 16).toFixed(0) + "px");
+    jarBody.appendChild(s);
+    dentro.push(s);
+  }
+  function brillo(){ jarBody.style.setProperty("--brillo", (.08 + .32 * (dentro.length / total)).toFixed(2)); }
+  brillo();
+  $("hint").textContent = "toca el frasco para abrirlo";
+
+  function progreso(){
+    const p = $("progress");
+    p.textContent = "✨ " + leidas + " de " + total;
+    p.classList.add("show");
+  }
+
+  function soltar(){
+    if (!abierto){
+      abierto = true;
+      jar.classList.remove("closed");
+      jar.classList.add("open");
+      jar.setAttribute("aria-label", "Sacar una luciérnaga");
+      $("hint").textContent = movimientoOk ? "toca el frasco o agita el celular" : "toca el frasco";
+      pedirMovimiento();
+      vibrar(20);
+      const {x, y} = bocaFrasco();
+      chispa(x, y, 30);
+      return;
+    }
+    if (leidas >= total) return;
+
+    jar.classList.remove("shake");
+    void jar.offsetWidth;
+    jar.classList.add("shake");
+
+    // Sale una luciérnaga volando
+    const s = dentro.splice(Math.floor(Math.random() * dentro.length), 1)[0];
+    if (s) s.remove();
+    brillo();
+    const {x, y} = bocaFrasco();
+    nuevaLuciernaga(x, y, azar(-2.5, 2.5), azar(-5, -3.5));
+    chispa(x, y, 18);
+    vibrar(15);
+
+    // Y trae una nota
+    const slot = $("slot");
+    const vieja = slot.querySelector(".note");
+    if (vieja){
+      vieja.classList.add("old");
+      vieja.addEventListener("animationend", () => vieja.remove());
+    }
+    $("intro").hidden = true;
+    const n = document.createElement("div");
+    n.className = "note";
+    const num = document.createElement("span");
+    num.className = "num";
+    num.textContent = (leidas + 1) + " / " + total;
+    n.appendChild(num);
+    n.appendChild(document.createTextNode(CONFIG.notas[leidas]));
+    setTimeout(() => {
+      slot.appendChild(n);
+      if (vieja) vieja.remove();
+    }, vieja && !reduce ? 250 : 0);
+
+    leidas++;
+    progreso();
+
+    if (leidas === total){
+      $("hint").textContent = "";
+      setTimeout(final, reduce ? 800 : 3200);
+    }
+  }
+
+  function bocaFrasco(){
+    const j = jar.getBoundingClientRect(), r = night.getBoundingClientRect();
+    return {x: j.left - r.left + j.width / 2, y: j.top - r.top + 30};
+  }
+
+  jar.addEventListener("click", soltar);
+
+  // Agitar el celular para sacar una luciérnaga
+  let movimientoOk = false;
+  let ultimoAgite = 0;
+  function alMover(e){
+    const a = e.accelerationIncludingGravity || e.acceleration;
+    if (!a) return;
+    const fuerza = Math.hypot(a.x || 0, a.y || 0, a.z || 0);
+    const t = performance.now();
+    if (fuerza > 24 && t - ultimoAgite > 700 && abierto && leidas < total){
+      ultimoAgite = t;
+      soltar();
+    }
+  }
+  function pedirMovimiento(){
+    if (typeof DeviceMotionEvent === "undefined") return;
+    const activar = () => {
+      window.addEventListener("devicemotion", alMover);
+      movimientoOk = true;
+      if (leidas < total) $("hint").textContent = "toca el frasco o agita el celular";
+    };
+    if (typeof DeviceMotionEvent.requestPermission === "function"){
+      DeviceMotionEvent.requestPermission().then((r) => { if (r === "granted") activar(); }).catch(() => {});
+    } else {
+      activar();
+    }
+  }
+
+  // ===================================================================
+  //  Final: la pregunta (el "No" se escapa)
+  // ===================================================================
+  function final(){
+    $("s1").hidden = true;
+    $("s2").hidden = false;
+    // Todas las luciérnagas se reúnen en una lluvia de luz
+    for (let i = 0; i < 12; i++) nuevaLuciernaga(azar(20, W - 20), H - 40, azar(-1, 1), azar(-4, -2));
+    chispa(W / 2, H / 3, 40);
+    vibrar([20, 60, 20]);
+  }
+
+  const no = $("no");
+  let intentos = 0;
+  function escapar(e){
+    if (no.dataset.rendido) return;
+    e.preventDefault();
+    intentos++;
+    if (intentos >= 5){
+      no.dataset.rendido = "1";
+      no.dataset.recien = "1"; // que este mismo toque no abra WhatsApp
+      no.textContent = CONFIG.noRendido;
+      no.classList.remove("no");
+      no.classList.add("yes");
+      return;
+    }
+    const cont = $("answers").getBoundingClientRect();
+    const b = no.getBoundingClientRect();
+    const maxX = cont.width - b.width;
+    const maxY = cont.height - b.height;
+    no.style.left = azar(0, maxX) + "px";
+    no.style.top = azar(0, maxY) + "px";
+    vibrar(10);
+  }
+  no.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") escapar(e); });
+  no.addEventListener("pointerdown", escapar);
+  no.addEventListener("click", (e) => {
+    if (no.dataset.recien){ delete no.dataset.recien; return; }
+    if (no.dataset.rendido) $("si").click();
+    else e.preventDefault();
+  });
+
+  $("si").addEventListener("click", () => {
+    $("yay").textContent = CONFIG.gracias;
+    $("yay").hidden = false;
+    for (let i = 0; i < 10; i++) nuevaLuciernaga(W / 2 + azar(-40, 40), H / 2 + azar(-20, 20), azar(-3, 3), azar(-3, 3));
+    chispa(W / 2, H / 2, 50);
+    vibrar([20, 40, 20]);
+  });
+</script>
+</body>
+</html>
