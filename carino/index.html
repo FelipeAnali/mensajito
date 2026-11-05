@@ -372,6 +372,111 @@
   }
   @keyframes respira{50%{opacity:.45}}
 
+  /* Mensaje que se va desbloqueando */
+  .mensaje{
+    position:relative;
+    z-index:4;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:6px;
+    padding:12px 12px 10px;
+    background:rgba(13,6,23,.55);
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .mensaje span{
+    min-width:44px;
+    padding:6px 10px;
+    border-radius:10px;
+    background:rgba(255,255,255,.08);
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:15px;
+    color:rgba(255,255,255,.5);
+    text-align:center;
+    transition:background .4s ease, color .4s ease;
+  }
+  .mensaje span.ok{
+    background:linear-gradient(135deg, var(--pink), #ff7a59);
+    color:#fff;
+    box-shadow:0 4px 14px -4px rgba(255,77,141,.8);
+    animation:destapa .6s cubic-bezier(.3,1.6,.5,1);
+  }
+  @keyframes destapa{from{transform:scale(.3) rotate(-12deg)}}
+  .locks span{width:22px;height:22px;border-radius:7px;font-size:11px}
+  .exito .palabra{
+    margin-top:14px;
+    padding:10px 22px;
+    border-radius:16px;
+    background:linear-gradient(135deg, var(--pink), #ff7a59);
+    font-family:"Fredoka",sans-serif;
+    font-weight:700;
+    font-size:34px;
+    box-shadow:0 10px 30px -8px rgba(255,77,141,.9);
+    animation:pop .7s cubic-bezier(.3,1.7,.5,1) .15s both;
+  }
+  .exito .btn{margin-top:22px}
+  .exito .big{font-size:64px}
+  .exito p{font-size:24px}
+
+  /* Minijuego: atrapa los corazones */
+  .campo{
+    position:relative;
+    width:100%;
+    height:300px;
+    margin-top:16px;
+    border-radius:18px;
+    background:rgba(255,255,255,.05);
+    overflow:hidden;
+    touch-action:none;
+  }
+  .cae{
+    position:absolute;
+    top:-60px;
+    width:56px;height:56px;
+    margin-left:-28px;
+    border:0;
+    background:none;
+    font-size:42px;
+    line-height:56px;
+    cursor:pointer;
+    animation:baja var(--dur,2.4s) linear forwards;
+  }
+  @keyframes baja{to{transform:translateY(380px) rotate(var(--r,20deg))}}
+  .cae.pum{animation:pum .3s ease-out forwards}
+  @keyframes pum{to{transform:scale(2);opacity:0}}
+  .marcador{margin-top:12px;font-family:"Fredoka",sans-serif;font-weight:700;font-size:22px;color:var(--gold)}
+
+  /* Minijuego: raspa la tarjeta */
+  .tarjeta{
+    position:relative;
+    width:280px;height:170px;
+    margin-top:22px;
+    border-radius:18px;
+    overflow:hidden;
+    background:linear-gradient(135deg, #fff1f7, #ffd6e7);
+    box-shadow:0 16px 36px -14px rgba(0,0,0,.7);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    color:#3b1a6b;
+  }
+  .tarjeta .premio{font-size:54px;line-height:1}
+  .tarjeta .txt{margin-top:6px;font-family:"Fredoka",sans-serif;font-weight:700;font-size:20px}
+  .tarjeta canvas{position:absolute;top:0;left:0;width:100%;height:100%;touch-action:none;cursor:grab}
+
+  /* Frase completa al final */
+  .frase{
+    margin-bottom:6px;
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:21px;
+    color:#fff;
+    text-shadow:0 2px 10px rgba(0,0,0,.6);
+    max-width:26ch;
+  }
+
   [hidden]{display:none !important}
 
   @media (prefers-reduced-motion: reduce){
@@ -390,12 +495,13 @@
     <div class="hud">
       <span class="titulo" id="hudTitulo">Mensaje bloqueado</span>
       <div class="locks" id="locks" aria-label="Retos superados">
-        <span>🔒</span><span>🔒</span><span>🔒</span>
+        <span>🔒</span><span>🔒</span><span>🔒</span><span>🔒</span><span>🔒</span>
       </div>
     </div>
 
     <div class="screen" id="screen">
       <canvas class="jardin" id="jardin" hidden></canvas>
+      <div class="mensaje" id="mensaje" aria-label="Mensaje secreto"></div>
 
       <div class="stage" id="stage">
 
@@ -404,13 +510,13 @@
           <span class="etiqueta">Para <span id="nombre0"></span></span>
           <div class="icono">🔒💌</div>
           <h1>Tengo un mensaje para ti</h1>
-          <p class="sub">Pero está bloqueado. Para abrirlo tienes que superar 3 retos rapiditos. ¿Lista?</p>
+          <p class="sub">Pero está bloqueado. Cada minijuego que ganes desbloquea una parte. Son 5. ¿Lista?</p>
           <button class="btn" id="empezar">¡Vamos! 🚀</button>
         </section>
 
         <!-- Reto 1: agitar -->
         <section class="reto" id="r1" hidden>
-          <span class="etiqueta">Reto 1 de 3</span>
+          <span class="etiqueta">Minijuego 1 de 5</span>
           <h1>¡Agita el celular!</h1>
           <p class="sub">Fuerte, como si quisieras que se cayeran todos los besos que tiene guardados.</p>
           <div class="phone" id="phone" aria-hidden="true">📱</div>
@@ -420,9 +526,18 @@
           <button class="alt" id="altAgitar">¿No funciona? Toca rápido el corazón</button>
         </section>
 
+        <!-- Minijuego 2: atrapa los corazones -->
+        <section class="reto" id="rC" hidden>
+          <span class="etiqueta">Minijuego 2 de 5</span>
+          <h1>¡Atrapa los corazones!</h1>
+          <p class="sub">Tócalos antes de que caigan 💗</p>
+          <div class="campo" id="campo"></div>
+          <div class="marcador" id="marcador"></div>
+        </section>
+
         <!-- Reto 2: hablar -->
         <section class="reto" id="r2" hidden>
-          <span class="etiqueta">Reto 2 de 3</span>
+          <span class="etiqueta">Minijuego 3 de 5</span>
           <h1>¡Háblale al celular!</h1>
           <p class="sub">Dile algo bonito en voz alta. Yo te escucho 👂</p>
           <div class="bars" id="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
@@ -434,9 +549,23 @@
           <button class="alt" id="altMic">¿No funciona el micrófono?</button>
         </section>
 
+        <!-- Minijuego 4: raspa la tarjeta -->
+        <section class="reto" id="rR" hidden>
+          <span class="etiqueta">Minijuego 4 de 5</span>
+          <h1>¡Raspa la tarjeta!</h1>
+          <p class="sub">Frota con el dedo para descubrir lo que hay debajo</p>
+          <div class="tarjeta" id="tarjeta">
+            <div class="premio">💋</div>
+            <div class="txt">Un beso para ti</div>
+            <canvas id="raspa" aria-label="Zona para raspar"></canvas>
+          </div>
+          <div class="meter"><i id="mR"></i></div>
+          <div class="pct" id="pR">0%</div>
+        </section>
+
         <!-- Reto 3: piano -->
         <section class="reto" id="r3" hidden>
-          <span class="etiqueta">Reto 3 de 3</span>
+          <span class="etiqueta">Minijuego 5 de 5</span>
           <h1>Toca la melodía del amor</h1>
           <p class="sub">Sigue la tecla que brilla ✨</p>
           <div class="piano" id="piano"></div>
@@ -447,6 +576,7 @@
 
       <!-- Final -->
       <div class="final" id="final" hidden>
+        <div class="frase" id="fraseFinal"></div>
         <div class="teamo">Te amo</div>
         <div class="para" id="nombreFinal"></div>
         <div class="contador" id="contador">🌸 0 flores</div>
@@ -461,6 +591,8 @@
   // ===================================================================
   const CONFIG = {
     nombre: "Valeri",
+    // El mensaje secreto: cada minijuego desbloquea una parte (son 5)
+    partes: ["Eres", "mi", "lugar", "favorito", "en el mundo"],
     // Mensajes que van apareciendo mientras más flores hay
     niveles: [
       [0,   "toca la pantalla: ¡más flores!"],
@@ -533,24 +665,42 @@
       c.addEventListener("animationend", () => c.remove());
     }
   }
+  // Mensaje con candados
+  CONFIG.partes.forEach(() => {
+    const sp = document.createElement("span");
+    sp.textContent = "🔒";
+    $("mensaje").appendChild(sp);
+  });
   function superado(n, emoji, texto, siguiente){
     const lock = $("locks").children[n - 1];
     lock.textContent = "💗";
     lock.classList.add("ok");
     const e = document.createElement("div");
     e.className = "exito";
-    e.innerHTML = '<div class="big"></div><p></p><small></small>';
+    e.innerHTML = '<div class="big"></div><p></p><small></small><div class="palabra"></div><button class="btn"></button>';
     e.querySelector(".big").textContent = emoji;
     e.querySelector("p").textContent = texto;
-    e.querySelector("small").textContent = n < 3 ? "Reto " + n + " de 3 superado" : "¡Mensaje desbloqueado!";
+    e.querySelector("small").textContent = "¡Desbloqueaste una parte del mensaje!";
+    e.querySelector(".palabra").textContent = CONFIG.partes[n - 1];
+    const b = e.querySelector(".btn");
+    b.textContent = n < CONFIG.partes.length ? "Seguir ➜" : "Ver el mensaje completo 💌";
     screen.appendChild(e);
     exitoSonido();
     vibrar([40, 60, 80]);
     confeti(80);
-    setTimeout(() => { e.remove(); siguiente(); }, reduce ? 900 : 1700);
+    // La parte aparece arriba, en el mensaje
+    setTimeout(() => {
+      const chip = $("mensaje").children[n - 1];
+      chip.textContent = CONFIG.partes[n - 1];
+      chip.classList.add("ok");
+      nota(1046.5, 0, .6, .1);
+    }, 500);
+    b.addEventListener("click", () => { e.remove(); siguiente(); }, {once:true});
   }
   function mostrar(id){
-    ["r0", "r1", "r2", "r3"].forEach((r) => $(r).hidden = r !== id);
+    ["r0", "r1", "rC", "r2", "rR", "r3"].forEach((r) => $(r).hidden = r !== id);
+    const n = {r1:1, rC:2, r2:3, rR:4, r3:5}[id];
+    if (n) $("hudTitulo").textContent = "Minijuego " + n + " de 5";
   }
 
   // ===================================================================
@@ -561,7 +711,6 @@
     nota(659.25, 0, .5, .12);
     pedirMovimiento();
     mostrar("r1");
-    $("hudTitulo").textContent = "Reto 1 de 3";
     empezarAgitar();
   });
 
@@ -608,7 +757,7 @@
     if (t - ultimoTic > 90){ ultimoTic = t; nota(400 + p1 * 6, 0, .15, .05); vibrar(15); }
     if (p1 >= 100 && agitando){
       agitando = false;
-      superado(1, "📳", "¡Eso! Qué energía", () => { mostrar("r2"); $("hudTitulo").textContent = "Reto 2 de 3"; });
+      superado(1, "📳", "¡Eso! Qué energía", empezarCorazones);
     }
   }
   function empezarAgitar(){
@@ -645,7 +794,7 @@
       escuchando = false;
       pararMic();
       const dijo = $("dijo").textContent;
-      superado(2, "🗣️", dijo ? "¡Qué lindo!" : "Te escuché 💗", empezarPiano);
+      superado(3, "🗣️", dijo ? "¡Qué lindo!" : "Te escuché 💗", empezarRaspa);
     }
   }
   function pintarBarras(nivel){
@@ -726,6 +875,106 @@
   });
   ["pointerup", "pointercancel", "pointerleave"].forEach((ev) =>
     $("holdMic").addEventListener(ev, () => { clearInterval(manteniendo); pintarBarras(0); }));
+
+  // ===================================================================
+  //  Minijuego 2: atrapa los corazones
+  // ===================================================================
+  const META_C = 8;
+  let atrapados = 0, lluvia = null;
+  function empezarCorazones(){
+    mostrar("rC");
+    atrapados = 0;
+    $("marcador").textContent = "0 / " + META_C;
+    const campo = $("campo");
+    campo.innerHTML = "";
+    clearInterval(lluvia);
+    lluvia = setInterval(soltarCorazon, 520);
+    soltarCorazon();
+  }
+  function soltarCorazon(){
+    const campo = $("campo");
+    const c = document.createElement("button");
+    c.className = "cae";
+    c.type = "button";
+    c.setAttribute("aria-label", "Corazón");
+    c.textContent = ["💗", "💖", "💘", "❤️", "💕"][Math.floor(Math.random() * 5)];
+    c.style.left = azar(12, 88) + "%";
+    c.style.setProperty("--dur", azar(2.1, 3) + "s");
+    c.style.setProperty("--r", azar(-40, 40) + "deg");
+    c.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      if (c.classList.contains("pum")) return;
+      c.style.transform = getComputedStyle(c).transform;
+      c.classList.add("pum");
+      atrapados++;
+      $("marcador").textContent = Math.min(atrapados, META_C) + " / " + META_C;
+      nota(523.25 + atrapados * 60, 0, .4, .1);
+      vibrar(12);
+      if (atrapados === META_C){
+        clearInterval(lluvia);
+        setTimeout(() => { campo.innerHTML = ""; superado(2, "💘", "¡Los atrapaste todos!", empezarHablar); }, 350);
+      }
+    });
+    c.addEventListener("animationend", () => c.remove());
+    campo.appendChild(c);
+  }
+  function empezarHablar(){ mostrar("r2"); }
+
+  // ===================================================================
+  //  Minijuego 4: raspa la tarjeta
+  // ===================================================================
+  let raspando = false, raspaHecho = false, ultimoChequeo = 0;
+  function empezarRaspa(){
+    mostrar("rR");
+    raspaHecho = false;
+    const cv = $("raspa");
+    const r = cv.getBoundingClientRect();
+    const k = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.round(r.width * k);
+    cv.height = Math.round(r.height * k);
+    const c = cv.getContext("2d");
+    c.setTransform(k, 0, 0, k, 0, 0);
+    c.globalCompositeOperation = "source-over";
+    const g = c.createLinearGradient(0, 0, r.width, r.height);
+    g.addColorStop(0, "#c9c9d6"); g.addColorStop(.5, "#f1f1f7"); g.addColorStop(1, "#a9a9bb");
+    c.fillStyle = g;
+    c.fillRect(0, 0, r.width, r.height);
+    c.fillStyle = "rgba(80,60,110,.55)";
+    c.font = "700 22px Fredoka, sans-serif";
+    c.textAlign = "center";
+    c.fillText("✨ Raspa aquí ✨", r.width / 2, r.height / 2 + 8);
+    setP("R", 0);
+  }
+  function rasparEn(e){
+    const cv = $("raspa");
+    const r = cv.getBoundingClientRect();
+    const c = cv.getContext("2d");
+    c.globalCompositeOperation = "destination-out";
+    c.beginPath();
+    c.arc(e.clientX - r.left, e.clientY - r.top, 22, 0, Math.PI * 2);
+    c.fill();
+    const t = performance.now();
+    if (t - ultimoChequeo > 120){
+      ultimoChequeo = t;
+      vibrar(5);
+      // ¿Qué tanto se ha raspado? (muestreando píxeles)
+      const d = c.getImageData(0, 0, cv.width, cv.height).data;
+      let vacios = 0, total = 0;
+      for (let i = 3; i < d.length; i += 4 * 24){ total++; if (d[i] < 40) vacios++; }
+      const pct = vacios / total * 100;
+      setP("R", Math.min(100, pct / .55));
+      if (pct >= 55 && !raspaHecho){
+        raspaHecho = true;
+        raspando = false;
+        c.clearRect(0, 0, cv.width, cv.height);
+        setP("R", 100);
+        setTimeout(() => superado(4, "💋", "¡Encontraste un beso!", empezarPiano), 500);
+      }
+    }
+  }
+  $("raspa").addEventListener("pointerdown", (e) => { e.preventDefault(); raspando = true; $("raspa").setPointerCapture(e.pointerId); rasparEn(e); });
+  $("raspa").addEventListener("pointermove", (e) => { if (raspando && !raspaHecho) rasparEn(e); });
+  ["pointerup", "pointercancel"].forEach((ev) => $("raspa").addEventListener(ev, () => raspando = false));
 
   // ===================================================================
   //  Reto 3: piano — "Para Elisa" (Beethoven, dominio público)
@@ -818,11 +1067,10 @@
     setTimeout(() => {
       $("pianoMsg").textContent = "“Para Elisa”… pero hoy es para ti 💗";
     }, 1500);
-    setTimeout(() => superado(3, "🎹", "¡Qué bonito sonó!", final), (t + .6) * 1000);
+    setTimeout(() => superado(5, "🎹", "¡Qué bonito sonó!", final), (t + .6) * 1000);
   }
   function empezarPiano(){
     mostrar("r3");
-    $("hudTitulo").textContent = "Reto 3 de 3";
     armarPiano();
     paso = 0;
     pianoActivo = true;
@@ -935,7 +1183,9 @@
   }
 
   function final(){
-    ["r0", "r1", "r2", "r3"].forEach((r) => $(r).hidden = true);
+    ["r0", "r1", "rC", "r2", "rR", "r3"].forEach((r) => $(r).hidden = true);
+    $("mensaje").hidden = true;
+    $("fraseFinal").textContent = CONFIG.partes.join(" ") + "…";
     $("stage").hidden = true;
     $("hudTitulo").textContent = "Mensaje abierto 💌";
     jardin.hidden = false;
