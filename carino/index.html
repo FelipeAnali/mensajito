@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Madame Cariño</title>
-<meta name="description" content="Tienes una llamada de Madame Cariño, cariño.">
-<meta name="theme-color" content="#111111">
+<title>Tengo un mensaje para ti</title>
+<meta name="description" content="Un mensaje bloqueado. Supera los retos para abrirlo.">
+<meta name="theme-color" content="#1a0b2e">
 <meta property="og:type" content="website">
-<meta property="og:title" content="📞 Llamada entrante: Madame Cariño">
-<meta property="og:description" content="Contesta, cariño. Madame no espera.">
+<meta property="og:title" content="🔒 Tengo un mensaje para ti">
+<meta property="og:description" content="Pero tienes que desbloquearlo. ¿Te atreves?">
 <meta property="og:url" content="https://felipeanali.github.io/mensajito/carino/">
 <meta property="og:image" content="https://felipeanali.github.io/mensajito/carino/portada.jpg">
 <meta property="og:image:width" content="1200">
@@ -17,28 +17,29 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;1,6..96,500;1,6..96,700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Great+Vibes&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#f6f2ec;
-    --ink:#111111;
-    --soft:#5b5550;
-    --red:#d7263d;
-    --gold:#c9a34a;
-    --green:#22c55e;
+    --night:#12081f;
+    --deep:#1a0b2e;
+    --violet:#3b1a6b;
+    --pink:#ff4d8d;
+    --pink-soft:#ff9ec2;
+    --gold:#ffd166;
+    --mint:#5ef2c1;
+    --text:#fff6fb;
+    --muted:rgba(255,246,251,.72);
   }
 
   *{box-sizing:border-box}
   button{-webkit-tap-highlight-color:transparent;font:inherit}
   body{
     margin:0;
-    background-color:#e9e3da;
-    background-image:
-      linear-gradient(90deg, rgba(17,17,17,.04) 1px, transparent 1px),
-      linear-gradient(rgba(17,17,17,.04) 1px, transparent 1px);
-    background-size:28px 28px;
-    color:var(--ink);
-    font-family:"Inter",system-ui,sans-serif;
+    background-color:var(--night);
+    background-image:radial-gradient(rgba(255,77,141,.14) 1.2px, transparent 1.3px);
+    background-size:22px 22px;
+    color:var(--text);
+    font-family:"Nunito",system-ui,sans-serif;
     -webkit-text-size-adjust:100%;
             text-size-adjust:100%;
     min-height:100vh;
@@ -47,52 +48,46 @@
     justify-content:center;
     padding:24px;
   }
-
   .frame{
     margin:auto 0;
     width:min(94vw,460px);
-    background:var(--ink);
+    background:#0d0617;
+    border:1px solid rgba(255,77,141,.25);
     border-radius:30px;
     padding:12px;
-    box-shadow:0 30px 60px -25px rgba(0,0,0,.6);
+    box-shadow:0 0 70px -15px rgba(255,77,141,.35), 0 30px 60px -25px #000;
   }
-  .topbar{
+
+  /* HUD: progreso de los retos */
+  .hud{
     height:46px;
     display:flex;
     align-items:center;
     gap:10px;
-    padding:0 8px 0 14px;
-    color:#fff;
+    padding:0 14px;
   }
-  .brand{
-    font-family:"Bodoni Moda",Didot,serif;
-    font-style:italic;
-    font-weight:700;
-    font-size:18px;
+  .hud .titulo{font-family:"Fredoka",sans-serif;font-weight:600;font-size:15px}
+  .locks{margin-left:auto;display:flex;gap:8px}
+  .locks span{
+    width:30px;height:30px;
+    border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;
+    background:rgba(255,255,255,.08);
+    transition:background .4s ease, transform .4s cubic-bezier(.3,1.6,.5,1);
   }
-  .brand b{color:var(--red);font-style:normal}
-  .mute{
-    margin-left:auto;
-    width:36px;height:36px;
-    border-radius:50%;
-    border:0;
-    background:rgba(255,255,255,.12);
-    color:#fff;
-    font-size:16px;
-    cursor:pointer;
-  }
-  .mute:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  .locks span.ok{background:var(--pink);transform:scale(1.12)}
 
-  .atelier{
+  .screen{
     position:relative;
     border-radius:20px;
     overflow:hidden;
     overflow:clip;
     min-height:620px;
     background:
-      radial-gradient(60% 40% at 50% 28%, #fffdf9 0%, transparent 70%),
-      repeating-linear-gradient(90deg, transparent 0 46px, rgba(17,17,17,.035) 46px 47px),
-      var(--paper);
+      radial-gradient(70% 45% at 50% 30%, rgba(255,77,141,.22), transparent 70%),
+      radial-gradient(80% 50% at 50% 100%, rgba(94,242,193,.10), transparent 70%),
+      linear-gradient(180deg, var(--violet) 0%, var(--deep) 60%, var(--night) 100%);
     touch-action:manipulation;
   }
   .stage{
@@ -102,684 +97,878 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    padding:26px 22px 30px;
+    justify-content:center;
+    padding:30px 22px;
     text-align:center;
   }
-
-  /* ---------- LLAMADA ENTRANTE ---------- */
-  .call{
-    position:absolute;
-    top:0;right:0;bottom:0;left:0;
-    z-index:12;
+  .reto{
+    width:100%;
     display:flex;
     flex-direction:column;
     align-items:center;
-    padding:70px 24px 50px;
-    background:linear-gradient(180deg, #1c1c1f 0%, #0b0b0c 100%);
-    color:#fff;
-    text-align:center;
+    animation:entra .55s cubic-bezier(.2,.9,.25,1) both;
   }
-  .call .tipo{font-size:14px;letter-spacing:1px;color:rgba(255,255,255,.65)}
-  .call .quien{
-    margin-top:8px;
-    font-family:"Bodoni Moda",Didot,serif;
-    font-weight:700;
-    font-size:38px;
-  }
-  .call .quien b{color:var(--red)}
-  .avatar{
-    position:relative;
-    margin-top:46px;
-    width:150px;height:150px;
-    border-radius:50%;
-    background:var(--paper);
-    overflow:hidden;
-    box-shadow:0 0 0 6px rgba(255,255,255,.08);
-  }
-  .avatar svg{position:absolute;left:-30px;top:-42px;width:210px;height:229px}
-  .ondas{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;pointer-events:none}
-  .ondas i{
-    position:absolute;
-    top:0;right:0;bottom:0;left:0;
-    border-radius:50%;
-    border:2px solid rgba(255,255,255,.35);
-    animation:onda 2s ease-out infinite;
-  }
-  .ondas i:nth-child(2){animation-delay:.7s}
-  .ondas i:nth-child(3){animation-delay:1.4s}
-  @keyframes onda{from{transform:scale(1);opacity:.9}to{transform:scale(1.9);opacity:0}}
-  .avatar-wrap{position:relative;animation:timbra 1.2s ease-in-out infinite}
-  @keyframes timbra{
-    0%,40%,100%{transform:rotate(0)}
-    5%,15%,25%{transform:rotate(-6deg)}
-    10%,20%,30%{transform:rotate(6deg)}
-  }
-  .call .botones{
-    margin-top:auto;
-    width:100%;
-    display:flex;
-    justify-content:space-around;
-  }
-  .call .op{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,.75)}
-  .redondo{
-    width:72px;height:72px;
-    border-radius:50%;
-    border:0;
-    color:#fff;
-    font-size:30px;
-    cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-    transition:transform .15s ease;
-  }
-  .redondo:active{transform:scale(.9)}
-  .redondo:focus-visible{outline:3px solid #fff;outline-offset:4px}
-  .redondo.si{background:var(--green);animation:llama 1.2s ease-in-out infinite}
-  .redondo.no{background:#ef4444}
-  .redondo.no span{display:inline-block;transform:rotate(135deg)}
-  @keyframes llama{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}50%{box-shadow:0 0 0 14px rgba(34,197,94,0)}}
-  .call .nota{min-height:1.3em;margin-top:18px;font-family:"Bodoni Moda",serif;font-style:italic;font-size:17px;color:#f3e3b8}
-
-  /* ---------- MADAME ---------- */
-  .madame{
-    position:relative;
-    width:210px;
-    height:229px;
-    border:0;background:transparent;padding:0;
-    cursor:pointer;
-    flex:none;
-  }
-  .madame:focus-visible{outline:3px solid var(--red);outline-offset:6px;border-radius:20px}
-  .madame svg{width:100%;height:100%;overflow:visible}
-  .madame .cuerpo{transform-origin:110px 240px;animation:respira 3.4s ease-in-out infinite}
-  @keyframes respira{0%,100%{transform:scale(1)}50%{transform:scale(1.015,.99)}}
-  .madame.wow .cuerpo{animation:wow .6s cubic-bezier(.3,1.6,.5,1)}
-  @keyframes wow{30%{transform:translateY(-14px) scale(1.04)}}
-  .madame .cabeza{transform-origin:110px 160px;transition:transform .5s cubic-bezier(.3,1.4,.5,1)}
-  .madame.sospecha .cabeza{transform:rotate(-7deg)}
-  .madame .boca{transform-origin:110px 160px;transform-box:view-box}
-  .madame.habla .boca{animation:habla .18s ease-in-out infinite alternate}
-  @keyframes habla{from{transform:scaleY(.4)}to{transform:scaleY(1.6)}}
-  .madame .parpado{transform-origin:center;transform-box:fill-box;transform:scaleY(0);animation:parpadea 5s infinite}
-  @keyframes parpadea{0%,94%,100%{transform:scaleY(0)}96%{transform:scaleY(1)}}
-  .madame .lid{transition:height .4s ease}
-  .madame .tel{transform-origin:150px 150px;transition:transform .5s ease}
-  .madame.colgo .tel{transform:translate(30px,70px) rotate(40deg);opacity:0;transition:transform .6s ease, opacity .6s ease .2s}
-
-  /* ---------- BURBUJA ---------- */
-  .bubble{
-    position:relative;
-    width:100%;
-    margin-top:14px;
-    background:#fff;
-    border:2px solid var(--ink);
-    border-radius:18px;
-    padding:18px 18px 16px;
-    font-family:"Bodoni Moda",Didot,serif;
-    font-weight:500;
-    font-size:22px;
-    line-height:1.3;
-    text-align:left;
-    box-shadow:6px 6px 0 var(--ink);
-    min-height:86px;
-  }
-  .bubble::before{
-    content:"";
-    position:absolute;
-    left:50%;top:-12px;
-    width:20px;height:20px;
-    margin-left:-10px;
-    background:#fff;
-    border-left:2px solid var(--ink);
-    border-top:2px solid var(--ink);
-    transform:rotate(45deg);
-  }
-  .bubble em{font-style:italic;color:var(--red)}
-  .bubble .who{
-    display:block;
-    margin-bottom:4px;
-    font-family:"Inter",sans-serif;
-    font-size:11px;
-    font-weight:700;
-    letter-spacing:2.5px;
+  @keyframes entra{from{opacity:0;transform:translateY(18px) scale(.97)}}
+  .etiqueta{
+    display:inline-block;
+    padding:6px 14px;
+    border-radius:999px;
+    background:rgba(255,255,255,.1);
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:2px;
     text-transform:uppercase;
-    color:var(--soft);
+    color:var(--pink-soft);
   }
-  .bubble .who i{font-style:normal;color:var(--green)}
-  .cursor{display:inline-block;width:2px;height:1em;background:var(--ink);vertical-align:-2px;margin-left:2px;animation:blink 1s steps(1) infinite}
-  @keyframes blink{50%{opacity:0}}
-
-  .ask{
-    width:100%;
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    margin-top:20px;
-  }
-  .ask input{
-    width:100%;
-    font-family:"Bodoni Moda",Didot,serif;
+  h1{
+    font-family:"Fredoka",sans-serif;
     font-weight:700;
-    font-size:26px;
-    text-align:center;
-    color:var(--ink);
-    background:transparent;
-    border:0;
-    border-bottom:3px solid var(--ink);
-    border-radius:0;
-    padding:8px 6px;
-    outline:none;
-    -webkit-appearance:none;
-            appearance:none;
+    font-size:clamp(30px,8.5vw,40px);
+    line-height:1.08;
+    margin:14px 0 8px;
   }
-  .ask input::placeholder{color:rgba(17,17,17,.3);font-style:italic;font-weight:500}
-  .ask input:focus{border-color:var(--red)}
+  .sub{font-size:15px;line-height:1.6;color:var(--muted);margin:0;max-width:30ch}
+  .icono{font-size:84px;line-height:1;margin:26px 0 10px;filter:drop-shadow(0 10px 24px rgba(255,77,141,.45))}
+
   .btn{
+    margin-top:24px;
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    gap:8px;
-    padding:14px 22px;
-    border:2px solid var(--ink);
+    gap:10px;
+    padding:15px 28px;
+    border:0;
     border-radius:999px;
-    background:var(--ink);
+    background:linear-gradient(135deg, var(--pink), #ff7a59);
     color:#fff;
-    font-family:"Inter",sans-serif;
-    font-weight:700;
-    font-size:15px;
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:18px;
     cursor:pointer;
-    box-shadow:4px 4px 0 var(--red);
-    transition:transform .12s ease, box-shadow .12s ease;
+    box-shadow:0 10px 26px -8px rgba(255,77,141,.8);
+    transition:transform .15s ease;
   }
-  .btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--red)}
-  .btn:focus-visible{outline:3px solid var(--red);outline-offset:4px}
-  .btn.light{background:#fff;color:var(--ink);box-shadow:4px 4px 0 var(--ink)}
-  .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px}
-  .colgo-txt{margin-top:16px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--soft)}
+  .btn:active{transform:scale(.95)}
+  .btn:focus-visible{outline:3px solid #fff;outline-offset:4px}
+  .alt{
+    margin-top:16px;
+    background:none;
+    border:0;
+    color:var(--muted);
+    font-size:13.5px;
+    text-decoration:underline;
+    text-underline-offset:3px;
+    cursor:pointer;
+  }
 
-  /* ---------- ¡NOMBRE, CARIÑOOOO! ---------- */
-  .shout{
+  /* Barra de progreso de cada reto */
+  .meter{
+    width:100%;
+    max-width:300px;
+    height:22px;
+    margin-top:26px;
+    border-radius:999px;
+    background:rgba(255,255,255,.1);
+    overflow:hidden;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,.4);
+  }
+  .meter i{
+    display:block;
+    height:100%;
+    width:0%;
+    border-radius:999px;
+    background:linear-gradient(90deg, var(--pink), var(--gold));
+    box-shadow:0 0 16px rgba(255,77,141,.8);
+    transition:width .15s linear;
+  }
+  .pct{margin-top:8px;font-family:"Fredoka",sans-serif;font-weight:600;font-size:15px;color:var(--pink-soft)}
+
+  /* Reto 1: celular que se agita */
+  .phone{font-size:90px;display:inline-block;margin:24px 0 0;animation:agita 1.4s ease-in-out infinite}
+  @keyframes agita{
+    0%,55%,100%{transform:rotate(0)}
+    60%,70%,80%,90%{transform:rotate(-14deg)}
+    65%,75%,85%,95%{transform:rotate(14deg)}
+  }
+  .phone.vivo{animation:agita2 .12s linear infinite}
+  @keyframes agita2{0%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}100%{transform:rotate(-12deg)}}
+  .tapheart{
+    margin-top:20px;
+    width:120px;height:120px;
+    border-radius:50%;
+    border:0;
+    background:radial-gradient(circle at 35% 30%, #ff9ec2, var(--pink) 60%, #c2185b);
+    font-size:54px;
+    cursor:pointer;
+    box-shadow:0 12px 30px -8px rgba(255,77,141,.9);
+    transition:transform .08s ease;
+  }
+  .tapheart:active{transform:scale(.88)}
+
+  /* Reto 2: micrófono */
+  .bars{display:flex;gap:7px;align-items:flex-end;height:90px;margin-top:24px}
+  .bars i{
+    width:14px;
+    height:10px;
+    border-radius:7px;
+    background:linear-gradient(180deg, var(--gold), var(--pink));
+    transition:height .08s linear;
+  }
+  .dijo{
+    min-height:1.5em;
+    margin-top:16px;
+    font-family:"Fredoka",sans-serif;
+    font-weight:500;
+    font-size:19px;
+    color:var(--gold);
+    max-width:28ch;
+  }
+  .holdbtn{touch-action:none;user-select:none;-webkit-user-select:none}
+
+  /* Reto 3: piano */
+  .piano{
+    position:relative;
+    margin-top:26px;
+    width:100%;
+    max-width:330px;
+    height:180px;
+    display:flex;
+    border-radius:14px;
+    padding:8px 8px 10px;
+    background:#0b0610;
+    box-shadow:0 18px 40px -16px rgba(0,0,0,.8), inset 0 2px 0 rgba(255,255,255,.06);
+  }
+  .key{
+    position:relative;
+    flex:1;
+    margin:0 2px;
+    border:0;
+    border-radius:0 0 10px 10px;
+    background:linear-gradient(180deg, #fff 0%, #f1e9f3 100%);
+    box-shadow:inset 0 -8px 0 #d9cde0;
+    cursor:pointer;
+    transition:background .1s ease, transform .1s ease;
+  }
+  .key.negra{
+    position:absolute;
+    top:8px;
+    width:34px;height:104px;
+    margin:0;
+    z-index:2;
+    border-radius:0 0 8px 8px;
+    background:linear-gradient(180deg, #2a2230, #0e0912);
+    box-shadow:inset 0 -6px 0 #000;
+  }
+  .key.on{background:linear-gradient(180deg, #ffd6e7, var(--pink-soft));transform:translateY(2px)}
+  .key.negra.on{background:linear-gradient(180deg, #ff7aa8, var(--pink))}
+  .key.siguiente{background:linear-gradient(180deg, #fff, #ffe08a);box-shadow:inset 0 -8px 0 #f2b931, 0 0 22px 6px rgba(255,209,102,.75);animation:pulso .8s ease-in-out infinite}
+  .key.negra.siguiente{background:linear-gradient(180deg, #ffe08a, #f2b931);box-shadow:0 0 22px 6px rgba(255,209,102,.85)}
+  @keyframes pulso{50%{transform:translateY(3px)}}
+  .key.mal{animation:mal .3s ease}
+  @keyframes mal{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .notas{
+    margin-top:14px;
+    display:flex;
+    gap:5px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .notas i{
+    width:16px;height:16px;
+    border-radius:50%;
+    background:rgba(255,255,255,.14);
+    transition:background .2s ease, transform .2s ease;
+  }
+  .notas i.ok{background:var(--gold);transform:scale(1.15)}
+
+  /* Celebración entre retos */
+  .exito{
     position:absolute;
     top:0;right:0;bottom:0;left:0;
-    z-index:10;
+    z-index:20;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    padding:20px;
-    background:var(--ink);
-    color:#fff;
-    text-align:center;
-    animation:fadein .2s ease;
+    background:rgba(18,8,31,.78);
+    -webkit-backdrop-filter:blur(4px);
+            backdrop-filter:blur(4px);
+    animation:fade .25s ease;
   }
-  @keyframes fadein{from{opacity:0}}
-  .shout .nombre{
-    font-family:"Bodoni Moda",Didot,serif;
-    font-weight:900;
-    line-height:1;
-    max-width:100%;
-    overflow-wrap:break-word;
-    animation:zoom .7s cubic-bezier(.3,1.6,.5,1);
-  }
-  .shout .carino{
-    margin-top:10px;
-    font-family:"Bodoni Moda",Didot,serif;
-    font-style:italic;
-    font-weight:700;
-    font-size:clamp(34px,10vw,54px);
-    color:var(--red);
-    white-space:nowrap;
-  }
-  .shout .carino span{display:inline-block;opacity:0;animation:letra .3s ease forwards}
-  @keyframes letra{from{opacity:0;transform:translateY(16px) scale(.6)}to{opacity:1;transform:none}}
-  @keyframes zoom{from{transform:scale(.2);opacity:0}}
+  @keyframes fade{from{opacity:0}}
+  .exito .big{font-size:90px;animation:pop .6s cubic-bezier(.3,1.7,.5,1)}
+  .exito p{margin:10px 0 0;font-family:"Fredoka",sans-serif;font-weight:700;font-size:30px}
+  .exito small{margin-top:6px;color:var(--pink-soft);font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:12px}
+  @keyframes pop{from{transform:scale(.2) rotate(-30deg);opacity:0}}
 
-  .sequin{
+  .confeti{
     position:absolute;
-    z-index:15;
-    top:-12px;
-    width:8px;height:8px;
-    border-radius:50%;
+    top:-14px;
+    width:9px;height:14px;
+    border-radius:2px;
+    z-index:25;
     pointer-events:none;
-    animation:cae var(--dur,2.4s) linear var(--delay,0s) forwards;
+    animation:cae var(--dur,2.4s) cubic-bezier(.3,.1,.6,1) var(--delay,0s) forwards;
   }
-  @keyframes cae{to{transform:translate(var(--x,0),700px) rotate(540deg)}}
+  @keyframes cae{to{transform:translate(var(--x,0),720px) rotate(var(--r,540deg))}}
 
-  .step{width:100%;display:flex;flex-direction:column;align-items:center;animation:sube .6s cubic-bezier(.2,.9,.25,1) both}
-  @keyframes sube{from{opacity:0;transform:translateY(12px)}}
+  /* Final: TE AMO con flores */
+  .jardin{
+    position:absolute;
+    top:0;right:0;bottom:0;left:0;
+    width:100%;height:100%;
+    z-index:1;
+  }
+  .final{
+    position:absolute;
+    top:0;right:0;bottom:0;left:0;
+    z-index:3;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none;
+    text-align:center;
+    padding:20px;
+    /* sombra suave detrás del texto para que se lea aunque haya muchas flores */
+    background:radial-gradient(ellipse 62% 26% at 50% 46%, rgba(18,8,31,.78) 0%, rgba(18,8,31,.45) 55%, transparent 100%);
+  }
+  .teamo{
+    font-family:"Great Vibes",cursive;
+    font-size:clamp(84px,25vw,124px);
+    line-height:.95;
+    color:#fff;
+    text-shadow:0 0 18px rgba(255,77,141,.95), 0 0 46px rgba(255,77,141,.6), 0 4px 0 rgba(0,0,0,.25);
+    animation:late 1.6s ease-in-out infinite;
+  }
+  @keyframes late{0%,100%{transform:scale(1)}15%{transform:scale(1.07)}30%{transform:scale(.98)}45%{transform:scale(1.04)}}
+  .para{
+    margin-top:6px;
+    font-family:"Fredoka",sans-serif;
+    font-weight:700;
+    font-size:30px;
+    color:var(--gold);
+    text-shadow:0 2px 10px rgba(0,0,0,.5);
+  }
+  .contador{
+    margin-top:22px;
+    padding:8px 16px;
+    border-radius:999px;
+    background:rgba(18,8,31,.6);
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:15px;
+  }
+  .pista{
+    margin-top:10px;
+    font-size:12.5px;
+    font-weight:800;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--pink-soft);
+    text-shadow:0 1px 6px rgba(0,0,0,.6);
+    animation:respira 2.2s ease-in-out infinite;
+  }
+  @keyframes respira{50%{opacity:.45}}
 
   [hidden]{display:none !important}
 
   @media (prefers-reduced-motion: reduce){
-    .madame .cuerpo,.madame .parpado,.madame.habla .boca,.avatar-wrap,.ondas i,.redondo.si{animation:none}
-    .step,.shout,.shout .nombre{animation:none}
-    .shout .carino span{animation:none;opacity:1}
-    .sequin{display:none}
+    .phone,.phone.vivo,.teamo,.pista,.key.siguiente{animation:none}
+    .reto,.exito,.exito .big{animation:none}
+    .confeti{display:none}
   }
   @media (max-width:420px){
-    .atelier,.stage{min-height:590px}
-    .bubble{font-size:20px}
+    .screen,.stage{min-height:590px}
+    .piano{height:168px}
   }
 </style>
 </head>
 <body>
   <main class="frame">
-    <div class="topbar">
-      <span class="brand">Atelier <b>Cariño</b></span>
-      <button class="mute" id="mute" aria-label="Silenciar a Madame">🔊</button>
+    <div class="hud">
+      <span class="titulo" id="hudTitulo">Mensaje bloqueado</span>
+      <div class="locks" id="locks" aria-label="Retos superados">
+        <span>🔒</span><span>🔒</span><span>🔒</span>
+      </div>
     </div>
 
-    <div class="atelier" id="atelier">
+    <div class="screen" id="screen">
+      <canvas class="jardin" id="jardin" hidden></canvas>
 
-      <!-- Llamada entrante -->
-      <div class="call" id="call">
-        <div class="tipo">Llamada entrante…</div>
-        <div class="quien">Madame <b>Cariño</b></div>
-        <div class="avatar-wrap">
-          <div class="ondas" aria-hidden="true"><i></i><i></i><i></i></div>
-          <div class="avatar" id="avatar" aria-hidden="true"></div>
-        </div>
-        <p class="nota" id="nota"></p>
-        <div class="botones">
-          <div class="op"><button class="redondo no" id="rechazar" aria-label="Rechazar"><span>📞</span></button>Rechazar</div>
-          <div class="op"><button class="redondo si" id="contestar" aria-label="Contestar">📞</button>Contestar</div>
-        </div>
+      <div class="stage" id="stage">
+
+        <!-- Inicio -->
+        <section class="reto" id="r0">
+          <span class="etiqueta">Para <span id="nombre0"></span></span>
+          <div class="icono">🔒💌</div>
+          <h1>Tengo un mensaje para ti</h1>
+          <p class="sub">Pero está bloqueado. Para abrirlo tienes que superar 3 retos rapiditos. ¿Lista?</p>
+          <button class="btn" id="empezar">¡Vamos! 🚀</button>
+        </section>
+
+        <!-- Reto 1: agitar -->
+        <section class="reto" id="r1" hidden>
+          <span class="etiqueta">Reto 1 de 3</span>
+          <h1>¡Agita el celular!</h1>
+          <p class="sub">Fuerte, como si quisieras que se cayeran todos los besos que tiene guardados.</p>
+          <div class="phone" id="phone" aria-hidden="true">📱</div>
+          <button class="tapheart" id="tapAgitar" hidden aria-label="Tocar rápido">💗</button>
+          <div class="meter"><i id="m1"></i></div>
+          <div class="pct" id="p1">0%</div>
+          <button class="alt" id="altAgitar">¿No funciona? Toca rápido el corazón</button>
+        </section>
+
+        <!-- Reto 2: hablar -->
+        <section class="reto" id="r2" hidden>
+          <span class="etiqueta">Reto 2 de 3</span>
+          <h1>¡Háblale al celular!</h1>
+          <p class="sub">Dile algo bonito en voz alta. Yo te escucho 👂</p>
+          <div class="bars" id="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="dijo" id="dijo" aria-live="polite"></div>
+          <button class="btn" id="activarMic">🎤 Activar micrófono</button>
+          <button class="btn holdbtn" id="holdMic" hidden>🎤 Mantén presionado y habla</button>
+          <div class="meter"><i id="m2"></i></div>
+          <div class="pct" id="p2">0%</div>
+          <button class="alt" id="altMic">¿No funciona el micrófono?</button>
+        </section>
+
+        <!-- Reto 3: piano -->
+        <section class="reto" id="r3" hidden>
+          <span class="etiqueta">Reto 3 de 3</span>
+          <h1>Toca la melodía del amor</h1>
+          <p class="sub">Sigue la tecla que brilla ✨</p>
+          <div class="piano" id="piano"></div>
+          <div class="notas" id="notas"></div>
+          <div class="dijo" id="pianoMsg" aria-live="polite"></div>
+        </section>
       </div>
 
-      <div class="stage">
-        <button class="madame sospecha" id="madame" aria-label="Madame Cariño">
-          <svg viewBox="0 0 220 240" aria-hidden="true" id="dibujo">
-            <defs>
-              <radialGradient id="piel" cx="45%" cy="40%" r="65%">
-                <stop offset="0" stop-color="#f7d2b4"/>
-                <stop offset="1" stop-color="#e9b08f"/>
-              </radialGradient>
-              <linearGradient id="pelo" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#3a2a1f"/>
-                <stop offset="1" stop-color="#1d140e"/>
-              </linearGradient>
-              <clipPath id="clipI"><ellipse cx="86" cy="124" rx="11" ry="8"/></clipPath>
-              <clipPath id="clipD"><ellipse cx="134" cy="124" rx="11" ry="8"/></clipPath>
-            </defs>
-            <g class="cuerpo">
-              <!-- vestido con hombreras y cuello rojo -->
-              <path d="M58 240 Q56 196 80 182 L140 182 Q164 196 162 240 Z" fill="#1f1f24"/>
-              <path d="M62 206 Q76 182 102 186" stroke="#33333b" stroke-width="11" fill="none" stroke-linecap="round"/>
-              <path d="M64 224 Q78 200 100 204" stroke="#2a2a31" stroke-width="10" fill="none" stroke-linecap="round"/>
-              <path d="M158 206 Q144 182 118 186" stroke="#33333b" stroke-width="11" fill="none" stroke-linecap="round"/>
-              <path d="M156 224 Q142 200 120 204" stroke="#2a2a31" stroke-width="10" fill="none" stroke-linecap="round"/>
-              <rect x="101" y="160" width="18" height="24" fill="#e9b08f"/>
-              <path d="M96 180 L110 214 L124 180" stroke="#c4224a" stroke-width="5" fill="none" stroke-linejoin="round"/>
-              <g class="cabeza">
-                <!-- melena -->
-                <path d="M44 156 C26 70 60 30 110 30 C160 30 194 70 176 156 Q166 166 152 158 L150 112 L70 112 L68 158 Q54 166 44 156 Z" fill="url(#pelo)"/>
-                <ellipse cx="110" cy="120" rx="47" ry="50" fill="url(#piel)"/>
-                <path d="M58 108 C50 52 76 36 110 36 C144 36 170 52 162 108 Q136 99 110 100 Q84 99 58 108 Z" fill="url(#pelo)"/>
-                <path d="M110 40 Q108 70 112 98 M84 46 Q78 74 80 100 M136 46 Q142 74 140 100" stroke="#4a3628" stroke-width="2" fill="none" opacity=".6"/>
-                <ellipse cx="78" cy="146" rx="9" ry="5" fill="#e88f86" opacity=".35"/>
-                <ellipse cx="142" cy="146" rx="9" ry="5" fill="#e88f86" opacity=".35"/>
-                <!-- ojos -->
-                <ellipse cx="86" cy="124" rx="11" ry="8" fill="#fff"/>
-                <ellipse cx="134" cy="124" rx="11" ry="8" fill="#fff"/>
-                <circle id="ojoI" cx="86" cy="126" r="5" fill="#4a2f22"/>
-                <circle id="ojoD" cx="134" cy="126" r="5" fill="#4a2f22"/>
-                <circle id="luzI" cx="88" cy="124" r="1.6" fill="#fff"/>
-                <circle id="luzD" cx="136" cy="124" r="1.6" fill="#fff"/>
-                <rect class="lid" id="lidI" x="72" y="110" width="28" height="13" fill="#efc09f" clip-path="url(#clipI)"/>
-                <rect class="lid" id="lidD" x="120" y="110" width="28" height="13" fill="#efc09f" clip-path="url(#clipD)"/>
-                <path d="M77 134 Q86 138 95 134" stroke="#c98a6e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-                <path d="M125 134 Q134 138 143 134" stroke="#c98a6e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-                <ellipse class="parpado" cx="86" cy="124" rx="12" ry="9" fill="#efc09f"/>
-                <ellipse class="parpado" cx="134" cy="124" rx="12" ry="9" fill="#efc09f"/>
-                <!-- gafas gigantes -->
-                <circle cx="86" cy="124" r="25" fill="rgba(255,255,255,.12)" stroke="#141414" stroke-width="5"/>
-                <circle cx="134" cy="124" r="25" fill="rgba(255,255,255,.12)" stroke="#141414" stroke-width="5"/>
-                <path d="M109 121 Q110 118 111 121" stroke="#141414" stroke-width="4" fill="none" stroke-linecap="round"/>
-                <path d="M70 112 Q74 104 82 102" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".7"/>
-                <path d="M118 112 Q122 104 130 102" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".7"/>
-                <!-- nariz y boca -->
-                <ellipse cx="110" cy="142" rx="9" ry="10" fill="#e8a283"/>
-                <ellipse cx="107" cy="139" rx="3" ry="2.5" fill="#f6c9ad"/>
-                <path class="boca" d="M101 160 Q110 155 119 160 Q110 166 101 160 Z" fill="#b8323f"/>
-              </g>
-              <!-- teléfono en la oreja -->
-              <g class="tel">
-                <path d="M150 204 Q176 196 168 158" stroke="#1f1f24" stroke-width="16" fill="none" stroke-linecap="round"/>
-                <path d="M172 112 Q186 140 150 170" stroke="#d7263d" stroke-width="10" fill="none" stroke-linecap="round"/>
-                <ellipse cx="170" cy="112" rx="9" ry="14" fill="#b81c31" transform="rotate(-20 170 112)"/>
-                <ellipse cx="148" cy="170" rx="12" ry="8" fill="#b81c31" transform="rotate(-30 148 170)"/>
-                <ellipse cx="166" cy="160" rx="10" ry="8" fill="#efc09f"/>
-                <path d="M146 178 q-6 8 2 12 q8 4 0 11 q-8 5 1 11 q8 5 0 11" stroke="#2a2a2a" stroke-width="2" fill="none"/>
-              </g>
-            </g>
-          </svg>
-        </button>
-
-        <div class="bubble" id="bubble" aria-live="polite"><span class="who">Madame Cariño · <i id="estado">en llamada</i></span><span id="dice"></span><span class="cursor"></span></div>
-
-        <form class="ask step" id="pasoNombre" hidden>
-          <input id="nombre" type="text" maxlength="24" autocomplete="given-name" placeholder="di tu nombre…" aria-label="Tu nombre">
-          <button class="btn" type="submit">Decirle quién soy</button>
-        </form>
-
-        <div class="step" id="pasoFinal" hidden>
-          <div class="colgo-txt" id="colgoTxt">📞 Madame colgó</div>
-          <div class="row">
-            <button class="btn light" id="otraVez">Otra vez, cariño</button>
-            <button class="btn" id="compartir">Compartir 📲</button>
-          </div>
-        </div>
+      <!-- Final -->
+      <div class="final" id="final" hidden>
+        <div class="teamo">Te amo</div>
+        <div class="para" id="nombreFinal"></div>
+        <div class="contador" id="contador">🌸 0 flores</div>
+        <div class="pista" id="pista">toca la pantalla: ¡más flores!</div>
       </div>
     </div>
   </main>
 
 <script>
   // ===================================================================
-  //  EDITA AQUÍ  →  lo que dice Madame Cariño
+  //  EDITA AQUÍ
   // ===================================================================
   const CONFIG = {
-    aloTexto: "¿Aló?… *te mira raro por encima de las gafas* …¿Quién es?",
-    aloVoz: [["¿Aló?", .85, 1.1], ["¿Quién es?", .75, .95]],
-    sinNombre: "¿Y? Tu nombre, cariño. No tengo todo el día.",
-    // {n} = su nombre
-    final: "Felipe me había contado de ti. *Jumm…* Sí. Esta vez sí tiene buenos gustos.",
-    finalVoz: [["Felipe me había contado de ti.", .95, 1.1], ["Jumm.", .5, .9], ["Sí. Esta vez sí tiene buenos gustos.", .9, 1.15]],
-    rechazos: ["¿Rechazar a Madame? Nadie rechaza a Madame, cariño.", "Ni lo intentes, cariño.", "Contesta. Ahora."],
-    toques: ["¿Qué? Estoy en una llamada, cariño.", "¡No me toques el peinado!", "Jumm.", "¡Cariñoooo!"]
+    nombre: "Valeri",
+    // Mensajes que van apareciendo mientras más flores hay
+    niveles: [
+      [0,   "toca la pantalla: ¡más flores!"],
+      [25,  "sigue… 🌷"],
+      [60,  "te amo un montón 💗"],
+      [110, "y cada vez más 🌹"],
+      [180, "un jardín entero para ti 💐"],
+      [260, "te amo infinito ♾️"]
+    ]
   };
   // ===================================================================
 
   const $ = (id) => document.getElementById(id);
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const atelier = $("atelier");
-  const madame = $("madame");
+  const screen = $("screen");
   const azar = (a, b) => a + Math.random() * (b - a);
   const vibrar = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch(e){} };
-  let nombre = "";
-  let fase = "llamada"; // llamada → alo → grito → final
-
-  // Foto de perfil de la llamada: el mismo dibujo de Madame
-  const mini = $("dibujo").cloneNode(true);
-  mini.removeAttribute("id");
-  mini.querySelectorAll("[id]").forEach((n) => {
-    const v = n.id; n.id = "m-" + v;
-  });
-  // Los degradados del clon apuntan a sus propias definiciones
-  mini.innerHTML = mini.innerHTML.replace(/url\(#(piel|pelo|clipI|clipD)\)/g, "url(#m-$1)");
-  mini.querySelector(".tel").remove();
-  $("avatar").appendChild(mini);
+  const params = new URLSearchParams(location.search);
+  const nombre = (params.get("para") || CONFIG.nombre || "ti").slice(0, 24);
+  $("nombre0").textContent = nombre;
+  $("nombreFinal").textContent = nombre;
 
   // ===================================================================
-  //  Voz y sonidos
+  //  Sonido
   // ===================================================================
-  let conVoz = true;
-  let voz = null;
-  function elegirVoz(){
-    if (!("speechSynthesis" in window)) return;
-    const vs = speechSynthesis.getVoices().filter((v) => /^es/i.test(v.lang));
-    voz = vs.find((v) => /Paulina|Monica|Mónica|Marisol|Helena|Sabina|Google español|female|mujer/i.test(v.name))
-       || vs.find((v) => /es-(MX|US|CO|419)/i.test(v.lang)) || vs[0] || null;
-  }
-  if ("speechSynthesis" in window){ elegirVoz(); speechSynthesis.onvoiceschanged = elegirVoz; }
-
-  let turno = 0;
-  function hablar(partes, alTerminar){
-    const mio = ++turno;
-    madame.classList.add("habla");
-    const fin = () => {
-      if (mio === turno) madame.classList.remove("habla");
-      if (alTerminar){ const f = alTerminar; alTerminar = null; f(); }
-    };
-    if (!conVoz || !("speechSynthesis" in window)){
-      setTimeout(fin, Math.min(partes.reduce((t, p) => t + p[0].length * 60, 500), 4500));
-      return;
-    }
-    try {
-      speechSynthesis.cancel();
-      partes.forEach(([texto, rate, pitch], i) => {
-        const u = new SpeechSynthesisUtterance(texto);
-        u.lang = voz ? voz.lang : "es-ES";
-        if (voz) u.voice = voz;
-        u.rate = rate; u.pitch = pitch;
-        if (i === partes.length - 1){ u.onend = fin; u.onerror = fin; }
-        speechSynthesis.speak(u);
-      });
-      setTimeout(fin, 9000);
-    } catch(e){ fin(); }
-  }
-  $("mute").addEventListener("click", () => {
-    conVoz = !conVoz;
-    $("mute").textContent = conVoz ? "🔊" : "🔇";
-    $("mute").setAttribute("aria-label", conVoz ? "Silenciar a Madame" : "Activar la voz de Madame");
-    if (!conVoz && "speechSynthesis" in window) speechSynthesis.cancel();
-  });
-
   let ac = null;
   function sonido(){
     if (!ac){ try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return null; } }
     if (ac.state === "suspended") ac.resume();
     return ac;
   }
-  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch(e){}
-  function acorde(frecs, dur = 1.2, vol = .08, tipo = "triangle"){
-    const a = sonido(); if (!a || !conVoz) return;
-    const t = a.currentTime;
-    frecs.forEach((f, i) => {
-      const o = a.createOscillator(), g = a.createGain();
-      o.type = tipo; o.frequency.value = f;
-      o.connect(g); g.connect(a.destination);
-      g.gain.setValueAtTime(0, t + i * .05);
-      g.gain.linearRampToValueAtTime(vol, t + i * .05 + .02);
-      g.gain.exponentialRampToValueAtTime(.0004, t + i * .05 + dur);
-      o.start(t + i * .05); o.stop(t + i * .05 + dur + .05);
+  // En iPhone: sonar por el parlante aunque esté en silencio; solo se cambia
+  // a "grabar" mientras el micrófono está encendido
+  function sesionAudio(tipo){ try { if (navigator.audioSession) navigator.audioSession.type = tipo; } catch(e){} }
+  sesionAudio("playback");
+  function nota(freq, cuando = 0, dur = 1.4, vol = .22){
+    const a = sonido(); if (!a) return;
+    const t = a.currentTime + cuando;
+    const g = a.createGain();
+    g.connect(a.destination);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + .008);
+    g.gain.exponentialRampToValueAtTime(vol * .35, t + .25);
+    g.gain.exponentialRampToValueAtTime(.0005, t + dur);
+    [[1, "triangle", 1], [2, "sine", .35], [3, "sine", .12], [4.01, "sine", .06]].forEach(([r, tipo, amp]) => {
+      const o = a.createOscillator(), gg = a.createGain();
+      o.type = tipo; o.frequency.value = freq * r; gg.gain.value = amp;
+      o.connect(gg); gg.connect(g);
+      o.start(t); o.stop(t + dur + .05);
     });
   }
-  function clicTelefono(){ acorde([880, 660], .15, .06, "square"); }
+  function exitoSonido(){ [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => nota(f, i * .09, .9, .14)); }
 
   // ===================================================================
-  //  Burbuja que se escribe letra por letra
+  //  Confeti y pantalla de "¡reto superado!"
   // ===================================================================
-  let escribiendo = null;
-  function decir(texto){
-    const d = $("dice");
-    clearInterval(escribiendo);
-    d.textContent = "";
-    const nodos = [];
-    texto.split(/(\*[^*]+\*)/).forEach((t) => {
-      if (!t) return;
-      const el = document.createElement(t.startsWith("*") ? "em" : "span");
-      d.appendChild(el);
-      nodos.push([el, t.startsWith("*") ? t.slice(1, -1) : t]);
-    });
-    if (reduce){ nodos.forEach(([n, t]) => n.textContent = t); return; }
-    let k = 0, j = 0;
-    escribiendo = setInterval(() => {
-      if (k >= nodos.length){ clearInterval(escribiendo); return; }
-      const [n, t] = nodos[k];
-      n.textContent = t.slice(0, ++j);
-      if (j >= t.length){ k++; j = 0; }
-    }, 30);
-  }
-
-  // ===================================================================
-  //  Ojos: desconfiados al principio, que siguen el dedo
-  // ===================================================================
-  function parpados(alto){ $("lidI").setAttribute("height", alto); $("lidD").setAttribute("height", alto); }
-  parpados(15);
-  const ojos = [["ojoI", "luzI", 86], ["ojoD", "luzD", 134]];
-  function mirar(cx, cy){
-    const svg = $("dibujo").getBoundingClientRect();
-    if (!svg.width) return;
-    const sx = svg.width / 220, sy = svg.height / 240;
-    ojos.forEach(([o, l, x0]) => {
-      const ox = svg.left + x0 * sx, oy = svg.top + 126 * sy;
-      const ang = Math.atan2(cy - oy, cx - ox);
-      const dist = Math.min(5, Math.hypot(cx - ox, cy - oy) / 25);
-      const dx = Math.cos(ang) * dist, dy = Math.max(-1, Math.min(2, Math.sin(ang) * dist * .5));
-      $(o).setAttribute("cx", x0 + dx); $(o).setAttribute("cy", 126 + dy);
-      $(l).setAttribute("cx", x0 + 2 + dx); $(l).setAttribute("cy", 124 + dy);
-    });
-  }
-  window.addEventListener("pointermove", (e) => mirar(e.clientX, e.clientY));
-  window.addEventListener("pointerdown", (e) => mirar(e.clientX, e.clientY));
-  // Mientras desconfía, mira de reojo de un lado a otro
-  let reojo = setInterval(() => {
-    if (!madame.classList.contains("sospecha")) return;
-    const r = $("dibujo").getBoundingClientRect();
-    mirar(r.left + (Math.random() < .5 ? -200 : r.width + 200), r.top + r.height * .45);
-  }, 1600);
-
-  let toque = 0;
-  madame.addEventListener("click", () => {
-    madame.classList.remove("wow"); void madame.offsetWidth; madame.classList.add("wow");
-    const t = CONFIG.toques[toque++ % CONFIG.toques.length];
-    decir(t);
-    hablar([[t, 1, 1.2]]);
-    vibrar(15);
-  });
-
-  function lentejuelas(n = 60){
+  function confeti(n = 70){
     if (reduce) return;
-    const col = ["#c9a34a", "#f3e3b8", "#d7263d", "#ffffff", "#111111"];
+    const col = ["#ff4d8d", "#ffd166", "#5ef2c1", "#b48cff", "#ffffff"];
     for (let i = 0; i < n; i++){
-      const s = document.createElement("span");
-      s.className = "sequin";
-      s.style.left = azar(0, 100) + "%";
-      s.style.background = col[i % col.length];
-      s.style.boxShadow = "0 0 6px rgba(255,255,255,.8)";
-      s.style.setProperty("--x", azar(-60, 60) + "px");
-      s.style.setProperty("--dur", azar(1.8, 3.2) + "s");
-      s.style.setProperty("--delay", azar(0, .7) + "s");
-      atelier.appendChild(s);
-      s.addEventListener("animationend", () => s.remove());
+      const c = document.createElement("span");
+      c.className = "confeti";
+      c.style.left = azar(0, 100) + "%";
+      c.style.background = col[i % col.length];
+      c.style.setProperty("--x", azar(-80, 80) + "px");
+      c.style.setProperty("--r", azar(-720, 720) + "deg");
+      c.style.setProperty("--dur", azar(1.8, 3) + "s");
+      c.style.setProperty("--delay", azar(0, .5) + "s");
+      screen.appendChild(c);
+      c.addEventListener("animationend", () => c.remove());
     }
+  }
+  function superado(n, emoji, texto, siguiente){
+    const lock = $("locks").children[n - 1];
+    lock.textContent = "💗";
+    lock.classList.add("ok");
+    const e = document.createElement("div");
+    e.className = "exito";
+    e.innerHTML = '<div class="big"></div><p></p><small></small>';
+    e.querySelector(".big").textContent = emoji;
+    e.querySelector("p").textContent = texto;
+    e.querySelector("small").textContent = n < 3 ? "Reto " + n + " de 3 superado" : "¡Mensaje desbloqueado!";
+    screen.appendChild(e);
+    exitoSonido();
+    vibrar([40, 60, 80]);
+    confeti(80);
+    setTimeout(() => { e.remove(); siguiente(); }, reduce ? 900 : 1700);
+  }
+  function mostrar(id){
+    ["r0", "r1", "r2", "r3"].forEach((r) => $(r).hidden = r !== id);
   }
 
   // ===================================================================
-  //  1. Llamada entrante
+  //  Inicio
   // ===================================================================
-  let rechazos = 0;
-  $("rechazar").addEventListener("click", () => {
-    $("nota").textContent = CONFIG.rechazos[Math.min(rechazos++, CONFIG.rechazos.length - 1)];
-    vibrar([60, 40, 60]);
+  $("empezar").addEventListener("click", () => {
     sonido();
+    nota(659.25, 0, .5, .12);
+    pedirMovimiento();
+    mostrar("r1");
+    $("hudTitulo").textContent = "Reto 1 de 3";
+    empezarAgitar();
   });
 
-  function iniciarLlamada(){
-    clicTelefono();
-    vibrar(30);
-    $("call").hidden = true;
-    madame.classList.add("sospecha");
-    madame.classList.remove("colgo");
-    parpados(15);
-    $("pasoFinal").hidden = true;
-    $("pasoNombre").hidden = true;
-    fase = "alo";
-    $("estado").textContent = "en llamada";
-    $("estado").style.color = "";
-    decir(CONFIG.aloTexto);
-    const pedirNombre = () => {
-      if (fase !== "alo" || !$("pasoNombre").hidden) return;
-      $("pasoNombre").hidden = false;
-      setTimeout(() => $("nombre").focus({preventScroll:true}), 100);
-    };
-    hablar(CONFIG.aloVoz, pedirNombre);
-    // Por si la voz no avisa que terminó
-    setTimeout(pedirNombre, 3200);
+  // ===================================================================
+  //  Reto 1: agitar el celular
+  // ===================================================================
+  let p1 = 0, agitando = false, ultimoMov = 0, huboMovimiento = false, ultimaSacudida = 0;
+  function setP(i, v){
+    $("m" + i).style.width = Math.min(100, v) + "%";
+    $("p" + i).textContent = Math.min(100, Math.round(v)) + "%";
   }
-  $("contestar").addEventListener("click", iniciarLlamada);
-
-  // Si el link trae ?para=Nombre, ya viene escrito
-  const params = new URLSearchParams(location.search);
-  if (params.get("para")) $("nombre").value = params.get("para").slice(0, 24);
-
-  // ===================================================================
-  //  2. Ella dice su nombre → ¡NOMBRE, CARIÑOOOO!
-  // ===================================================================
-  const capital = (s) => s.split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-
-  $("pasoNombre").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const v = $("nombre").value.trim();
-    if (!v){ decir(CONFIG.sinNombre); hablar([[CONFIG.sinNombre, 1, 1.05]]); $("nombre").focus(); return; }
-    nombre = capital(v);
-    fase = "grito";
-    $("nombre").blur();
-    $("pasoNombre").hidden = true;
-    gritar();
-  });
-
-  function gritar(){
-    const s = document.createElement("div");
-    s.className = "shout";
-    const n = document.createElement("div");
-    n.className = "nombre";
-    n.textContent = "¡" + nombre + "!";
-    const ancho = Math.min(atelier.clientWidth - 40, 420);
-    n.style.fontSize = Math.max(30, Math.min(78, ancho / ((nombre.length + 2) * .62))) + "px";
-    const c = document.createElement("div");
-    c.className = "carino";
-    "cariñoooooo".split("").forEach((ch, i) => {
-      const sp = document.createElement("span");
-      sp.textContent = ch;
-      sp.style.animationDelay = (.5 + i * .09) + "s";
-      c.appendChild(sp);
-    });
-    s.append(n, c);
-    atelier.appendChild(s);
-    acorde([261.63, 329.63, 392, 523.25], 1.6, .09);
-    hablar([[nombre + "!", .9, 1.35], ["cariño", .42, 1.15]]);
-    vibrar([40, 60, 120]);
-    setTimeout(() => lentejuelas(70), 300);
-    setTimeout(() => {
-      s.style.transition = "opacity .5s ease";
-      s.style.opacity = "0";
-      setTimeout(() => s.remove(), 500);
-      remate();
-    }, reduce ? 1500 : 3600);
-  }
-
-  // ===================================================================
-  //  3. "Felipe me había contado de ti… Jumm… sí, esta vez sí tiene buenos gustos"
-  // ===================================================================
-  function remate(){
-    fase = "final";
-    madame.classList.remove("sospecha");
-    parpados(11);
-    madame.classList.remove("wow"); void madame.offsetWidth; madame.classList.add("wow");
-    const t = CONFIG.final.replace(/\{n\}/g, nombre);
-    decir(t);
-    hablar(CONFIG.finalVoz, () => {
-      setTimeout(() => {
-        madame.classList.add("colgo");
-        $("estado").textContent = "llamada finalizada";
-        $("estado").style.color = "#d7263d";
-        clicTelefono();
-        $("pasoFinal").hidden = false;
-        lentejuelas(40);
-      }, 600);
-    });
-  }
-
-  $("otraVez").addEventListener("click", () => {
-    $("nombre").value = "";
-    fase = "llamada";
-    $("call").hidden = false;
-    $("nota").textContent = "";
-    rechazos = 0;
-    madame.classList.remove("colgo");
-    madame.classList.add("sospecha");
-    decir("");
-  });
-
-  $("compartir").addEventListener("click", async () => {
-    const url = location.origin + location.pathname;
-    const texto = "📞 Te está llamando Madame Cariño. Contesta, cariño.";
-    if (navigator.share){
-      try { await navigator.share({title: "Madame Cariño", text: texto, url}); return; }
-      catch(e){ if (e && e.name === "AbortError") return; }
+  function alMover(e){
+    if (!agitando) return;
+    const a = e.accelerationIncludingGravity || e.acceleration;
+    if (!a || a.x == null) return;
+    huboMovimiento = true;
+    const f = Math.hypot(a.x || 0, a.y || 0, a.z || 0);
+    const ahora = performance.now();
+    // Un celular manda ~60 lecturas por segundo: contar como mucho una
+    // sacudida cada 110 ms, para que haya que agitar unos 2–3 segundos
+    if (f > 16 && ahora - ultimaSacudida > 110){
+      ultimaSacudida = ahora;
+      sumarAgitar(Math.min(9, (f - 14) * .7));
+      $("phone").classList.add("vivo");
+      clearTimeout(ultimoMov);
+      ultimoMov = setTimeout(() => $("phone").classList.remove("vivo"), 250);
     }
-    window.open("https://wa.me/?text=" + encodeURIComponent(texto + " " + url), "_blank", "noopener");
+  }
+  function pedirMovimiento(){
+    if (typeof DeviceMotionEvent === "undefined") return;
+    if (typeof DeviceMotionEvent.requestPermission === "function"){
+      DeviceMotionEvent.requestPermission()
+        .then((r) => { if (r === "granted") window.addEventListener("devicemotion", alMover); else modoTocar(); })
+        .catch(modoTocar);
+    } else {
+      window.addEventListener("devicemotion", alMover);
+    }
+  }
+  let ultimoTic = 0;
+  function sumarAgitar(x){
+    p1 += x;
+    setP(1, p1);
+    const t = performance.now();
+    if (t - ultimoTic > 90){ ultimoTic = t; nota(400 + p1 * 6, 0, .15, .05); vibrar(15); }
+    if (p1 >= 100 && agitando){
+      agitando = false;
+      superado(1, "📳", "¡Eso! Qué energía", () => { mostrar("r2"); $("hudTitulo").textContent = "Reto 2 de 3"; });
+    }
+  }
+  function empezarAgitar(){
+    agitando = true;
+    // Si en 5 segundos el celular no manda movimiento, ofrecer tocar
+    setTimeout(() => { if (agitando && !huboMovimiento) modoTocar(); }, 5000);
+  }
+  function modoTocar(){
+    $("phone").hidden = true;
+    $("tapAgitar").hidden = false;
+    $("altAgitar").hidden = true;
+    document.querySelector("#r1 h1").textContent = "¡Toca rápido el corazón!";
+    document.querySelector("#r1 .sub").textContent = "Lo más rápido que puedas 💨";
+  }
+  $("altAgitar").addEventListener("click", modoTocar);
+  $("tapAgitar").addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    sumarAgitar(7);
+    const b = $("tapAgitar");
+    b.style.transform = "scale(.85)";
+    setTimeout(() => b.style.transform = "", 80);
   });
+
+  // ===================================================================
+  //  Reto 2: hablarle al celular
+  // ===================================================================
+  let p2 = 0, escuchando = false, micStream = null, reco = null;
+  const barras = [...$("bars").children];
+  function sumarVoz(x){
+    if (!escuchando) return;
+    p2 += x;
+    setP(2, p2);
+    if (p2 >= 100){
+      escuchando = false;
+      pararMic();
+      const dijo = $("dijo").textContent;
+      superado(2, "🗣️", dijo ? "¡Qué lindo!" : "Te escuché 💗", empezarPiano);
+    }
+  }
+  function pintarBarras(nivel){
+    barras.forEach((b, i) => {
+      const k = Math.max(0, nivel * 90 * (1 - Math.abs(i - 3) * .18) + azar(-6, 6));
+      b.style.height = Math.max(10, Math.min(90, k)) + "px";
+    });
+  }
+  async function activarMic(){
+    sesionAudio("play-and-record");
+    const a = sonido();
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}});
+    } catch(e){
+      sesionAudio("playback");
+      modoMantener("No pude usar el micrófono 😅");
+      return;
+    }
+    $("activarMic").hidden = true;
+    escuchando = true;
+    const src = a.createMediaStreamSource(micStream);
+    const an = a.createAnalyser();
+    an.fftSize = 1024;
+    src.connect(an);
+    const datos = new Float32Array(an.fftSize);
+    (function loop(){
+      if (!escuchando) return;
+      an.getFloatTimeDomainData(datos);
+      let s = 0;
+      for (let i = 0; i < datos.length; i++) s += datos[i] * datos[i];
+      const rms = Math.sqrt(s / datos.length);
+      const nivel = Math.min(1, rms * 9);
+      pintarBarras(nivel);
+      if (rms > .02) sumarVoz(rms * 9);
+      requestAnimationFrame(loop);
+    })();
+    // Si el celular lo permite, mostrar lo que dijo
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR){
+      try {
+        reco = new SR();
+        reco.lang = "es-CO";
+        reco.interimResults = true;
+        reco.continuous = true;
+        reco.onresult = (ev) => {
+          let txt = "";
+          for (let i = 0; i < ev.results.length; i++) txt += ev.results[i][0].transcript;
+          $("dijo").textContent = "“" + txt.trim() + "”";
+          sumarVoz(4);
+        };
+        reco.onerror = () => {};
+        reco.start();
+      } catch(e){}
+    }
+  }
+  function pararMic(){
+    if (micStream) micStream.getTracks().forEach((t) => t.stop());
+    micStream = null;
+    try { reco && reco.stop(); } catch(e){}
+    pintarBarras(0);
+    sesionAudio("playback");
+  }
+  function modoMantener(msg){
+    $("activarMic").hidden = true;
+    $("altMic").hidden = true;
+    $("holdMic").hidden = false;
+    if (msg) $("dijo").textContent = msg;
+    escuchando = true;
+  }
+  $("activarMic").addEventListener("click", activarMic);
+  $("altMic").addEventListener("click", () => { pararMic(); modoMantener(""); });
+  let manteniendo = null;
+  $("holdMic").addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    $("holdMic").setPointerCapture(e.pointerId);
+    clearInterval(manteniendo);
+    manteniendo = setInterval(() => { sumarVoz(2.2); pintarBarras(azar(.3, .9)); }, 50);
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach((ev) =>
+    $("holdMic").addEventListener(ev, () => { clearInterval(manteniendo); pintarBarras(0); }));
+
+  // ===================================================================
+  //  Reto 3: piano — "Para Elisa" (Beethoven, dominio público)
+  // ===================================================================
+  const TECLAS = [
+    {n:"A4", f:440.00},    {n:"B4", f:493.88},    {n:"C5", f:523.25},
+    {n:"D5", f:587.33},    {n:"E5", f:659.25},    {n:"F5", f:698.46}
+  ];
+  const NEGRAS = [
+    {n:"A#4", f:466.16, entre:0}, {n:"C#5", f:554.37, entre:2}, {n:"D#5", f:622.25, entre:3}
+  ];
+  const MELODIA = ["E5", "D#5", "E5", "D#5", "E5", "B4", "D5", "C5", "A4"];
+  // Lo que suena de premio al terminar (primeras frases de "Para Elisa")
+  const PREMIO = [
+    ["E5", .28], ["D#5", .28], ["E5", .28], ["D#5", .28], ["E5", .28], ["B4", .28], ["D5", .28], ["C5", .28], ["A4", .7],
+    ["C4", .28], ["E4", .28], ["A4", .28], ["B4", .7],
+    ["E4", .28], ["G#4", .28], ["B4", .28], ["C5", .7],
+    ["E4", .28], ["E5", .28], ["D#5", .28], ["E5", .28], ["D#5", .28], ["E5", .28], ["B4", .28], ["D5", .28], ["C5", .28], ["A4", .7],
+    ["C4", .28], ["E4", .28], ["A4", .28], ["B4", .7],
+    ["E4", .28], ["C5", .28], ["B4", .28], ["A4", 1.6]
+  ];
+  const FREC = {C4:261.63, E4:329.63, "G#4":415.30};
+  const mapa = {};
+  let paso = 0, pianoActivo = false;
+
+  function armarPiano(){
+    const piano = $("piano");
+    piano.innerHTML = "";
+    TECLAS.forEach((t) => {
+      const b = document.createElement("button");
+      b.className = "key";
+      b.setAttribute("aria-label", "Tecla " + t.n);
+      b.dataset.n = t.n;
+      piano.appendChild(b);
+      mapa[t.n] = b; FREC[t.n] = t.f;
+    });
+    NEGRAS.forEach((t) => {
+      const b = document.createElement("button");
+      b.className = "key negra";
+      b.setAttribute("aria-label", "Tecla " + t.n);
+      b.dataset.n = t.n;
+      // Centrada en la unión de dos teclas blancas
+      b.style.left = "calc(8px + (100% - 16px) * " + ((t.entre + 1) / TECLAS.length).toFixed(4) + " - 17px)";
+      piano.appendChild(b);
+      mapa[t.n] = b; FREC[t.n] = t.f;
+    });
+    Object.values(mapa).forEach((b) => b.addEventListener("pointerdown", (e) => { e.preventDefault(); tocar(b.dataset.n); }));
+    const notas = $("notas");
+    notas.innerHTML = "";
+    MELODIA.forEach(() => notas.appendChild(document.createElement("i")));
+  }
+  function iluminar(n, ms = 220){
+    const b = mapa[n]; if (!b) return;
+    b.classList.add("on");
+    setTimeout(() => b.classList.remove("on"), ms);
+  }
+  function marcarSiguiente(){
+    Object.values(mapa).forEach((b) => b.classList.remove("siguiente"));
+    if (paso < MELODIA.length) mapa[MELODIA[paso]].classList.add("siguiente");
+  }
+  function tocar(n){
+    nota(FREC[n], 0, 1.4, .22);
+    iluminar(n);
+    vibrar(8);
+    if (!pianoActivo) return;
+    if (n === MELODIA[paso]){
+      $("notas").children[paso].classList.add("ok");
+      paso++;
+      if (paso >= MELODIA.length){
+        pianoActivo = false;
+        marcarSiguiente();
+        $("pianoMsg").textContent = "🎶 ¡Escucha!";
+        tocarPremio();
+      } else {
+        marcarSiguiente();
+        $("pianoMsg").textContent = "";
+      }
+    } else {
+      mapa[n].classList.remove("mal"); void mapa[n].offsetWidth; mapa[n].classList.add("mal");
+      $("pianoMsg").textContent = "Casi… sigue la que brilla ✨";
+    }
+  }
+  function tocarPremio(){
+    let t = .35;
+    PREMIO.forEach(([n, d]) => {
+      nota(FREC[n], t, Math.max(1, d * 2.4), .2);
+      setTimeout(() => iluminar(n, d * 900), t * 1000);
+      t += d;
+    });
+    setTimeout(() => {
+      $("pianoMsg").textContent = "“Para Elisa”… pero hoy es para ti 💗";
+    }, 1500);
+    setTimeout(() => superado(3, "🎹", "¡Qué bonito sonó!", final), (t + .6) * 1000);
+  }
+  function empezarPiano(){
+    mostrar("r3");
+    $("hudTitulo").textContent = "Reto 3 de 3";
+    armarPiano();
+    paso = 0;
+    pianoActivo = true;
+    marcarSiguiente();
+  }
+
+  // ===================================================================
+  //  Final: TE AMO + flores que llenan la pantalla
+  // ===================================================================
+  const jardin = $("jardin");
+  const ctx = jardin.getContext("2d");
+  const fondo = document.createElement("canvas"); // flores ya terminadas
+  const fctx = fondo.getContext("2d");
+  let W = 0, H = 0, dpr = 1;
+  const creciendo = [];
+  let total = 0;
+  const COLORES = ["#ff4d8d", "#ff9ec2", "#ffd166", "#b48cff", "#ff7a59", "#ffffff", "#ff5e7e", "#f7a1ff"];
+
+  function medir(){
+    const r = screen.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const viejo = W ? fondo : null;
+    W = r.width; H = r.height;
+    [jardin, fondo].forEach((c) => { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); });
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function dibujarFlor(c, f, k){
+    // k: 0 → 1 (crecimiento)
+    const e = 1 - Math.pow(1 - Math.min(1, k), 3);
+    const r = f.r * e;
+    c.save();
+    c.translate(f.x, f.y);
+    // tallo y hoja
+    if (f.tallo){
+      c.strokeStyle = "#3fbf7f";
+      c.lineWidth = Math.max(1.5, f.r * .14);
+      c.lineCap = "round";
+      c.beginPath();
+      c.moveTo(0, f.r * 3 * Math.min(1, k * 1.6));
+      c.quadraticCurveTo(f.r * .5, f.r * 1.5, 0, r * .4);
+      c.stroke();
+      if (k > .4){
+        c.fillStyle = "#2fa86b";
+        c.beginPath();
+        c.ellipse(f.r * .45, f.r * 1.8, f.r * .5 * e, f.r * .2 * e, -.6, 0, Math.PI * 2);
+        c.fill();
+      }
+    }
+    c.rotate(f.giro + (1 - e) * -1.2);
+    c.fillStyle = f.color;
+    for (let i = 0; i < f.petalos; i++){
+      c.rotate((Math.PI * 2) / f.petalos);
+      c.beginPath();
+      c.ellipse(0, -r * .55, r * f.ancho, r * .55, 0, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.fillStyle = f.centro;
+    c.beginPath(); c.arc(0, 0, r * .3, 0, Math.PI * 2); c.fill();
+    c.restore();
+  }
+
+  function flor(x, y, grande = false){
+    const color = COLORES[Math.floor(Math.random() * COLORES.length)];
+    creciendo.push({
+      x, y,
+      r: grande ? azar(18, 30) : azar(9, 20),
+      petalos: [5, 6, 8, 12][Math.floor(Math.random() * 4)],
+      ancho: azar(.22, .42),
+      color,
+      centro: color === "#ffd166" ? "#ff7a59" : "#ffd166",
+      giro: azar(0, Math.PI),
+      tallo: Math.random() < .55,
+      t0: performance.now(),
+      dur: azar(450, 800)
+    });
+    total++;
+    $("contador").textContent = "🌸 " + total + " flores";
+    let msg = CONFIG.niveles[0][1];
+    CONFIG.niveles.forEach(([n, m]) => { if (total >= n) msg = m; });
+    $("pista").textContent = msg;
+    arrancar();
+  }
+
+  let corriendo = false;
+  function arrancar(){ if (!corriendo){ corriendo = true; requestAnimationFrame(cuadro); } }
+  function cuadro(t){
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(fondo, 0, 0, W, H);
+    for (let i = creciendo.length - 1; i >= 0; i--){
+      const f = creciendo[i];
+      const k = reduce ? 1 : (t - f.t0) / f.dur;
+      if (k >= 1){
+        dibujarFlor(fctx, f, 1);
+        creciendo.splice(i, 1);
+      } else {
+        dibujarFlor(ctx, f, Math.max(0, k));
+      }
+    }
+    if (creciendo.length) requestAnimationFrame(cuadro);
+    else { corriendo = false; ctx.clearRect(0, 0, W, H); ctx.drawImage(fondo, 0, 0, W, H); }
+  }
+
+  function ramo(x, y, n){
+    for (let i = 0; i < n; i++){
+      const a = azar(0, Math.PI * 2), d = azar(0, 46);
+      setTimeout(() => flor(x + Math.cos(a) * d, y + Math.sin(a) * d), i * 45);
+    }
+  }
+
+  function final(){
+    ["r0", "r1", "r2", "r3"].forEach((r) => $(r).hidden = true);
+    $("stage").hidden = true;
+    $("hudTitulo").textContent = "Mensaje abierto 💌";
+    jardin.hidden = false;
+    medir();
+    $("final").hidden = false;
+    // Un primer anillo de flores alrededor del "Te amo"
+    for (let i = 0; i < 26; i++){
+      const a = (i / 26) * Math.PI * 2;
+      setTimeout(() => flor(W / 2 + Math.cos(a) * W * .42, H * .45 + Math.sin(a) * H * .34, true), i * 60);
+    }
+    confeti(100);
+    vibrar([60, 80, 60, 80, 120]);
+    [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => nota(f, i * .12, 1.6, .12));
+
+    let ultimo = 0, abajo = false;
+    screen.addEventListener("pointerdown", (e) => {
+      abajo = true;
+      const r = screen.getBoundingClientRect();
+      ramo(e.clientX - r.left, e.clientY - r.top, 4);
+      nota([523.25, 587.33, 659.25, 783.99, 880, 1046.5][Math.floor(Math.random() * 6)], 0, .8, .08);
+      vibrar(10);
+    });
+    screen.addEventListener("pointermove", (e) => {
+      if (!abajo) return;
+      const t = performance.now();
+      if (t - ultimo < 70) return;
+      ultimo = t;
+      const r = screen.getBoundingClientRect();
+      flor(e.clientX - r.left + azar(-10, 10), e.clientY - r.top + azar(-10, 10));
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach((ev) => screen.addEventListener(ev, () => abajo = false));
+    screen.style.touchAction = "none";
+  }
 </script>
 </body>
 </html>
