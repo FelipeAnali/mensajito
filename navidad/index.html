@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algo de Navidad 🎄</title>
+<meta name="description" content="Prende las luces, decora el árbol y abre tu regalo.">
+<meta name="theme-color" content="#0b1530">
+<meta property="og:type" content="website">
+<meta property="og:title" content="🎄 Te dejé algo debajo del árbol">
+<meta property="og:description" content="Prende las luces y ábrelo… si te atreves 🎁">
+<meta property="og:url" content="https://felipeanali.github.io/mensajito/navidad/">
+<meta property="og:image" content="https://felipeanali.github.io/mensajito/navidad/portada.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="es_CO">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#060b1c;
+    --sky:#0b1530;
+    --green:#1f7a4a;
+    --green-2:#2a9b5e;
+    --red:#e23b3b;
+    --gold:#ffd166;
+    --text:#f6f8ff;
+    --muted:rgba(246,248,255,.75);
+  }
+
+  *{box-sizing:border-box}
+  button{-webkit-tap-highlight-color:transparent;font:inherit}
+  body{
+    margin:0;
+    background-color:var(--night);
+    background-image:radial-gradient(rgba(255,255,255,.08) 1.2px, transparent 1.3px);
+    background-size:22px 22px;
+    color:var(--text);
+    font-family:"Nunito",system-ui,sans-serif;
+    -webkit-text-size-adjust:100%;
+            text-size-adjust:100%;
+    min-height:100vh;
+    min-height:100dvh;
+    display:flex;
+    justify-content:center;
+    padding:24px;
+  }
+  .frame{
+    margin:auto 0;
+    width:min(94vw,460px);
+    background:#050914;
+    border:1px solid rgba(255,209,102,.18);
+    border-radius:30px;
+    padding:12px;
+    box-shadow:0 0 70px -20px rgba(226,59,59,.35), 0 30px 60px -25px #000;
+  }
+  .topbar{
+    height:46px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 8px 0 14px;
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:15px;
+  }
+  .sound{
+    margin-left:auto;
+    width:38px;height:38px;
+    border-radius:50%;
+    border:0;
+    background:rgba(255,255,255,.1);
+    color:#fff;
+    font-size:17px;
+    cursor:pointer;
+  }
+  .sound:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+  .scene{
+    position:relative;
+    border-radius:20px;
+    overflow:hidden;
+    overflow:clip;
+    min-height:640px;
+    background:
+      radial-gradient(60% 30% at 50% 100%, rgba(255,255,255,.18), transparent 70%),
+      linear-gradient(180deg, #0b1530 0%, #132449 60%, #1b2f58 100%);
+    touch-action:manipulation;
+  }
+  .nieve{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5}
+  .suelo{
+    position:absolute;
+    left:-10%;right:-10%;bottom:-40px;
+    height:120px;
+    border-radius:50%;
+    background:linear-gradient(180deg, #eef4ff, #c9d8f5);
+    z-index:1;
+  }
+  .oscuro{
+    position:absolute;top:0;left:0;right:0;bottom:0;
+    z-index:4;
+    background:rgba(2,4,12,.72);
+    pointer-events:none;
+    transition:opacity 1.2s ease;
+  }
+  .scene.on .oscuro{opacity:0}
+
+  /* Guirnalda de bombillos arriba */
+  .guirnalda{
+    position:absolute;
+    top:0;left:0;right:0;
+    height:60px;
+    z-index:3;
+    pointer-events:none;
+  }
+  .guirnalda svg{width:100%;height:100%}
+  .bombillo{fill:#3a3a44;transition:fill .3s ease}
+  .scene.on .bombillo{animation:titila var(--t,1.4s) ease-in-out var(--d,0s) infinite}
+  @keyframes titila{
+    0%,100%{fill:var(--c);filter:drop-shadow(0 0 6px var(--c))}
+    50%{fill:#3a3a44;filter:none}
+  }
+
+  /* Árbol */
+  .arbol{
+    position:absolute;
+    left:50%;
+    top:62px;
+    width:300px;
+    height:380px;
+    margin-left:-150px;
+    z-index:2;
+  }
+  .arbol canvas{display:block;width:100%;height:100%}
+  @keyframes cuelga{from{transform:translateY(-30px) scale(.3);opacity:0}}
+  @keyframes baja-estrella{from{opacity:0;transform:translateY(-120px) rotate(-180deg) scale(.4)}to{opacity:1;transform:none}}
+  @keyframes brilla{50%{filter:drop-shadow(0 0 14px #ffd166) brightness(1.2)}}
+  .arbol.tocable{cursor:pointer}
+
+  /* Regalo */
+  .regalo{
+    position:absolute;
+    left:50%;
+    top:372px;
+    width:110px;height:100px;
+    margin-left:-55px;
+    z-index:6;
+    border:0;background:none;padding:0;
+    cursor:pointer;
+    animation:aparece .7s cubic-bezier(.3,1.6,.5,1);
+  }
+  @keyframes aparece{from{transform:scale(0) translateY(40px)}}
+  .regalo .caja{position:absolute;left:8px;right:8px;bottom:0;height:64px;background:var(--red);border-radius:6px;box-shadow:inset 0 -10px 0 rgba(0,0,0,.15)}
+  .regalo .caja::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:16px;margin-left:-8px;background:var(--gold)}
+  .regalo .tapa{position:absolute;left:0;right:0;bottom:60px;height:22px;background:#c42d2d;border-radius:6px;transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .5s ease .2s}
+  .regalo .tapa::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:16px;margin-left:-8px;background:#e8b13f}
+  .regalo .lazo{position:absolute;left:50%;bottom:78px;width:60px;height:26px;margin-left:-30px}
+  .regalo .lazo::before,.regalo .lazo::after{content:"";position:absolute;top:2px;width:26px;height:20px;border:6px solid var(--gold);border-radius:50% 50% 50% 50% / 60% 60% 40% 40%}
+  .regalo .lazo::before{left:0;transform:rotate(-18deg)}
+  .regalo .lazo::after{right:0;transform:rotate(18deg)}
+  .regalo.sacude{animation:sacude .45s ease}
+  @keyframes sacude{20%{transform:rotate(-10deg) scale(1.05)}40%{transform:rotate(9deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(3deg)}}
+  .regalo.abierto .tapa,.regalo.abierto .lazo{transform:translate(70px,-160px) rotate(50deg);opacity:0}
+  .regalo:focus-visible{outline:3px solid #fff;outline-offset:6px;border-radius:12px}
+
+  /* Panel de abajo */
+  .panel{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    z-index:7;
+    padding:18px 20px 24px;
+    text-align:center;
+    color:#14213d;
+  }
+  .paso{animation:sube .5s cubic-bezier(.2,.9,.25,1) both}
+  @keyframes sube{from{opacity:0;transform:translateY(12px)}}
+  .paso h1{
+    margin:0;
+    font-family:"Fredoka",sans-serif;
+    font-weight:700;
+    font-size:24px;
+  }
+  .paso p{margin:4px 0 0;font-size:14.5px;font-weight:700;color:#3a4a6b}
+  .contador{
+    display:inline-block;
+    margin-bottom:8px;
+    padding:6px 14px;
+    border-radius:999px;
+    background:#14213d;
+    color:var(--gold);
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:14px;
+  }
+  .btn{
+    margin-top:12px;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    padding:13px 24px;
+    border:0;
+    border-radius:999px;
+    background:linear-gradient(135deg, var(--red), #ff6b4a);
+    color:#fff;
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:17px;
+    cursor:pointer;
+    box-shadow:0 8px 20px -6px rgba(226,59,59,.8);
+    transition:transform .15s ease;
+  }
+  .btn:active{transform:scale(.95)}
+  .btn:focus-visible{outline:3px solid #14213d;outline-offset:4px}
+  .btn.verde{background:linear-gradient(135deg, var(--green), var(--green-2));box-shadow:0 8px 20px -6px rgba(31,122,74,.8)}
+  .enchufe{font-size:22px;animation:llama 1.2s ease-in-out infinite}
+  @keyframes llama{0%,100%{box-shadow:0 0 0 0 rgba(255,209,102,.7)}50%{box-shadow:0 0 0 12px rgba(255,209,102,0)}}
+  .scene:not(.on) .panel{color:var(--text)}
+  .scene:not(.on) .panel p{color:var(--muted)}
+
+  /* Final */
+  .final{
+    position:absolute;
+    top:0;left:0;right:0;bottom:0;
+    z-index:20;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    text-align:center;
+    background:radial-gradient(70% 50% at 50% 45%, #13244a, #070d20);
+    animation:fade .5s ease;
+  }
+  @keyframes fade{from{opacity:0}}
+  .pavo{font-size:84px;line-height:1;margin-top:10px;animation:baila .7s ease-in-out infinite alternate;filter:drop-shadow(0 12px 22px rgba(0,0,0,.5))}
+  @keyframes baila{from{transform:rotate(-12deg) translateY(0)}to{transform:rotate(12deg) translateY(-14px)}}
+  .linea{opacity:0;animation:aparece2 .6s cubic-bezier(.3,1.5,.5,1) forwards}
+  @keyframes aparece2{from{opacity:0;transform:translateY(16px) scale(.9)}to{opacity:1;transform:none}}
+  .l1{
+    margin-top:18px;
+    font-family:"Mountains of Christmas",cursive;
+    font-size:clamp(30px,8.5vw,40px);
+    line-height:1.1;
+    color:var(--gold);
+  }
+  .l2{margin-top:10px;font-family:"Fredoka",sans-serif;font-weight:600;font-size:clamp(22px,6vw,28px)}
+  .l3{
+    margin-top:6px;
+    font-family:"Fredoka",sans-serif;
+    font-weight:700;
+    font-size:clamp(30px,9vw,44px);
+    line-height:1.05;
+    color:#ff6b6b;
+    text-shadow:0 0 22px rgba(255,107,107,.6);
+  }
+  .l4{margin-top:8px;font-size:36px}
+  .firma{margin-top:14px;font-family:"Mountains of Christmas",cursive;font-size:24px;color:var(--muted)}
+  .final .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+  .btn.claro{background:#fff;color:#14213d;box-shadow:0 8px 20px -6px rgba(0,0,0,.5)}
+
+  .confeti{
+    position:absolute;
+    top:-14px;
+    width:9px;height:14px;
+    border-radius:2px;
+    z-index:25;
+    pointer-events:none;
+    animation:cae var(--dur,2.4s) cubic-bezier(.3,.1,.6,1) var(--delay,0s) forwards;
+  }
+  @keyframes cae{to{transform:translate(var(--x,0),720px) rotate(var(--r,540deg))}}
+  .chispa{
+    position:absolute;
+    z-index:8;
+    pointer-events:none;
+    font-size:18px;
+    animation:chispa .9s ease-out forwards;
+  }
+  @keyframes chispa{to{transform:translate(var(--x),var(--y)) scale(.4);opacity:0}}
+
+  [hidden]{display:none !important}
+
+  @media (prefers-reduced-motion: reduce){
+    .scene.on .bombillo{animation:none;fill:var(--c)}
+    .pavo,.enchufe{animation:none}
+    .linea{animation:none;opacity:1}
+    .confeti,.chispa{display:none}
+  }
+  @media (max-width:420px){
+    .scene{min-height:610px}
+    .arbol{transform:scale(.92);transform-origin:50% 0}
+  }
+</style>
+</head>
+<body>
+  <main class="frame">
+    <div class="topbar">
+      <span id="para"></span>
+      <button class="sound" id="sound" aria-label="Activar la música" hidden>🔇</button>
+    </div>
+
+    <div class="scene" id="scene">
+      <div class="guirnalda" aria-hidden="true"><svg id="guirnalda" viewBox="0 0 400 60" preserveAspectRatio="none"></svg></div>
+      <div class="suelo" aria-hidden="true"></div>
+
+      <div class="arbol" id="arbol" aria-label="Árbol de Navidad">
+        <canvas id="arbolCv"></canvas>
+      </div>
+
+      <button class="regalo" id="regalo" aria-label="Abrir el regalo" hidden>
+        <div class="caja"></div><div class="tapa"></div><div class="lazo"></div>
+      </button>
+
+      <div class="oscuro" aria-hidden="true"></div>
+      <canvas class="nieve" id="nieve" aria-hidden="true"></canvas>
+
+      <div class="panel" id="panel">
+        <div class="paso" id="p0">
+          <div class="contador" id="contador"></div>
+          <h1>Está muy oscuro por aquí…</h1>
+          <p>¿Me ayudas a prender las luces?</p>
+          <button class="btn enchufe" id="enchufe">🔌 Conectar las luces</button>
+        </div>
+        <div class="paso" id="p1" hidden>
+          <h1>¡Decora el árbol! 🎄</h1>
+          <p id="bolasTxt">Toca el árbol para colgar bolas (0 / 6)</p>
+        </div>
+        <div class="paso" id="p2" hidden>
+          <h1>Falta lo más importante…</h1>
+          <button class="btn verde" id="ponerEstrella">⭐ Poner la estrella</button>
+        </div>
+        <div class="paso" id="p3" hidden>
+          <h1>¡Hay un regalo para ti! 🎁</h1>
+          <p id="regaloTxt">Tócalo para abrirlo</p>
+        </div>
+      </div>
+
+      <div class="final" id="final" hidden>
+        <div class="pavo" aria-hidden="true">🦃</div>
+        <div class="linea l1" style="animation-delay:.6s" id="f1"></div>
+        <div class="linea l2" style="animation-delay:2.2s" id="f2"></div>
+        <div class="linea l3" style="animation-delay:3.4s" id="f3"></div>
+        <div class="linea l4" style="animation-delay:4.2s">🦃😏</div>
+        <div class="linea firma" style="animation-delay:5s" id="firma"></div>
+        <div class="linea row" style="animation-delay:5.6s">
+          <button class="btn claro" id="otraVez">Otra vez 🎄</button>
+          <button class="btn" id="compartir">Compartir 📲</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script>
+  // ===================================================================
+  //  EDITA AQUÍ
+  // ===================================================================
+  const CONFIG = {
+    para: "Valeri",
+    firma: "— Felipe 🎄",
+    linea1: "Todavía no es Navidad…",
+    linea2: "y yo ya te quiero",
+    linea3: "rellenar el pavo",
+    bolas: 6
+  };
+  // ===================================================================
+
+  const $ = (id) => document.getElementById(id);
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const scene = $("scene");
+  const azar = (a, b) => a + Math.random() * (b - a);
+  const vibrar = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch(e){} };
+  const params = new URLSearchParams(location.search);
+  const para = (params.get("para") || CONFIG.para || "").slice(0, 24);
+  const NS = "http://www.w3.org/2000/svg";
+  const COLORES = ["#ff4d4d", "#ffd166", "#4dd2ff", "#7dff8a", "#ff8af2", "#ffa94d"];
+
+  $("para").textContent = para ? "Para " + para + " 🎄" : "🎄 Navidad";
+  $("f1").textContent = CONFIG.linea1;
+  $("f2").textContent = CONFIG.linea2;
+  $("f3").textContent = CONFIG.linea3;
+  $("firma").textContent = CONFIG.firma;
+
+  // ¿Cuántos días faltan para Navidad?
+  (function(){
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    let nav = new Date(hoy.getFullYear(), 11, 25);
+    if (hoy > nav) nav = new Date(hoy.getFullYear() + 1, 11, 25);
+    const dias = Math.round((nav - hoy) / 86400000);
+    $("contador").textContent = dias === 0 ? "🎄 ¡Hoy es Navidad!" : "⏳ Faltan " + dias + " días para Navidad";
+  })();
+
+  // ===================================================================
+  //  Música y sonidos
+  // ===================================================================
+  const bgm = new Audio();
+  bgm.src = "musica.mp3";
+  bgm.loop = true;
+  bgm.preload = "auto";
+  bgm.setAttribute("playsinline", "");
+  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch(e){}
+  let musica = false;
+  function ponerMusica(si){
+    musica = si;
+    if (si) bgm.play().catch(() => {}); else bgm.pause();
+    $("sound").textContent = si ? "🎵" : "🔇";
+    $("sound").setAttribute("aria-label", si ? "Apagar la música" : "Activar la música");
+  }
+  $("sound").addEventListener("click", () => ponerMusica(!musica));
+
+  let ac = null;
+  function sonido(){
+    if (!ac){ try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return null; } }
+    if (ac.state === "suspended") ac.resume();
+    return ac;
+  }
+  function campana(freq, cuando = 0, dur = 1.2, vol = .14){
+    const a = sonido(); if (!a) return;
+    const t = a.currentTime + cuando;
+    const g = a.createGain();
+    g.connect(a.destination);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + .005);
+    g.gain.exponentialRampToValueAtTime(.0004, t + dur);
+    [[1, 1], [2.76, .35], [5.4, .12]].forEach(([r, amp]) => {
+      const o = a.createOscillator(), gg = a.createGain();
+      o.frequency.value = freq * r; gg.gain.value = amp;
+      o.connect(gg); gg.connect(g);
+      o.start(t); o.stop(t + dur + .05);
+    });
+  }
+  const ESCALA = [1046.5, 1174.66, 1318.5, 1567.98, 1760, 2093];
+
+  // ===================================================================
+  //  Nieve
+  // ===================================================================
+  const cv = $("nieve"), ctx = cv.getContext("2d");
+  let W = 0, H = 0;
+  function medir(){
+    const r = scene.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  medir();
+  if ("ResizeObserver" in window) new ResizeObserver(medir).observe(scene);
+  const copos = [];
+  let nevando = 30; // copos al principio (pocos); al prender las luces, más
+  function cuadro(t){
+    ctx.clearRect(0, 0, W, H);
+    while (copos.length < nevando) copos.push({x:azar(0, W), y:azar(-H, 0), r:azar(1, 3.2), v:azar(.4, 1.2), f:azar(0, 6)});
+    ctx.fillStyle = "rgba(255,255,255,.9)";
+    for (const c of copos){
+      c.y += c.v; c.x += Math.sin(t / 1000 + c.f) * .4;
+      if (c.y > H + 5){ c.y = -5; c.x = azar(0, W); }
+      ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2); ctx.fill();
+    }
+    requestAnimationFrame(cuadro);
+  }
+  if (!reduce) requestAnimationFrame(cuadro);
+
+  // ===================================================================
+  //  Guirnalda de bombillos y luces del árbol
+  // ===================================================================
+  (function(){
+    const g = $("guirnalda");
+    const cable = document.createElementNS(NS, "path");
+    cable.setAttribute("d", "M-5 10 Q50 40 100 14 Q150 40 200 14 Q250 40 300 14 Q350 40 405 10");
+    cable.setAttribute("stroke", "#1a1a22"); cable.setAttribute("stroke-width", "2"); cable.setAttribute("fill", "none");
+    g.appendChild(cable);
+    for (let i = 0; i < 16; i++){
+      const x = 10 + i * 25;
+      const fase = (x % 100) / 100;
+      const y = 14 + Math.sin(fase * Math.PI) * 18 + 6;
+      const b = document.createElementNS(NS, "ellipse");
+      b.setAttribute("class", "bombillo");
+      b.setAttribute("cx", x); b.setAttribute("cy", y); b.setAttribute("rx", 5); b.setAttribute("ry", 8);
+      b.style.setProperty("--c", COLORES[i % COLORES.length]);
+      b.style.setProperty("--t", azar(1, 1.8).toFixed(2) + "s");
+      b.style.setProperty("--d", (-azar(0, 2)).toFixed(2) + "s");
+      g.appendChild(b);
+    }
+  })();
+  // ===================================================================
+  //  Árbol realista: dibujado rama por rama en un canvas
+  // ===================================================================
+  const arbolCv = $("arbolCv");
+  const actx = arbolCv.getContext("2d");
+  const AW = 300, AH = 380, CX = 150, TOP = 40, BASE = 312, ANCHO = 128;
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  arbolCv.width = AW * DPR; arbolCv.height = AH * DPR;
+  actx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  // Números "al azar" con semilla: el árbol sale igual cada vez
+  let semilla = 20251225;
+  const rnd = () => (semilla = (semilla * 16807) % 2147483647) / 2147483647;
+  const ra = (a, b) => a + rnd() * (b - a);
+
+  // Ancho del árbol a cada altura, con forma de "pisos" de ramas
+  function medioAncho(y){
+    const k = Math.max(0, (y - TOP) / (BASE - TOP));
+    const pisos = 6;
+    const ondita = 1 - .17 * (1 - ((k * pisos) % 1));
+    return ANCHO * Math.pow(k, .9) * ondita;
+  }
+
+  const cuerpo = document.createElement("canvas");
+  cuerpo.width = AW * DPR; cuerpo.height = AH * DPR;
+  (function dibujarCuerpo(){
+    const c = cuerpo.getContext("2d");
+    c.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    // Falda roja de terciopelo con borde blanco
+    let g = c.createRadialGradient(CX, BASE + 26, 10, CX, BASE + 26, 150);
+    g.addColorStop(0, "#d0142f"); g.addColorStop(1, "#5e0613");
+    c.fillStyle = g;
+    c.beginPath(); c.ellipse(CX, BASE + 28, 142, 28, 0, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 6;
+    c.beginPath(); c.ellipse(CX, BASE + 28, 139, 25, 0, .05, Math.PI - .05); c.stroke();
+
+    // Tronco
+    g = c.createLinearGradient(CX - 14, 0, CX + 14, 0);
+    g.addColorStop(0, "#2e1b0f"); g.addColorStop(.5, "#6b4426"); g.addColorStop(1, "#2e1b0f");
+    c.fillStyle = g;
+    c.fillRect(CX - 12, BASE - 10, 24, 34);
+
+    // Silueta interior oscura: da profundidad y tapa los huecos entre ramas
+    c.fillStyle = "#0d2a19";
+    c.beginPath();
+    c.moveTo(CX, TOP + 6);
+    for (let y = TOP + 6; y <= BASE; y += 2) c.lineTo(CX + medioAncho(y) * .82, y);
+    for (let y = BASE; y >= TOP + 6; y -= 2) c.lineTo(CX - medioAncho(y) * .82, y);
+    c.closePath();
+    c.fill();
+
+    // Ramas alrededor del tronco: primero las de atrás (oscuras), luego las de adelante
+    const ramas = [];
+    for (let i = 0; i < 1250; i++){
+      const y = TOP + 4 + Math.pow(rnd(), .8) * (BASE - TOP - 4);
+      const ang = ra(0, Math.PI * 2);
+      ramas.push({y, ang, prof: Math.cos(ang)});
+    }
+    ramas.sort((a, b) => a.prof - b.prof);
+    c.lineCap = "round";
+    for (const r of ramas){
+      const hw = medioAncho(r.y);
+      const alcance = hw * ra(.82, 1.06);
+      const x0 = CX + Math.sin(r.ang) * hw * .08, y0 = r.y - 2;
+      const x1 = CX + Math.sin(r.ang) * alcance;
+      const y1 = r.y + ra(4, 12) + (BASE - r.y) * .02;
+      const luz = (r.prof + 1) / 2; // 0 atrás → 1 adelante
+      // ramita
+      c.strokeStyle = `hsl(140, 35%, ${8 + luz * 8}%)`;
+      c.lineWidth = 1.4;
+      c.beginPath(); c.moveTo(x0, y0); c.quadraticCurveTo((x0 + x1) / 2, y0 - 3, x1, y1); c.stroke();
+      // agujas a lo largo de la ramita
+      const pasos = Math.max(4, Math.floor(Math.abs(x1 - x0) / 3.2));
+      for (let k = 2; k <= pasos; k++){
+        const t = k / pasos;
+        const px = x0 + (x1 - x0) * t;
+        const py = y0 + (y1 - y0) * t - Math.sin(t * Math.PI) * 3;
+        const largo = ra(4, 8) * (1.1 - t * .3);
+        const L = 10 + luz * 20 + t * 12 + ra(-4, 4);
+        const H = ra(132, 152);
+        c.strokeStyle = `hsl(${H}, ${ra(35, 55)}%, ${L}%)`;
+        c.lineWidth = ra(.8, 1.4);
+        for (const s of [-1, 1]){
+          const a = Math.atan2(y1 - y0, x1 - x0) + s * ra(.6, 1.1) + .35;
+          c.beginPath();
+          c.moveTo(px, py);
+          c.lineTo(px + Math.cos(a) * largo, py + Math.sin(a) * largo);
+          c.stroke();
+        }
+      }
+      // un poquito de nieve en algunas puntas de adelante
+      if (luz > .6 && rnd() < .05){
+        c.fillStyle = "rgba(245,250,255,.7)";
+        c.beginPath(); c.ellipse(x1, y1 - 2, ra(1.8, 3.2), ra(1, 1.6), 0, 0, Math.PI * 2); c.fill();
+      }
+    }
+
+    // Luz suave desde arriba a la izquierda, sombra abajo a la derecha
+    c.globalCompositeOperation = "source-atop";
+    g = c.createLinearGradient(40, TOP, 260, BASE);
+    g.addColorStop(0, "rgba(255,240,200,.10)");
+    g.addColorStop(.55, "rgba(0,0,0,0)");
+    g.addColorStop(1, "rgba(0,10,20,.35)");
+    c.fillStyle = g;
+    c.fillRect(0, 0, AW, AH);
+    c.globalCompositeOperation = "source-over";
+
+    // Guirnalda dorada en espiral (solo la parte de adelante)
+    for (let y = TOP + 26; y < BASE - 8; y += .6){
+      const vuelta = (y - TOP) / 46;
+      const ang = vuelta * Math.PI * 2 + .6;
+      if (Math.cos(ang) < .05) continue;
+      const x = CX + Math.sin(ang) * medioAncho(y) * .93;
+      const yy = y + Math.sin(ang) * 6;
+      c.fillStyle = rnd() < .25 ? "#fff3c4" : (rnd() < .5 ? "#e8b13f" : "#c99227");
+      c.beginPath(); c.arc(x + ra(-1.5, 1.5), yy + ra(-1.5, 1.5), ra(.8, 1.8), 0, Math.PI * 2); c.fill();
+    }
+  })();
+
+  // Luces de hada sobre las ramas
+  const luces = [];
+  for (let i = 0; i < 78; i++){
+    const y = TOP + 14 + Math.pow(rnd(), .85) * (BASE - TOP - 26);
+    const ang = ra(-1.35, 1.35);
+    const calida = rnd() < .62;
+    luces.push({
+      x: CX + Math.sin(ang) * medioAncho(y) * ra(.55, .97),
+      y: y + ra(-3, 5),
+      col: calida ? [255, 214, 150] : [[255, 80, 80], [90, 200, 255], [120, 255, 140], [255, 120, 230], [255, 190, 70]][Math.floor(rnd() * 5)],
+      vel: ra(1.2, 3.2),
+      fase: ra(0, 6.3)
+    });
+  }
+
+  const bolasArr = [];
+  let estrellaT0 = null;
+  const COLORES_BOLA = [["#ff4d5e", "#8a0f1d"], ["#ffd166", "#a6731a"], ["#4dc3ff", "#0d4f7a"], ["#c77dff", "#4a1a7a"], ["#ff9a3c", "#8a3d05"], ["#e9eef5", "#7b8494"]];
+
+  function dibujarBola(b, ahora){
+    const k = Math.min(1, (ahora - b.t0) / 550);
+    const e = reduce ? 1 : 1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2); // rebote
+    const r = 9 * Math.max(.01, e);
+    const [c1, c2] = b.col;
+    actx.strokeStyle = "rgba(255,230,160,.8)"; actx.lineWidth = .8;
+    actx.beginPath(); actx.moveTo(b.x, b.y - 15); actx.lineTo(b.x, b.y - r - 2); actx.stroke();
+    actx.fillStyle = "#c9a34a";
+    actx.fillRect(b.x - 2.6, b.y - r - 3.5, 5.2, 3.5);
+    const g = actx.createRadialGradient(b.x - r * .4, b.y - r * .4, r * .1, b.x, b.y, r);
+    g.addColorStop(0, "#ffffff");
+    g.addColorStop(.18, c1);
+    g.addColorStop(1, c2);
+    actx.fillStyle = g;
+    actx.beginPath(); actx.arc(b.x, b.y, r, 0, Math.PI * 2); actx.fill();
+    // reflejo de las luces
+    actx.fillStyle = "rgba(255,255,255,.35)";
+    actx.beginPath(); actx.ellipse(b.x + r * .35, b.y + r * .45, r * .25, r * .12, -.5, 0, Math.PI * 2); actx.fill();
+  }
+
+  function caminoEstrella(c, x, y, R, r){
+    c.beginPath();
+    for (let i = 0; i < 10; i++){
+      const a = -Math.PI / 2 + i * Math.PI / 5;
+      const rad = i % 2 ? r : R;
+      c.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad);
+    }
+    c.closePath();
+  }
+  function dibujarEstrella(ahora){
+    const k = reduce ? 1 : Math.min(1, (ahora - estrellaT0) / 900);
+    const e = 1 - Math.pow(1 - k, 3);
+    const x = CX, y = TOP - 10 - (1 - e) * 120;
+    const pulso = .75 + .25 * Math.sin(ahora / 350);
+    // resplandor
+    const g = actx.createRadialGradient(x, y, 2, x, y, 46 * pulso);
+    g.addColorStop(0, "rgba(255,240,180,.9)");
+    g.addColorStop(.35, "rgba(255,209,102,.35)");
+    g.addColorStop(1, "rgba(255,209,102,0)");
+    actx.fillStyle = g;
+    actx.beginPath(); actx.arc(x, y, 46 * pulso, 0, Math.PI * 2); actx.fill();
+    actx.save();
+    actx.translate(x, y);
+    actx.rotate((1 - e) * -3);
+    const gs = actx.createLinearGradient(0, -18, 0, 18);
+    gs.addColorStop(0, "#fff6cf"); gs.addColorStop(.5, "#ffd166"); gs.addColorStop(1, "#d99a1a");
+    actx.fillStyle = gs;
+    caminoEstrella(actx, 0, 0, 19, 8);
+    actx.fill();
+    actx.strokeStyle = "rgba(255,255,255,.8)"; actx.lineWidth = 1.2; actx.stroke();
+    actx.restore();
+  }
+
+  let ultimoArbol = 0;
+  function pintarArbol(ahora){
+    requestAnimationFrame(pintarArbol);
+    if (ahora - ultimoArbol < 33) return; // ~30 cuadros por segundo
+    ultimoArbol = ahora;
+    actx.clearRect(0, 0, AW, AH);
+    actx.drawImage(cuerpo, 0, 0, AW, AH);
+    const prendido = scene.classList.contains("on");
+    for (const l of luces){
+      const [r, g, b] = l.col;
+      if (!prendido){
+        actx.fillStyle = "rgba(60,60,50,.9)";
+        actx.beginPath(); actx.arc(l.x, l.y, 1.6, 0, Math.PI * 2); actx.fill();
+        continue;
+      }
+      const a = reduce ? 1 : .55 + .45 * Math.sin(ahora / 1000 * l.vel + l.fase);
+      const halo = actx.createRadialGradient(l.x, l.y, 0, l.x, l.y, 10);
+      halo.addColorStop(0, `rgba(${r},${g},${b},${.85 * a})`);
+      halo.addColorStop(.3, `rgba(${r},${g},${b},${.35 * a})`);
+      halo.addColorStop(1, `rgba(${r},${g},${b},0)`);
+      actx.fillStyle = halo;
+      actx.beginPath(); actx.arc(l.x, l.y, 10, 0, Math.PI * 2); actx.fill();
+      actx.fillStyle = `rgba(255,255,240,${.6 + .4 * a})`;
+      actx.beginPath(); actx.arc(l.x, l.y, 1.7, 0, Math.PI * 2); actx.fill();
+    }
+    for (const b of bolasArr) dibujarBola(b, ahora);
+    if (estrellaT0 !== null) dibujarEstrella(ahora);
+  }
+  requestAnimationFrame(pintarArbol);
+
+  function aCanvas(px, py){
+    const r = arbolCv.getBoundingClientRect();
+    return {x: (px - r.left) * AW / r.width, y: (py - r.top) * AH / r.height};
+  }
+  function aPantalla(x, y){
+    const r = arbolCv.getBoundingClientRect();
+    return {x: r.left + x * r.width / AW, y: r.top + y * r.height / AH};
+  }
+  function dentroDelArbol(x, y){
+    return y > TOP + 16 && y < BASE - 10 && Math.abs(x - CX) < medioAncho(y) * .9;
+  }
+
+  function confeti(n = 80){
+    if (reduce) return;
+    const col = ["#e23b3b", "#ffd166", "#2a9b5e", "#ffffff", "#4dd2ff"];
+    for (let i = 0; i < n; i++){
+      const c = document.createElement("span");
+      c.className = "confeti";
+      c.style.left = azar(0, 100) + "%";
+      c.style.background = col[i % col.length];
+      c.style.setProperty("--x", azar(-80, 80) + "px");
+      c.style.setProperty("--r", azar(-720, 720) + "deg");
+      c.style.setProperty("--dur", azar(1.8, 3) + "s");
+      c.style.setProperty("--delay", azar(0, .5) + "s");
+      scene.appendChild(c);
+      c.addEventListener("animationend", () => c.remove());
+    }
+  }
+  function chispas(x, y, n = 8, txt = "✨"){
+    if (reduce) return;
+    for (let i = 0; i < n; i++){
+      const s = document.createElement("span");
+      s.className = "chispa";
+      s.textContent = txt;
+      s.style.left = (x - 9) + "px"; s.style.top = (y - 9) + "px";
+      const a = (i / n) * Math.PI * 2;
+      s.style.setProperty("--x", Math.cos(a) * azar(30, 60) + "px");
+      s.style.setProperty("--y", Math.sin(a) * azar(30, 60) + "px");
+      scene.appendChild(s);
+      s.addEventListener("animationend", () => s.remove());
+    }
+  }
+  function enEscena(px, py){
+    const r = scene.getBoundingClientRect();
+    return {x: px - r.left, y: py - r.top};
+  }
+  function mostrar(id){ ["p0", "p1", "p2", "p3"].forEach((p) => $(p).hidden = p !== id); }
+
+  // ===================================================================
+  //  1. Conectar las luces
+  // ===================================================================
+  $("enchufe").addEventListener("click", () => {
+    sonido();
+    campana(523.25, 0, .3, .1);
+    setTimeout(() => {
+      scene.classList.add("on");
+      nevando = 90;
+      $("sound").hidden = false;
+      ponerMusica(true);
+      vibrar([30, 40, 60]);
+      [1046.5, 1318.5, 1567.98, 2093].forEach((f, i) => campana(f, i * .08, 1, .1));
+      mostrar("p1");
+      $("arbol").classList.add("tocable");
+    }, reduce ? 0 : 350);
+  });
+
+  // ===================================================================
+  //  2. Decorar el árbol
+  // ===================================================================
+  let bolas = 0;
+  arbolCv.addEventListener("pointerdown", (e) => {
+    if (!scene.classList.contains("on") || bolas >= CONFIG.bolas) return;
+    const {x, y} = aCanvas(e.clientX, e.clientY);
+    if (!dentroDelArbol(x, y)) return;
+    bolasArr.push({x, y, col: COLORES_BOLA[bolas % COLORES_BOLA.length], t0: performance.now()});
+    bolas++;
+    campana(ESCALA[(bolas - 1) % ESCALA.length], 0, 1.1, .14);
+    vibrar(12);
+    const q = enEscena(e.clientX, e.clientY);
+    chispas(q.x, q.y, 6);
+    $("bolasTxt").textContent = "Toca el árbol para colgar bolas (" + bolas + " / " + CONFIG.bolas + ")";
+    if (bolas >= CONFIG.bolas){
+      $("arbol").classList.remove("tocable");
+      setTimeout(() => mostrar("p2"), 500);
+    }
+  });
+
+  // ===================================================================
+  //  3. La estrella
+  // ===================================================================
+  $("ponerEstrella").addEventListener("click", () => {
+    estrellaT0 = performance.now();
+    [1567.98, 2093, 2637].forEach((f, i) => campana(f, .7 + i * .1, 1.4, .12));
+    vibrar([20, 30, 60]);
+    setTimeout(() => {
+      const pe = aPantalla(CX, TOP - 10);
+      const {x, y} = enEscena(pe.x, pe.y);
+      chispas(x, y, 12, "⭐");
+      confeti(50);
+    }, reduce ? 0 : 850);
+    setTimeout(() => {
+      mostrar("p3");
+      $("regalo").hidden = false;
+      campana(784, 0, .6, .1);
+    }, reduce ? 300 : 1800);
+  });
+
+  // ===================================================================
+  //  4. El regalo
+  // ===================================================================
+  let toques = 0;
+  const TEXTOS = ["Tócalo para abrirlo", "¡Otra vez! Algo se mueve adentro…", "Una más… 👀"];
+  $("regalo").addEventListener("click", () => {
+    if (toques >= 3) return;
+    toques++;
+    const r = $("regalo");
+    r.classList.remove("sacude"); void r.offsetWidth; r.classList.add("sacude");
+    campana(392 + toques * 98, 0, .5, .12);
+    vibrar(30 * toques);
+    if (toques < 3){
+      $("regaloTxt").textContent = TEXTOS[toques];
+      return;
+    }
+    r.classList.add("abierto");
+    const b = r.getBoundingClientRect();
+    const {x, y} = enEscena(b.left + b.width / 2, b.top);
+    chispas(x, y, 14, "✨");
+    setTimeout(final, reduce ? 200 : 900);
+  });
+
+  // ===================================================================
+  //  Final
+  // ===================================================================
+  function final(){
+    $("final").hidden = false;
+    $("panel").hidden = true;
+    confeti(120);
+    vibrar([60, 80, 60, 80, 150]);
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => campana(f, i * .12, 1.4, .12));
+    setTimeout(() => { confeti(80); campana(1567.98, 0, 1.2, .12); campana(2093, .12, 1.2, .1); }, reduce ? 0 : 3400);
+  }
+
+  $("otraVez").addEventListener("click", () => {
+    $("final").hidden = true;
+    $("panel").hidden = false;
+    bolasArr.length = 0;
+    estrellaT0 = null;
+    $("regalo").hidden = true;
+    $("regalo").classList.remove("abierto", "sacude");
+    bolas = 0; toques = 0;
+    $("bolasTxt").textContent = "Toca el árbol para colgar bolas (0 / " + CONFIG.bolas + ")";
+    $("regaloTxt").textContent = TEXTOS[0];
+    $("arbol").classList.add("tocable");
+    mostrar("p1");
+  });
+
+  $("compartir").addEventListener("click", async () => {
+    const url = location.origin + location.pathname;
+    const texto = "🎄 Te dejé algo debajo del árbol… ábrelo 🎁";
+    if (navigator.share){
+      try { await navigator.share({title: document.title, text: texto, url}); return; }
+      catch(e){ if (e && e.name === "AbortError") return; }
+    }
+    window.open("https://wa.me/?text=" + encodeURIComponent(texto + " " + url), "_blank", "noopener");
+  });
+</script>
+</body>
+</html>
