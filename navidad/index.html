@@ -369,7 +369,7 @@
     // Canción del final: sube tu archivo a la carpeta navidad/ con este nombre.
     // Si el archivo está, suena solo apenas se abre el regalo.
     // Si no está, se muestra el reproductor de Spotify de abajo.
-    cancionFinal: "cancion.mp3",
+    cancionFinal: "Luces de Navidad - Foquitos de Navidad.mp3",
     spotify: "4dR205z6owDkAv7RgFfGFV",
     bolas: 6
   };
@@ -883,7 +883,7 @@
       const sp = $("spotify");
       if (sp && sp.parentElement) sp.parentElement.hidden = true; // no hace falta Spotify
     }, {once:true});
-    cancion.src = CONFIG.cancionFinal;
+    cancion.src = encodeURI(CONFIG.cancionFinal); // el nombre tiene espacios
     cancion.load();
   }
   function sonarCancion(){
