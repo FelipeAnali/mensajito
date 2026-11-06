@@ -234,12 +234,12 @@
     animation:fade .5s ease;
   }
   @keyframes fade{from{opacity:0}}
-  .pavo{font-size:84px;line-height:1;margin-top:10px;animation:baila .7s ease-in-out infinite alternate;filter:drop-shadow(0 12px 22px rgba(0,0,0,.5))}
+  .pavo{font-size:66px;line-height:1;margin-top:6px;animation:baila .7s ease-in-out infinite alternate;filter:drop-shadow(0 12px 22px rgba(0,0,0,.5))}
   @keyframes baila{from{transform:rotate(-12deg) translateY(0)}to{transform:rotate(12deg) translateY(-14px)}}
   .linea{opacity:0;animation:aparece2 .6s cubic-bezier(.3,1.5,.5,1) forwards}
   @keyframes aparece2{from{opacity:0;transform:translateY(16px) scale(.9)}to{opacity:1;transform:none}}
   .l1{
-    margin-top:18px;
+    margin-top:10px;
     font-family:"Mountains of Christmas",cursive;
     font-size:clamp(30px,8.5vw,40px);
     line-height:1.1;
@@ -256,8 +256,11 @@
     text-shadow:0 0 22px rgba(255,107,107,.6);
   }
   .l4{margin-top:8px;font-size:36px}
-  .firma{margin-top:14px;font-family:"Mountains of Christmas",cursive;font-size:24px;color:var(--muted)}
-  .final .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+  .firma{margin-top:8px;font-family:"Mountains of Christmas",cursive;font-size:24px;color:var(--muted)}
+  .spotify{width:100%;max-width:340px;margin-top:16px;min-height:80px;border-radius:12px;overflow:hidden}
+  .spotify iframe{display:block;width:100%;border:0;border-radius:12px}
+  .final .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+  .final .btn{margin-top:0;padding:11px 18px;font-size:15px}
   .btn.claro{background:#fff;color:#14213d;box-shadow:0 8px 20px -6px rgba(0,0,0,.5)}
 
   .confeti{
@@ -343,6 +346,7 @@
         <div class="linea l3" style="animation-delay:3.4s" id="f3"></div>
         <div class="linea l4" style="animation-delay:4.2s">🦃😏</div>
         <div class="linea firma" style="animation-delay:5s" id="firma"></div>
+        <div class="linea spotify" style="animation-delay:1.2s"><div id="spotify"></div></div>
         <div class="linea row" style="animation-delay:5.6s">
           <button class="btn claro" id="otraVez">Otra vez 🎄</button>
           <button class="btn" id="compartir">Compartir 📲</button>
@@ -361,6 +365,8 @@
     linea1: "Todavía no es Navidad…",
     linea2: "y yo ya te quiero",
     linea3: "rellenar el pavo",
+    // Canción de Spotify que suena cuando sale el mensaje (el código del link)
+    spotify: "4dR205z6owDkAv7RgFfGFV",
     bolas: 6
   };
   // ===================================================================
@@ -837,7 +843,46 @@
   // ===================================================================
   //  Final
   // ===================================================================
+  // ===================================================================
+  //  Canción de Spotify para el final
+  //  (se prepara desde el principio para que arranque apenas salga el mensaje)
+  // ===================================================================
+  let spotify = null;
+  function spotifyRespaldo(){
+    // Si no carga la API de Spotify, se pone el reproductor normal (se toca ▶︎)
+    const cont = $("spotify");
+    if (spotify || !cont || cont.querySelector("iframe")) return;
+    const f = document.createElement("iframe");
+    f.src = "https://open.spotify.com/embed/track/" + CONFIG.spotify + "?utm_source=generator&theme=0";
+    f.height = "80";
+    f.loading = "lazy";
+    f.allow = "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+    f.title = "Canción en Spotify";
+    cont.appendChild(f);
+  }
+  window.onSpotifyIframeApiReady = (API) => {
+    const cont = $("spotify");
+    if (!cont || cont.querySelector("iframe")) return; // ya está el respaldo
+    try {
+      API.createController($("spotify"), {uri: "spotify:track:" + CONFIG.spotify, width: "100%", height: 80, theme: "dark"}, (ctrl) => { spotify = ctrl; });
+    } catch(e){ spotifyRespaldo(); }
+  };
+  if (CONFIG.spotify){
+    const sc = document.createElement("script");
+    sc.src = "https://open.spotify.com/embed/iframe-api/v1";
+    sc.async = true;
+    sc.onerror = spotifyRespaldo;
+    document.head.appendChild(sc);
+    setTimeout(() => { if (!spotify) spotifyRespaldo(); }, 8000);
+  }
+  function sonarSpotify(){
+    if (!CONFIG.spotify) return;
+    ponerMusica(false); // se apaga Jingle Bells
+    if (spotify){ try { spotify.play(); } catch(e){} }
+  }
+
   function final(){
+    sonarSpotify();
     $("final").hidden = false;
     $("panel").hidden = true;
     confeti(120);
@@ -847,6 +892,8 @@
   }
 
   $("otraVez").addEventListener("click", () => {
+    if (spotify){ try { spotify.pause(); } catch(e){} }
+    ponerMusica(true);
     $("final").hidden = true;
     $("panel").hidden = false;
     bolasArr.length = 0;
