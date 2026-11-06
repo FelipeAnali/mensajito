@@ -366,6 +366,10 @@
     linea2: "y yo ya te quiero",
     linea3: "rellenar el pavo",
     // Canción de Spotify que suena cuando sale el mensaje (el código del link)
+    // Canción del final: sube tu archivo a la carpeta navidad/ con este nombre.
+    // Si el archivo está, suena solo apenas se abre el regalo.
+    // Si no está, se muestra el reproductor de Spotify de abajo.
+    cancionFinal: "cancion.mp3",
     spotify: "4dR205z6owDkAv7RgFfGFV",
     bolas: 6
   };
@@ -834,6 +838,7 @@
       return;
     }
     r.classList.add("abierto");
+    sonarCancion();
     const b = r.getBoundingClientRect();
     const {x, y} = enEscena(b.left + b.width / 2, b.top);
     chispas(x, y, 14, "✨");
@@ -867,6 +872,28 @@
       API.createController($("spotify"), {uri: "spotify:track:" + CONFIG.spotify, width: "100%", height: 80, theme: "dark"}, (ctrl) => { spotify = ctrl; });
     } catch(e){ spotifyRespaldo(); }
   };
+  // ¿Subiste tu canción? Se prueba a cargar el archivo
+  const cancion = new Audio();
+  let hayCancion = false;
+  if (CONFIG.cancionFinal){
+    cancion.preload = "auto";
+    cancion.setAttribute("playsinline", "");
+    cancion.addEventListener("canplay", () => {
+      hayCancion = true;
+      const sp = $("spotify");
+      if (sp && sp.parentElement) sp.parentElement.hidden = true; // no hace falta Spotify
+    }, {once:true});
+    cancion.src = CONFIG.cancionFinal;
+    cancion.load();
+  }
+  function sonarCancion(){
+    if (!hayCancion) return false;
+    ponerMusica(false); // se apaga Jingle Bells
+    cancion.currentTime = 0;
+    cancion.play().catch(() => {});
+    return true;
+  }
+
   if (CONFIG.spotify){
     const sc = document.createElement("script");
     sc.src = "https://open.spotify.com/embed/iframe-api/v1";
@@ -876,6 +903,7 @@
     setTimeout(() => { if (!spotify) spotifyRespaldo(); }, 8000);
   }
   function sonarSpotify(){
+    if (hayCancion) return; // ya está sonando tu canción
     if (!CONFIG.spotify) return;
     ponerMusica(false); // se apaga Jingle Bells
     if (spotify){ try { spotify.play(); } catch(e){} }
@@ -893,6 +921,7 @@
 
   $("otraVez").addEventListener("click", () => {
     if (spotify){ try { spotify.pause(); } catch(e){} }
+    cancion.pause();
     ponerMusica(true);
     $("final").hidden = true;
     $("panel").hidden = false;
