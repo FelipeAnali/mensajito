@@ -129,18 +129,12 @@
     left:50%;
     top:62px;
     width:300px;
-    height:360px;
+    height:380px;
     margin-left:-150px;
     z-index:2;
   }
-  .arbol svg{width:100%;height:100%;overflow:visible}
-  .luz{fill:#2d3a33;transition:fill .3s ease}
-  .scene.on .luz{animation:titila var(--t,1.4s) ease-in-out var(--d,0s) infinite}
-  .bola{animation:cuelga .6s cubic-bezier(.3,1.6,.5,1)}
+  .arbol canvas{display:block;width:100%;height:100%}
   @keyframes cuelga{from{transform:translateY(-30px) scale(.3);opacity:0}}
-  .bola{transform-box:fill-box;transform-origin:center}
-  .estrella{transform-box:fill-box;transform-origin:center;opacity:0}
-  .estrella.puesta{animation:baja-estrella .9s cubic-bezier(.3,1.5,.5,1) forwards, brilla 1.6s ease-in-out .9s infinite}
   @keyframes baja-estrella{from{opacity:0;transform:translateY(-120px) rotate(-180deg) scale(.4)}to{opacity:1;transform:none}}
   @keyframes brilla{50%{filter:drop-shadow(0 0 14px #ffd166) brightness(1.2)}}
   .arbol.tocable{cursor:pointer}
@@ -288,9 +282,8 @@
   [hidden]{display:none !important}
 
   @media (prefers-reduced-motion: reduce){
-    .scene.on .luz,.scene.on .bombillo{animation:none;fill:var(--c)}
-    .pavo,.enchufe,.estrella.puesta{animation:none}
-    .estrella.puesta{opacity:1}
+    .scene.on .bombillo{animation:none;fill:var(--c)}
+    .pavo,.enchufe{animation:none}
     .linea{animation:none;opacity:1}
     .confeti,.chispa{display:none}
   }
@@ -312,18 +305,7 @@
       <div class="suelo" aria-hidden="true"></div>
 
       <div class="arbol" id="arbol" aria-label="Árbol de Navidad">
-        <svg viewBox="0 0 300 360" id="arbolSvg">
-          <rect x="132" y="292" width="36" height="46" rx="4" fill="#7a4a2a"/>
-          <polygon points="150,150 40,298 260,298" fill="#1b6b41"/>
-          <polygon points="150,92 62,214 238,214" fill="#1f7a4a"/>
-          <polygon points="150,36 88,136 212,136" fill="#24894f"/>
-          <path d="M70 260 Q150 300 236 252" stroke="#ffd166" stroke-width="3" fill="none" stroke-dasharray="2 6" stroke-linecap="round" opacity=".8"/>
-          <path d="M84 188 Q150 222 218 182" stroke="#ffd166" stroke-width="3" fill="none" stroke-dasharray="2 6" stroke-linecap="round" opacity=".8"/>
-          <path d="M106 118 Q150 140 196 112" stroke="#ffd166" stroke-width="3" fill="none" stroke-dasharray="2 6" stroke-linecap="round" opacity=".8"/>
-          <g id="luces"></g>
-          <g id="bolas"></g>
-          <polygon class="estrella" id="estrella" points="150,8 158,28 180,28 162,41 169,62 150,49 131,62 138,41 120,28 142,28" fill="#ffd166" stroke="#fff3c4" stroke-width="2"/>
-        </svg>
+        <canvas id="arbolCv"></canvas>
       </div>
 
       <button class="regalo" id="regalo" aria-label="Abrir el regalo" hidden>
@@ -500,23 +482,239 @@
       g.appendChild(b);
     }
   })();
-  (function(){
-    const g = $("luces");
-    const puntos = [
-      [118,126],[150,132],[182,124],[132,104],[168,102],[150,74],
-      [86,206],[118,212],[150,216],[182,210],[214,202],[104,176],[150,186],[196,174],
-      [60,286],[96,290],[132,294],[168,294],[204,288],[238,282],[80,250],[150,262],[220,246],[116,236],[186,232]
-    ];
-    puntos.forEach(([x, y], i) => {
-      const c = document.createElementNS(NS, "circle");
-      c.setAttribute("class", "luz");
-      c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", 4.5);
-      c.style.setProperty("--c", COLORES[i % COLORES.length]);
-      c.style.setProperty("--t", azar(.9, 1.9).toFixed(2) + "s");
-      c.style.setProperty("--d", (-azar(0, 2)).toFixed(2) + "s");
-      g.appendChild(c);
-    });
+  // ===================================================================
+  //  Árbol realista: dibujado rama por rama en un canvas
+  // ===================================================================
+  const arbolCv = $("arbolCv");
+  const actx = arbolCv.getContext("2d");
+  const AW = 300, AH = 380, CX = 150, TOP = 40, BASE = 312, ANCHO = 128;
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  arbolCv.width = AW * DPR; arbolCv.height = AH * DPR;
+  actx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  // Números "al azar" con semilla: el árbol sale igual cada vez
+  let semilla = 20251225;
+  const rnd = () => (semilla = (semilla * 16807) % 2147483647) / 2147483647;
+  const ra = (a, b) => a + rnd() * (b - a);
+
+  // Ancho del árbol a cada altura, con forma de "pisos" de ramas
+  function medioAncho(y){
+    const k = Math.max(0, (y - TOP) / (BASE - TOP));
+    const pisos = 6;
+    const ondita = 1 - .17 * (1 - ((k * pisos) % 1));
+    return ANCHO * Math.pow(k, .9) * ondita;
+  }
+
+  const cuerpo = document.createElement("canvas");
+  cuerpo.width = AW * DPR; cuerpo.height = AH * DPR;
+  (function dibujarCuerpo(){
+    const c = cuerpo.getContext("2d");
+    c.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    // Falda roja de terciopelo con borde blanco
+    let g = c.createRadialGradient(CX, BASE + 26, 10, CX, BASE + 26, 150);
+    g.addColorStop(0, "#d0142f"); g.addColorStop(1, "#5e0613");
+    c.fillStyle = g;
+    c.beginPath(); c.ellipse(CX, BASE + 28, 142, 28, 0, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 6;
+    c.beginPath(); c.ellipse(CX, BASE + 28, 139, 25, 0, .05, Math.PI - .05); c.stroke();
+
+    // Tronco
+    g = c.createLinearGradient(CX - 14, 0, CX + 14, 0);
+    g.addColorStop(0, "#2e1b0f"); g.addColorStop(.5, "#6b4426"); g.addColorStop(1, "#2e1b0f");
+    c.fillStyle = g;
+    c.fillRect(CX - 12, BASE - 10, 24, 34);
+
+    // Silueta interior oscura: da profundidad y tapa los huecos entre ramas
+    c.fillStyle = "#0d2a19";
+    c.beginPath();
+    c.moveTo(CX, TOP + 6);
+    for (let y = TOP + 6; y <= BASE; y += 2) c.lineTo(CX + medioAncho(y) * .82, y);
+    for (let y = BASE; y >= TOP + 6; y -= 2) c.lineTo(CX - medioAncho(y) * .82, y);
+    c.closePath();
+    c.fill();
+
+    // Ramas alrededor del tronco: primero las de atrás (oscuras), luego las de adelante
+    const ramas = [];
+    for (let i = 0; i < 1250; i++){
+      const y = TOP + 4 + Math.pow(rnd(), .8) * (BASE - TOP - 4);
+      const ang = ra(0, Math.PI * 2);
+      ramas.push({y, ang, prof: Math.cos(ang)});
+    }
+    ramas.sort((a, b) => a.prof - b.prof);
+    c.lineCap = "round";
+    for (const r of ramas){
+      const hw = medioAncho(r.y);
+      const alcance = hw * ra(.82, 1.06);
+      const x0 = CX + Math.sin(r.ang) * hw * .08, y0 = r.y - 2;
+      const x1 = CX + Math.sin(r.ang) * alcance;
+      const y1 = r.y + ra(4, 12) + (BASE - r.y) * .02;
+      const luz = (r.prof + 1) / 2; // 0 atrás → 1 adelante
+      // ramita
+      c.strokeStyle = `hsl(140, 35%, ${8 + luz * 8}%)`;
+      c.lineWidth = 1.4;
+      c.beginPath(); c.moveTo(x0, y0); c.quadraticCurveTo((x0 + x1) / 2, y0 - 3, x1, y1); c.stroke();
+      // agujas a lo largo de la ramita
+      const pasos = Math.max(4, Math.floor(Math.abs(x1 - x0) / 3.2));
+      for (let k = 2; k <= pasos; k++){
+        const t = k / pasos;
+        const px = x0 + (x1 - x0) * t;
+        const py = y0 + (y1 - y0) * t - Math.sin(t * Math.PI) * 3;
+        const largo = ra(4, 8) * (1.1 - t * .3);
+        const L = 10 + luz * 20 + t * 12 + ra(-4, 4);
+        const H = ra(132, 152);
+        c.strokeStyle = `hsl(${H}, ${ra(35, 55)}%, ${L}%)`;
+        c.lineWidth = ra(.8, 1.4);
+        for (const s of [-1, 1]){
+          const a = Math.atan2(y1 - y0, x1 - x0) + s * ra(.6, 1.1) + .35;
+          c.beginPath();
+          c.moveTo(px, py);
+          c.lineTo(px + Math.cos(a) * largo, py + Math.sin(a) * largo);
+          c.stroke();
+        }
+      }
+      // un poquito de nieve en algunas puntas de adelante
+      if (luz > .6 && rnd() < .05){
+        c.fillStyle = "rgba(245,250,255,.7)";
+        c.beginPath(); c.ellipse(x1, y1 - 2, ra(1.8, 3.2), ra(1, 1.6), 0, 0, Math.PI * 2); c.fill();
+      }
+    }
+
+    // Luz suave desde arriba a la izquierda, sombra abajo a la derecha
+    c.globalCompositeOperation = "source-atop";
+    g = c.createLinearGradient(40, TOP, 260, BASE);
+    g.addColorStop(0, "rgba(255,240,200,.10)");
+    g.addColorStop(.55, "rgba(0,0,0,0)");
+    g.addColorStop(1, "rgba(0,10,20,.35)");
+    c.fillStyle = g;
+    c.fillRect(0, 0, AW, AH);
+    c.globalCompositeOperation = "source-over";
+
+    // Guirnalda dorada en espiral (solo la parte de adelante)
+    for (let y = TOP + 26; y < BASE - 8; y += .6){
+      const vuelta = (y - TOP) / 46;
+      const ang = vuelta * Math.PI * 2 + .6;
+      if (Math.cos(ang) < .05) continue;
+      const x = CX + Math.sin(ang) * medioAncho(y) * .93;
+      const yy = y + Math.sin(ang) * 6;
+      c.fillStyle = rnd() < .25 ? "#fff3c4" : (rnd() < .5 ? "#e8b13f" : "#c99227");
+      c.beginPath(); c.arc(x + ra(-1.5, 1.5), yy + ra(-1.5, 1.5), ra(.8, 1.8), 0, Math.PI * 2); c.fill();
+    }
   })();
+
+  // Luces de hada sobre las ramas
+  const luces = [];
+  for (let i = 0; i < 78; i++){
+    const y = TOP + 14 + Math.pow(rnd(), .85) * (BASE - TOP - 26);
+    const ang = ra(-1.35, 1.35);
+    const calida = rnd() < .62;
+    luces.push({
+      x: CX + Math.sin(ang) * medioAncho(y) * ra(.55, .97),
+      y: y + ra(-3, 5),
+      col: calida ? [255, 214, 150] : [[255, 80, 80], [90, 200, 255], [120, 255, 140], [255, 120, 230], [255, 190, 70]][Math.floor(rnd() * 5)],
+      vel: ra(1.2, 3.2),
+      fase: ra(0, 6.3)
+    });
+  }
+
+  const bolasArr = [];
+  let estrellaT0 = null;
+  const COLORES_BOLA = [["#ff4d5e", "#8a0f1d"], ["#ffd166", "#a6731a"], ["#4dc3ff", "#0d4f7a"], ["#c77dff", "#4a1a7a"], ["#ff9a3c", "#8a3d05"], ["#e9eef5", "#7b8494"]];
+
+  function dibujarBola(b, ahora){
+    const k = Math.min(1, (ahora - b.t0) / 550);
+    const e = reduce ? 1 : 1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2); // rebote
+    const r = 9 * Math.max(.01, e);
+    const [c1, c2] = b.col;
+    actx.strokeStyle = "rgba(255,230,160,.8)"; actx.lineWidth = .8;
+    actx.beginPath(); actx.moveTo(b.x, b.y - 15); actx.lineTo(b.x, b.y - r - 2); actx.stroke();
+    actx.fillStyle = "#c9a34a";
+    actx.fillRect(b.x - 2.6, b.y - r - 3.5, 5.2, 3.5);
+    const g = actx.createRadialGradient(b.x - r * .4, b.y - r * .4, r * .1, b.x, b.y, r);
+    g.addColorStop(0, "#ffffff");
+    g.addColorStop(.18, c1);
+    g.addColorStop(1, c2);
+    actx.fillStyle = g;
+    actx.beginPath(); actx.arc(b.x, b.y, r, 0, Math.PI * 2); actx.fill();
+    // reflejo de las luces
+    actx.fillStyle = "rgba(255,255,255,.35)";
+    actx.beginPath(); actx.ellipse(b.x + r * .35, b.y + r * .45, r * .25, r * .12, -.5, 0, Math.PI * 2); actx.fill();
+  }
+
+  function caminoEstrella(c, x, y, R, r){
+    c.beginPath();
+    for (let i = 0; i < 10; i++){
+      const a = -Math.PI / 2 + i * Math.PI / 5;
+      const rad = i % 2 ? r : R;
+      c.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad);
+    }
+    c.closePath();
+  }
+  function dibujarEstrella(ahora){
+    const k = reduce ? 1 : Math.min(1, (ahora - estrellaT0) / 900);
+    const e = 1 - Math.pow(1 - k, 3);
+    const x = CX, y = TOP - 10 - (1 - e) * 120;
+    const pulso = .75 + .25 * Math.sin(ahora / 350);
+    // resplandor
+    const g = actx.createRadialGradient(x, y, 2, x, y, 46 * pulso);
+    g.addColorStop(0, "rgba(255,240,180,.9)");
+    g.addColorStop(.35, "rgba(255,209,102,.35)");
+    g.addColorStop(1, "rgba(255,209,102,0)");
+    actx.fillStyle = g;
+    actx.beginPath(); actx.arc(x, y, 46 * pulso, 0, Math.PI * 2); actx.fill();
+    actx.save();
+    actx.translate(x, y);
+    actx.rotate((1 - e) * -3);
+    const gs = actx.createLinearGradient(0, -18, 0, 18);
+    gs.addColorStop(0, "#fff6cf"); gs.addColorStop(.5, "#ffd166"); gs.addColorStop(1, "#d99a1a");
+    actx.fillStyle = gs;
+    caminoEstrella(actx, 0, 0, 19, 8);
+    actx.fill();
+    actx.strokeStyle = "rgba(255,255,255,.8)"; actx.lineWidth = 1.2; actx.stroke();
+    actx.restore();
+  }
+
+  let ultimoArbol = 0;
+  function pintarArbol(ahora){
+    requestAnimationFrame(pintarArbol);
+    if (ahora - ultimoArbol < 33) return; // ~30 cuadros por segundo
+    ultimoArbol = ahora;
+    actx.clearRect(0, 0, AW, AH);
+    actx.drawImage(cuerpo, 0, 0, AW, AH);
+    const prendido = scene.classList.contains("on");
+    for (const l of luces){
+      const [r, g, b] = l.col;
+      if (!prendido){
+        actx.fillStyle = "rgba(60,60,50,.9)";
+        actx.beginPath(); actx.arc(l.x, l.y, 1.6, 0, Math.PI * 2); actx.fill();
+        continue;
+      }
+      const a = reduce ? 1 : .55 + .45 * Math.sin(ahora / 1000 * l.vel + l.fase);
+      const halo = actx.createRadialGradient(l.x, l.y, 0, l.x, l.y, 10);
+      halo.addColorStop(0, `rgba(${r},${g},${b},${.85 * a})`);
+      halo.addColorStop(.3, `rgba(${r},${g},${b},${.35 * a})`);
+      halo.addColorStop(1, `rgba(${r},${g},${b},0)`);
+      actx.fillStyle = halo;
+      actx.beginPath(); actx.arc(l.x, l.y, 10, 0, Math.PI * 2); actx.fill();
+      actx.fillStyle = `rgba(255,255,240,${.6 + .4 * a})`;
+      actx.beginPath(); actx.arc(l.x, l.y, 1.7, 0, Math.PI * 2); actx.fill();
+    }
+    for (const b of bolasArr) dibujarBola(b, ahora);
+    if (estrellaT0 !== null) dibujarEstrella(ahora);
+  }
+  requestAnimationFrame(pintarArbol);
+
+  function aCanvas(px, py){
+    const r = arbolCv.getBoundingClientRect();
+    return {x: (px - r.left) * AW / r.width, y: (py - r.top) * AH / r.height};
+  }
+  function aPantalla(x, y){
+    const r = arbolCv.getBoundingClientRect();
+    return {x: r.left + x * r.width / AW, y: r.top + y * r.height / AH};
+  }
+  function dentroDelArbol(x, y){
+    return y > TOP + 16 && y < BASE - 10 && Math.abs(x - CX) < medioAncho(y) * .9;
+  }
 
   function confeti(n = 80){
     if (reduce) return;
@@ -576,36 +774,16 @@
   //  2. Decorar el árbol
   // ===================================================================
   let bolas = 0;
-  const NIVELES = [[36, 136, 88, 212], [92, 214, 62, 238], [150, 298, 40, 260]]; // [yTop, yBase, xIzq, xDer]
-  function dentroDelArbol(x, y){
-    // cada piso es un triángulo con punta en (150, yTop)
-    return NIVELES.some(([y0, y1, xl, xr]) => {
-      if (y < y0 + 8 || y > y1 - 4) return false;
-      const k = (y - y0) / (y1 - y0);
-      const medio = 150, ancho = (xr - xl) / 2 * k;
-      return x > medio - ancho + 4 && x < medio + ancho - 4;
-    });
-  }
-  $("arbolSvg").addEventListener("pointerdown", (e) => {
+  arbolCv.addEventListener("pointerdown", (e) => {
     if (!scene.classList.contains("on") || bolas >= CONFIG.bolas) return;
-    const svg = $("arbolSvg");
-    const pt = svg.createSVGPoint();
-    pt.x = e.clientX; pt.y = e.clientY;
-    const p = pt.matrixTransform(svg.getScreenCTM().inverse());
-    if (!dentroDelArbol(p.x, p.y)) return;
-    const color = COLORES[bolas % COLORES.length];
-    const g = document.createElementNS(NS, "g");
-    g.setAttribute("class", "bola");
-    g.innerHTML = `<line x1="${p.x}" y1="${p.y - 14}" x2="${p.x}" y2="${p.y - 9}" stroke="#ffd166" stroke-width="1.5"/>
-      <rect x="${p.x - 3}" y="${p.y - 11}" width="6" height="4" rx="1" fill="#c9a34a"/>
-      <circle cx="${p.x}" cy="${p.y}" r="9" fill="${color}"/>
-      <circle cx="${p.x - 3}" cy="${p.y - 3}" r="2.6" fill="#fff" opacity=".8"/>`;
-    $("bolas").appendChild(g);
+    const {x, y} = aCanvas(e.clientX, e.clientY);
+    if (!dentroDelArbol(x, y)) return;
+    bolasArr.push({x, y, col: COLORES_BOLA[bolas % COLORES_BOLA.length], t0: performance.now()});
     bolas++;
     campana(ESCALA[(bolas - 1) % ESCALA.length], 0, 1.1, .14);
     vibrar(12);
-    const {x, y} = enEscena(e.clientX, e.clientY);
-    chispas(x, y, 6);
+    const q = enEscena(e.clientX, e.clientY);
+    chispas(q.x, q.y, 6);
     $("bolasTxt").textContent = "Toca el árbol para colgar bolas (" + bolas + " / " + CONFIG.bolas + ")";
     if (bolas >= CONFIG.bolas){
       $("arbol").classList.remove("tocable");
@@ -617,12 +795,12 @@
   //  3. La estrella
   // ===================================================================
   $("ponerEstrella").addEventListener("click", () => {
-    $("estrella").classList.add("puesta");
+    estrellaT0 = performance.now();
     [1567.98, 2093, 2637].forEach((f, i) => campana(f, .7 + i * .1, 1.4, .12));
     vibrar([20, 30, 60]);
     setTimeout(() => {
-      const r = $("estrella").getBoundingClientRect();
-      const {x, y} = enEscena(r.left + r.width / 2, r.top + r.height / 2);
+      const pe = aPantalla(CX, TOP - 10);
+      const {x, y} = enEscena(pe.x, pe.y);
       chispas(x, y, 12, "⭐");
       confeti(50);
     }, reduce ? 0 : 850);
@@ -671,8 +849,8 @@
   $("otraVez").addEventListener("click", () => {
     $("final").hidden = true;
     $("panel").hidden = false;
-    $("bolas").innerHTML = "";
-    $("estrella").classList.remove("puesta");
+    bolasArr.length = 0;
+    estrellaT0 = null;
     $("regalo").hidden = true;
     $("regalo").classList.remove("abierto", "sacude");
     bolas = 0; toques = 0;
