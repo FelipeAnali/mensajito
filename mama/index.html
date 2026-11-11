@@ -22,6 +22,7 @@
   }
 
   *{box-sizing:border-box}
+  button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   body{
     margin:0;
     background-color:var(--page);
@@ -29,7 +30,10 @@
     background-size:22px 22px;
     color:var(--ink);
     font-family:"Nunito",system-ui,sans-serif;
+    min-height:100vh;
     min-height:100dvh;
+    -webkit-text-size-adjust:100%;
+            text-size-adjust:100%;
     display:flex;
     justify-content:center;
     padding:24px;
@@ -65,6 +69,9 @@
     overflow:hidden;
     overflow:clip;
     min-height:600px;
+    touch-action:manipulation;
+    -webkit-user-select:none;
+            user-select:none;
     background:
       radial-gradient(70% 45% at 50% 30%, rgba(233,180,76,.22) 0%, transparent 70%),
       radial-gradient(60% 40% at 0% 100%, rgba(185,163,227,.30) 0%, transparent 70%),
@@ -250,7 +257,7 @@
       radial-gradient(circle at 45% 100%, #f7c6d0 12px, transparent 13px),
       radial-gradient(circle at 80% 100%, #f7c6d0 10px, transparent 11px)}
   .sprinkles{
-    position:absolute;inset:26px 10px 10px;
+    position:absolute;top:26px;right:10px;bottom:10px;left:10px;
     background:
       radial-gradient(circle, var(--gold) 2.5px, transparent 3px) 0 0/34px 26px,
       radial-gradient(circle, var(--mint) 2.5px, transparent 3px) 17px 13px/34px 26px;
@@ -444,13 +451,13 @@
 
   /* ---------- EFECTOS: fuegos artificiales, chispas ---------- */
   .fx{
-    position:absolute;inset:0;
+    position:absolute;top:0;right:0;bottom:0;left:0;
     width:100%;height:100%;
     z-index:4;
     pointer-events:none;
   }
   .flash{
-    position:absolute;inset:0;
+    position:absolute;top:0;right:0;bottom:0;left:0;
     z-index:4;
     pointer-events:none;
     background:radial-gradient(circle at var(--fx,50%) var(--fy,50%), rgba(255,247,214,.95), rgba(255,220,150,.4) 30%, transparent 65%);
@@ -459,7 +466,7 @@
   @keyframes flash{from{opacity:1}to{opacity:0}}
   .scene.night{transition:background-color 1.2s ease}
   .scene .sky{
-    position:absolute;inset:0;
+    position:absolute;top:0;right:0;bottom:0;left:0;
     z-index:0;
     pointer-events:none;
     background:
@@ -508,7 +515,7 @@
 
   /* ---------- GLOBOS ---------- */
   .balloons{
-    position:absolute;inset:0;
+    position:absolute;top:0;right:0;bottom:0;left:0;
     z-index:3;
     pointer-events:none;
   }
@@ -672,6 +679,9 @@
   // ===================================================================
 
   const $ = (id) => document.getElementById(id);
+  // En iPhone (iOS 17+): sonar aunque el celular esté en silencio
+  function sesionAudio(tipo){ try { if (navigator.audioSession) navigator.audioSession.type = tipo; } catch(e){} }
+  sesionAudio("playback");
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const scene = $("scene");
   const azar = (a, b) => a + Math.random() * (b - a);
@@ -737,8 +747,8 @@
         decae: azar(.010, .02) * (opts.lento ? .6 : 1),
         color: colores[Math.floor(Math.random() * colores.length)],
         r: azar(1.4, 3) * (opts.grande ? 1.6 : 1),
-        g: opts.g ?? .05,
-        roce: opts.roce ?? .975,
+        g: opts.g != null ? opts.g : .05,
+        roce: opts.roce != null ? opts.roce : .975,
         forma: opts.forma || "punto",
         brillo: Math.random() < .5
       });
@@ -935,19 +945,28 @@
   async function encenderMic(){
     const btn = $("mic"), msg = $("micMsg");
     if (micActivo){ apagarMic(); return; }
+    sesionAudio("play-and-record");
+    try {
+      audio = new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === "suspended") audio.resume();
+    } catch(e){ audio = null; }
     try {
       micStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
     } catch(e){
       msg.textContent = "No se pudo usar el micrófono. Tócalas con el dedo 😊";
       btn.hidden = true;
+      sesionAudio("playback");
+      if (audio && audio.close) audio.close();
+      audio = null;
       return;
     }
-    audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (!audio){ msg.textContent = "No se pudo usar el micrófono. Tócalas con el dedo 😊"; btn.hidden = true; return; }
+    if (audio.state === "suspended") audio.resume();
     const src = audio.createMediaStreamSource(micStream);
     const an = audio.createAnalyser();
     an.fftSize = 1024;
     src.connect(an);
-    const datos = new Float32Array(an.fftSize);
+    const datos = new Uint8Array(an.fftSize);
     micActivo = true;
     btn.classList.add("on");
     btn.textContent = "🎤 Sopla fuerte…";
@@ -955,9 +974,9 @@
     let soplando = 0, ultimaApagada = 0;
     (function escuchar(){
       if (!micActivo) return;
-      an.getFloatTimeDomainData(datos);
+      an.getByteTimeDomainData(datos);
       let suma = 0;
-      for (let i = 0; i < datos.length; i++) suma += datos[i] * datos[i];
+      for (let i = 0; i < datos.length; i++){ const v = (datos[i] - 128) / 128; suma += v * v; }
       const vol = Math.sqrt(suma / datos.length);
       const t = performance.now();
       const vivas = velas.filter((v) => !v.classList.contains("out"));
@@ -978,7 +997,8 @@
   function apagarMic(){
     micActivo = false;
     if (micStream) micStream.getTracks().forEach((t) => t.stop());
-    if (audio) audio.close().catch(() => {});
+    try { if (audio && audio.close) { const c = audio.close(); if (c && c.catch) c.catch(() => {}); } } catch(e){}
+    sesionAudio("playback");
     micStream = null; audio = null;
     $("mic").hidden = true;
     $("micMsg").textContent = "";
