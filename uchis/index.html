@@ -694,6 +694,80 @@
   .tarjeta-final .btn{margin-top:0;text-decoration:none}
   .tarjeta-final .nota{margin-top:10px;font-size:12.5px;color:rgba(255,255,255,.75);max-width:30ch}
 
+  /* ---------- Blue, dormido sobre el regalo ---------- */
+  .regalo-wrap{position:relative;width:190px;height:190px;margin-top:40px}
+  .gift.bloqueado{animation:none;cursor:default}
+  .blue{
+    position:absolute;
+    left:50%;top:-62px;
+    width:170px;height:118px;
+    margin-left:-85px;
+    z-index:5;
+    touch-action:none;
+    cursor:grab;
+    -webkit-user-select:none;
+            user-select:none;
+  }
+  .blue svg{width:100%;height:100%;overflow:visible;display:block}
+  .blue .cola{transform-origin:128px 78px;animation:cola 2.4s ease-in-out infinite}
+  @keyframes cola{0%,100%{transform:rotate(0)}50%{transform:rotate(-14deg)}}
+  .blue .cuerpo-gato{transform-origin:85px 105px;animation:respira-gato 3s ease-in-out infinite}
+  @keyframes respira-gato{50%{transform:scaleY(1.04)}}
+  .blue .abiertos{display:none}
+  .blue.despierto .abiertos{display:inline}
+  .blue.despierto .cerrados{display:none}
+  .blue.ronronea .cuerpo-gato{animation:ronroneo .12s linear infinite}
+  @keyframes ronroneo{50%{transform:translateY(.6px)}}
+  .blue.molesto{animation:sacudida .4s ease}
+  @keyframes sacudida{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .blue.salta{animation:salta 1s cubic-bezier(.4,0,.6,1) forwards}
+  @keyframes salta{
+    0%{transform:none}
+    35%{transform:translate(70px,-70px) rotate(10deg)}
+    100%{transform:translate(190px,90px) rotate(18deg) scale(.8);opacity:0}
+  }
+  .zzz{
+    position:absolute;
+    left:22%;top:-6px;
+    font-family:"Fraunces",Georgia,serif;
+    font-weight:700;
+    color:var(--rose);
+    pointer-events:none;
+  }
+  .zzz i{position:absolute;font-style:normal;opacity:0;animation:zzz 3s ease-in-out infinite}
+  .zzz i:nth-child(1){font-size:14px}
+  .zzz i:nth-child(2){font-size:18px;animation-delay:1s}
+  .zzz i:nth-child(3){font-size:23px;animation-delay:2s}
+  @keyframes zzz{0%{opacity:0;transform:translate(0,0)}25%{opacity:1}100%{opacity:0;transform:translate(-22px,-46px)}}
+  .blue.despierto .zzz{display:none}
+  .caricias{width:100%;max-width:260px;margin-top:18px}
+  .barra{height:14px;border-radius:999px;background:rgba(58,111,224,.15);overflow:hidden}
+  .barra i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg, var(--rose), var(--gold));transition:width .15s linear}
+  .llamar{
+    margin-top:14px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:11px 18px;
+    border-radius:999px;
+    border:2px solid var(--rose);
+    background:rgba(255,255,255,.8);
+    color:var(--rose-deep);
+    font:inherit;
+    font-weight:800;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .llamar.on{background:var(--rose);color:#fff;animation:pulse 1.2s ease-in-out infinite}
+  .llamar:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+  .blue-msg{min-height:1.3em;margin:10px 0 0;font-size:13.5px;font-weight:700;color:var(--rose-deep)}
+  .corazon-gato{position:absolute;z-index:7;pointer-events:none;font-size:20px;animation:sube-corazon 1.2s ease-out forwards}
+  @keyframes sube-corazon{from{opacity:1;transform:translate(0,0) scale(.6)}to{opacity:0;transform:translate(var(--x,0),-70px) scale(1.2)}}
+  @media (prefers-reduced-motion: reduce){
+    .blue .cola,.blue .cuerpo-gato,.zzz i{animation:none}
+    .zzz i{opacity:1}
+  }
+
   [hidden]{display:none !important}
 
   @media (prefers-reduced-motion: reduce){
@@ -720,12 +794,64 @@
 
         <!-- 1. Regalo -->
         <section class="step" id="s1">
-          <button class="gift" id="gift" aria-label="Abrir el regalo">
-            <div class="box"></div>
-            <div class="lid"><div class="bow"></div></div>
-            <div class="tag">Uchis</div>
-          </button>
-          <div class="hint">toca el regalo</div>
+          <div class="regalo-wrap">
+            <button class="gift bloqueado" id="gift" aria-label="Abrir el regalo">
+              <div class="box"></div>
+              <div class="lid"><div class="bow"></div></div>
+              <div class="tag">Uchis</div>
+            </button>
+            <div class="blue" id="blue" role="img" aria-label="Blue, el gato, dormido sobre el regalo">
+              <div class="zzz" aria-hidden="true"><i>z</i><i>z</i><i>z</i></div>
+              <svg viewBox="0 0 170 118" aria-hidden="true">
+                <defs>
+                  <radialGradient id="pelaje" cx="40%" cy="35%" r="70%">
+                    <stop offset="0" stop-color="#ffc27a"/>
+                    <stop offset=".6" stop-color="#f29a45"/>
+                    <stop offset="1" stop-color="#d9741f"/>
+                  </radialGradient>
+                </defs>
+                <path class="cola" d="M128 82 Q160 76 156 50 Q152 34 140 40" stroke="#e98a33" stroke-width="13" fill="none" stroke-linecap="round"/>
+                <g class="cuerpo-gato">
+                  <ellipse cx="88" cy="84" rx="56" ry="30" fill="url(#pelaje)"/>
+                  <path d="M96 58 q4 12 0 24 M112 60 q4 12 0 24 M126 66 q3 9 0 18" stroke="#c9651c" stroke-width="4" fill="none" stroke-linecap="round" opacity=".6"/>
+                  <ellipse cx="64" cy="94" rx="18" ry="13" fill="#fff4e6"/>
+                  <ellipse cx="58" cy="110" rx="11" ry="6" fill="#fff4e6"/>
+                  <ellipse cx="82" cy="111" rx="11" ry="6" fill="#fff4e6"/>
+                  <!-- cabeza -->
+                  <polygon points="30,44 24,12 50,32" fill="#f29a45"/>
+                  <polygon points="33,38 30,20 45,32" fill="#ffb3b3"/>
+                  <polygon points="64,30 84,12 82,44" fill="#f29a45"/>
+                  <polygon points="68,31 80,20 79,38" fill="#ffb3b3"/>
+                  <circle cx="56" cy="60" r="32" fill="url(#pelaje)"/>
+                  <path d="M48 32 q2 8 0 14 M56 30 q2 9 0 16 M64 32 q2 8 0 14" stroke="#c9651c" stroke-width="3" fill="none" stroke-linecap="round" opacity=".55"/>
+                  <ellipse cx="56" cy="74" rx="15" ry="11" fill="#fff4e6"/>
+                  <!-- ojos cerrados (dormido) -->
+                  <g class="cerrados">
+                    <path d="M38 60 q6 5 12 0" stroke="#5a3010" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+                    <path d="M62 60 q6 5 12 0" stroke="#5a3010" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+                  </g>
+                  <!-- ojos abiertos (verdes, como Blue) -->
+                  <g class="abiertos">
+                    <ellipse cx="44" cy="58" rx="6.5" ry="7.5" fill="#9ccc3a"/>
+                    <ellipse cx="68" cy="58" rx="6.5" ry="7.5" fill="#9ccc3a"/>
+                    <ellipse cx="44" cy="59" rx="2.4" ry="6" fill="#1e1a12"/>
+                    <ellipse cx="68" cy="59" rx="2.4" ry="6" fill="#1e1a12"/>
+                    <circle cx="46" cy="55" r="1.8" fill="#fff"/>
+                    <circle cx="70" cy="55" r="1.8" fill="#fff"/>
+                  </g>
+                  <path d="M52 68 L60 68 L56 72 Z" fill="#e88a95"/>
+                  <path d="M56 72 q-3 5 -7 3 M56 72 q3 5 7 3" stroke="#7a4a2a" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                  <path d="M40 72 L18 68 M40 75 L18 77 M72 72 L94 68 M72 75 L94 77" stroke="#fff" stroke-width="1.2" opacity=".85"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+          <div class="hint" id="blueHint">Blue está dormido sobre tu regalo 😴</div>
+          <div class="caricias" id="caricias">
+            <div class="barra"><i id="barraBlue"></i></div>
+            <p class="blue-msg" id="blueMsg">Acarícialo pasando el dedo… o llámalo 🐾</p>
+          </div>
+          <button class="llamar" id="llamar" type="button">🎤 Llámalo: di “¡Bluuu!”</button>
         </section>
 
         <!-- 2. Pastel -->
@@ -1053,10 +1179,205 @@
   }
 
   // ===================================================================
+  //  0. Blue: hay que acariciarlo o llamarlo para que se quite del regalo
+  // ===================================================================
+  let blueDespierto = false, caricia = 0, acariciando = false, ultimoPunto = null, ultimoRonroneo = 0;
+  let acB = null;
+  function audioBlue(){
+    try {
+      if (!acB) acB = new (window.AudioContext || window.webkitAudioContext)();
+      if (acB.state === "suspended") acB.resume();
+    } catch(e){ acB = null; }
+    return acB;
+  }
+  function ronroneo(){
+    const a = audioBlue(); if (!a) return;
+    const t = a.currentTime, dur = .7;
+    const o = a.createOscillator(), g = a.createGain(), lfo = a.createOscillator(), lg = a.createGain();
+    o.type = "sawtooth"; o.frequency.value = 26;
+    lfo.frequency.value = 24; lg.gain.value = .05;
+    lfo.connect(lg); lg.connect(g.gain);
+    const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 180;
+    o.connect(f); f.connect(g); g.connect(a.destination);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(.09, t + .1);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    o.start(t); lfo.start(t); o.stop(t + dur); lfo.stop(t + dur);
+  }
+  function miau(){
+    const a = audioBlue(); if (!a) return;
+    const t = a.currentTime;
+    const o = a.createOscillator(), g = a.createGain(), f = a.createBiquadFilter();
+    o.type = "sawtooth";
+    o.frequency.setValueAtTime(520, t);
+    o.frequency.linearRampToValueAtTime(820, t + .18);
+    o.frequency.linearRampToValueAtTime(560, t + .55);
+    f.type = "bandpass"; f.Q.value = 3;
+    f.frequency.setValueAtTime(900, t);
+    f.frequency.linearRampToValueAtTime(1600, t + .2);
+    f.frequency.linearRampToValueAtTime(800, t + .55);
+    o.connect(f); f.connect(g); g.connect(a.destination);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(.22, t + .05);
+    g.gain.linearRampToValueAtTime(.16, t + .35);
+    g.gain.exponentialRampToValueAtTime(.0005, t + .6);
+    o.start(t); o.stop(t + .62);
+  }
+  function corazonGato(){
+    if (reduce) return;
+    const b = $("blue").getBoundingClientRect(), r = scene.getBoundingClientRect();
+    const h = document.createElement("span");
+    h.className = "corazon-gato";
+    h.textContent = ["💙", "🧡", "💛", "🐾"][Math.floor(Math.random() * 4)];
+    h.style.left = (b.left - r.left + azar(30, b.width - 30)) + "px";
+    h.style.top = (b.top - r.top + azar(10, 40)) + "px";
+    h.style.setProperty("--x", azar(-30, 30) + "px");
+    scene.appendChild(h);
+    h.addEventListener("animationend", () => h.remove());
+  }
+  function sumarCaricia(x){
+    if (blueDespierto) return;
+    caricia = Math.min(100, caricia + x);
+    $("barraBlue").style.width = caricia + "%";
+    const t = performance.now();
+    if (t - ultimoRonroneo > 450){
+      ultimoRonroneo = t;
+      ronroneo();
+      vibrar(25);
+      corazonGato();
+    }
+    $("blue").classList.add("ronronea");
+    clearTimeout(sumarCaricia.t);
+    sumarCaricia.t = setTimeout(() => $("blue").classList.remove("ronronea"), 400);
+    if (caricia > 35) $("blueMsg").textContent = "¡Le gusta! Está ronroneando… 😻";
+    if (caricia >= 100) despertarBlue("¡Le encantaron tus caricias! 😻");
+  }
+  const blueEl = $("blue");
+  blueEl.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    audioBlue();
+    acariciando = true;
+    ultimoPunto = {x: e.clientX, y: e.clientY};
+    try { blueEl.setPointerCapture(e.pointerId); } catch(err){}
+    sumarCaricia(4);
+  });
+  blueEl.addEventListener("pointermove", (e) => {
+    if (!acariciando) return;
+    const d = Math.hypot(e.clientX - ultimoPunto.x, e.clientY - ultimoPunto.y);
+    ultimoPunto = {x: e.clientX, y: e.clientY};
+    sumarCaricia(d / 9);
+  });
+  ["pointerup", "pointercancel"].forEach((ev) => blueEl.addEventListener(ev, () => { acariciando = false; }));
+
+  // Llamarlo por su nombre
+  let reco = null, micB = null, escuchandoB = false;
+  function sesionAudioB(tipo){ try { if (navigator.audioSession) navigator.audioSession.type = tipo; } catch(e){} }
+  function pararEscucha(){
+    escuchandoB = false;
+    try { reco && reco.abort(); } catch(e){}
+    reco = null;
+    if (micB) micB.getTracks().forEach((t) => t.stop());
+    micB = null;
+    sesionAudioB("playback");
+    $("llamar").classList.remove("on");
+  }
+  async function escucharVolumen(){
+    // Sin reconocimiento de voz: basta con llamarlo fuerte
+    const a = audioBlue();
+    try {
+      micB = await navigator.mediaDevices.getUserMedia({audio:true});
+    } catch(e){
+      pararEscucha();
+      $("blueMsg").textContent = "No pude usar el micrófono. Mejor acarícialo 🐾";
+      $("llamar").hidden = true;
+      return;
+    }
+    if (!a){ pararEscucha(); return; }
+    if (a.state === "suspended") a.resume();
+    const an = a.createAnalyser();
+    an.fftSize = 1024;
+    a.createMediaStreamSource(micB).connect(an);
+    const datos = new Uint8Array(an.fftSize);
+    let fuerte = 0;
+    $("blueMsg").textContent = "Te escucho… ¡llámalo fuerte: «Bluuu»!";
+    (function loop(){
+      if (!escuchandoB) return;
+      an.getByteTimeDomainData(datos);
+      let s = 0;
+      for (let i = 0; i < datos.length; i++){ const v = (datos[i] - 128) / 128; s += v * v; }
+      const vol = Math.sqrt(s / datos.length);
+      fuerte = vol > .08 ? fuerte + 1 : Math.max(0, fuerte - 1);
+      if (fuerte > 20){ despertarBlue("¡Te escuchó y vino! 😺"); return; }
+      requestAnimationFrame(loop);
+    })();
+  }
+  $("llamar").addEventListener("click", () => {
+    if (blueDespierto) return;
+    if (escuchandoB){ pararEscucha(); $("blueMsg").textContent = "Acarícialo pasando el dedo… o llámalo 🐾"; return; }
+    audioBlue();
+    sesionAudioB("play-and-record");
+    escuchandoB = true;
+    $("llamar").classList.add("on");
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR){
+      try {
+        reco = new SR();
+        reco.lang = "es-CO";
+        reco.interimResults = true;
+        reco.continuous = true;
+        reco.onresult = (ev) => {
+          let txt = "";
+          for (let i = 0; i < ev.results.length; i++) txt += ev.results[i][0].transcript + " ";
+          $("blueMsg").textContent = "Escuché: “" + txt.trim() + "”";
+          if (/bl[uúoó]|blue|blu+|plu|blo/i.test(txt)) despertarBlue("¡Escuchó su nombre! 😺");
+        };
+        reco.onerror = () => { if (escuchandoB && !blueDespierto){ reco = null; escucharVolumen(); } };
+        reco.onend = () => { if (escuchandoB && !blueDespierto && reco){ try { reco.start(); } catch(e){} } };
+        reco.start();
+        $("blueMsg").textContent = "Te escucho… di «¡Bluuu!» 🎤";
+        return;
+      } catch(e){ reco = null; }
+    }
+    escucharVolumen();
+  });
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && !(window.SpeechRecognition || window.webkitSpeechRecognition)) $("llamar").hidden = true;
+
+  function despertarBlue(msg){
+    if (blueDespierto) return;
+    blueDespierto = true;
+    pararEscucha();
+    const b = $("blue");
+    b.classList.remove("ronronea");
+    b.classList.add("despierto");
+    $("barraBlue").style.width = "100%";
+    $("blueMsg").textContent = msg;
+    miau();
+    vibrar([30, 40, 30]);
+    for (let i = 0; i < 6; i++) setTimeout(corazonGato, i * 90);
+    setTimeout(() => {
+      b.classList.add("salta");
+      setTimeout(() => {
+        b.hidden = true;
+        $("caricias").hidden = true;
+        $("llamar").hidden = true;
+        gift.classList.remove("bloqueado");
+        $("blueHint").textContent = "¡Ahora sí! Toca tu regalo 🎁";
+      }, reduce ? 0 : 950);
+    }, reduce ? 300 : 1100);
+  }
+
+  // ===================================================================
   //  1. Regalo
   // ===================================================================
   const gift = $("gift");
   gift.addEventListener("click", () => {
+    if (!blueDespierto){
+      $("blueMsg").textContent = "Blue no te deja… acarícialo o llámalo 😺";
+      const b = $("blue");
+      b.classList.remove("molesto"); void b.offsetWidth; b.classList.add("molesto");
+      vibrar(30);
+      return;
+    }
     if (gift.classList.contains("open")) return;
     gift.classList.add("open");
     const g = gift.getBoundingClientRect(), r = scene.getBoundingClientRect();
