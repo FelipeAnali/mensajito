@@ -1227,10 +1227,16 @@
     m.querySelector(".num").textContent = "Mensaje " + (idx + 1) + " de " + CONFIG.globos.length;
     m.querySelector(".txt").textContent = texto;
     document.body.appendChild(m);
-    m.addEventListener("click", () => {
+    // En celular, al soltar el dedo del globo llega un "toque" que cerraba el mensaje
+    // apenas aparecía: se ignoran los toques del primer instante.
+    const desde = Date.now();
+    function cerrar(){
+      if (Date.now() - desde < 600) return;
+      m.removeEventListener("click", cerrar);
       m.remove();
       if (leidos === CONFIG.globos.length) todosLeidos();
-    }, {once:true});
+    }
+    m.addEventListener("click", cerrar);
   }
   function todosLeidos(){
     $("pistaGlobos").textContent = "¡Leíste los 20! Ahora tu carta 💌";
